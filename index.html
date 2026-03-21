@@ -1,0 +1,4252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Monster Rally!</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Arial Black', 'Impact', sans-serif;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  canvas {
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(255, 100, 0, 0.3);
+    max-width: 100vw;
+    max-height: 100vh;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// ============================================================
+// RESPONSIVE SIZING
+// ============================================================
+function resize() {
+  const ratio = 800 / 450;
+  let w = window.innerWidth;
+  let h = window.innerHeight;
+  if (w / h > ratio) {
+    canvas.height = h;
+    canvas.width = h * ratio;
+  } else {
+    canvas.width = w;
+    canvas.height = w / ratio;
+  }
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const W = 800, H = 450;
+const GROUND_Y = 340;
+const GRAVITY = 0.48; // floatier jumps, more hang time for crushes & flips
+const JUMP_FORCE = -12;
+const SLAM_FORCE = 8;
+const BASE_GRAVITY = 0.55;
+
+// Environment configs
+const ENVIRONMENTS = [
+  {
+    name: 'DESERT NIGHT', skyTop: '#0f0c29', skyMid: '#302b63', skyBot: '#24243e',
+    ground: '#5a4a3a', groundAccent: '#4a3a2a', road: '#3d3530',
+    mountainColor: '#1a1a3e', cloudAlpha: 0.05, starBright: 0.6, gravityMult: 1.0,
+    features: 'desert'
+  },
+  {
+    name: 'SUNSET CITY', skyTop: '#2d3142', skyMid: '#f7c59f', skyBot: '#ff6b35',
+    ground: '#555555', groundAccent: '#444444', road: '#333333',
+    mountainColor: '#1a1a2e', cloudAlpha: 0.15, starBright: 0.3, gravityMult: 1.0,
+    features: 'city'
+  },
+  {
+    name: 'NEON ARENA', skyTop: '#0a0020', skyMid: '#1a0040', skyBot: '#0a0020',
+    ground: '#222222', groundAccent: '#1a1a1a', road: '#181818',
+    mountainColor: '#0a0015', cloudAlpha: 0.0, starBright: 0.4, gravityMult: 1.0,
+    features: 'neon'
+  },
+  {
+    name: 'MOON SURFACE', skyTop: '#000011', skyMid: '#000018', skyBot: '#000022',
+    ground: '#888888', groundAccent: '#777777', road: '#666666',
+    mountainColor: '#333344', cloudAlpha: 0.0, starBright: 1.0, gravityMult: 0.7,
+    features: 'moon'
+  },
+  {
+    name: 'LAVA WORLD', skyTop: '#1a0000', skyMid: '#330000', skyBot: '#1a0000',
+    ground: '#aa2200', groundAccent: '#882200', road: '#661100',
+    mountainColor: '#220000', cloudAlpha: 0.0, starBright: 0.2, gravityMult: 1.0,
+    features: 'lava'
+  }
+];
+
+// Power-up configs
+const POWERUP_TYPES = [
+  { name: 'MEGA TRUCK', color: '#ff8800', icon: '↑', duration: 300, effect: 'mega' },
+  { name: 'MAGNET', color: '#4488ff', icon: '⊃', duration: 480, effect: 'magnet' },
+  { name: 'SLOW-MO', color: '#44ff88', icon: '◷', duration: 240, effect: 'slowmo' },
+  { name: 'DOUBLE STARS', color: '#ffd700', icon: 'x2', duration: 600, effect: 'double' }
+];
+
+// Sound constants
+const ENGINE_BASE_FREQ = 80;
+const CRUSH_NOISE_DURATION = 0.1;
+const CRUSH_THUMP_FREQ = 60;
+const STAR_NOTES = [523.25, 659.25, 783.99]; // C5, E5, G5
+const RAMP_FREQ_START = 200;
+const RAMP_FREQ_END = 800;
+const HORN_FREQ = 180;
+const HORN_DURATION = 0.4;
+const COMBO_CHORD = [261.63, 329.63, 392.00]; // C4, E4, G4
+
+// Backflip constants
+const AIRBORNE_FLIP_THRESHOLD = 30; // frames before flip starts (~0.5s)
+const FLIP_DURATION = 24; // frames for full 360 (snappy and satisfying)
+const FLIP_BONUS_POINTS = 50;
+
+// ============================================================
+// TRUCK ROSTER
+// ============================================================
+const TRUCK_ROSTER = [
+  // Classic monster trucks (original 4)
+  { name: 'Flame Crusher', body: '#ff4400', accent: '#ffcc00', highlight: '#ff6622', decal: 'flames', style: 'classic', type: 'monster' },
+  { name: 'Blue Thunder', body: '#2255ff', accent: '#00ccff', highlight: '#4477ff', decal: 'bolts', style: 'classic', type: 'monster' },
+  { name: 'Green Machine', body: '#22cc44', accent: '#88ff00', highlight: '#44dd66', decal: 'stripes', style: 'classic', type: 'monster' },
+  { name: 'Purple Nightmare', body: '#8833cc', accent: '#ff44ff', highlight: '#aa55dd', decal: 'stars', style: 'classic', type: 'monster' },
+  // New monster trucks (big wheels, high suspension)
+  { name: 'Grave Stomper', body: '#1a1a1a', accent: '#44ff44', highlight: '#333', decal: 'skull', style: 'monster', type: 'monster' },
+  { name: 'Red Rampage', body: '#cc1100', accent: '#ff4444', highlight: '#dd3322', decal: 'claws', style: 'monster', type: 'monster' },
+  { name: 'Thunder Bull', body: '#1144aa', accent: '#ffcc00', highlight: '#2255bb', decal: 'horns', style: 'monster', type: 'monster' },
+  { name: 'Toxic Crusher', body: '#338833', accent: '#00ff88', highlight: '#44aa44', decal: 'hazard', style: 'monster', type: 'monster' },
+  // Cars (the crushable ones, now playable!)
+  { name: 'Red Racer', body: '#e74c3c', accent: '#ff6b6b', highlight: '#c0392b', decal: 'stripes', style: 'car', type: 'car' },
+  { name: 'Cool Blue', body: '#3498db', accent: '#74b9ff', highlight: '#2980b9', decal: 'stripes', style: 'car', type: 'car' },
+  { name: 'Gold Rush', body: '#f39c12', accent: '#ffeaa7', highlight: '#e67e22', decal: 'flames', style: 'car', type: 'car' },
+  { name: 'Big SUV', body: '#34495e', accent: '#95a5a6', highlight: '#2c3e50', decal: 'bolts', style: 'suv', type: 'suv' },
+  { name: 'School Bus', body: '#f1c40f', accent: '#000', highlight: '#f39c12', decal: 'stripes', style: 'bus', type: 'bus' },
+  { name: 'Stretch Limo', body: '#e8e8e8', accent: '#222', highlight: '#ccc', decal: 'stars', style: 'limo', type: 'limo' }
+];
+const ROSTER_COUNT = TRUCK_ROSTER.length;
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let gameSpeed = 1.6;
+let maxSpeed = 6;
+let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'playerselect' | 'countdown' | 'playing' | 'paused' | 'gameover'
+let gameMode = 'rally'; // 'rally' | 'frenzy' | 'battle'
+let roundTimer = 0; // countdown timer for frenzy/battle (frames)
+let screenShake = 0;
+let wheelAngle = 0;
+let flashTimer = 0;
+let flashColor = '';
+let titleBounce = 0;
+let numPlayers = 1;
+let transitionAlpha = 0;
+let transitionTarget = '';
+
+// Countdown state
+let countdownTimer = 0;
+let countdownText = '';
+
+// Battle sumo state
+let battleScores = [0, 0]; // P1, P2 points
+let battleWinScore = 5;
+let battleResetTimer = 0; // timer for resetting positions after a point
+let battleAutoCharge = 2; // auto-charge speed on mobile
+
+// Environment state
+let currentEnvIndex = 0;
+let envTransitionTimer = 0;
+let envAnnouncementText = '';
+let envAnnouncementTimer = 0;
+let lavaBubbles = [];
+let neonSpotlights = [{ x: 200, angle: 0, speed: 0.02, color: '#ff00ff' }, { x: 500, angle: Math.PI, speed: -0.015, color: '#00ffff' }, { x: 650, angle: 1, speed: 0.025, color: '#ffff00' }];
+
+// Truck picker state
+let selectedTruck = parseInt(localStorage.getItem('monsterRallyTruck') || '0');
+if (selectedTruck < 0 || selectedTruck >= ROSTER_COUNT) selectedTruck = 0;
+let selectedTruck2 = 1;
+let pickerPlayer = 1; // which player is picking
+let pickerConfirmed = false;
+let pickerPulse = 0;
+
+// Per-truck best scores
+function getBestScore(truckIdx) {
+  return parseInt(localStorage.getItem('monsterRallyBest_' + truckIdx) || localStorage.getItem('monsterRallyBest') || '0');
+}
+function setBestScore(truckIdx, val) {
+  localStorage.setItem('monsterRallyBest_' + truckIdx, val);
+}
+
+// Player state factory
+function createPlayer(truckIdx, groundOffset) {
+  const gndY = GROUND_Y + (groundOffset || 0);
+  return {
+    score: 0, combo: 0, comboTimer: 0, totalCrushes: 0,
+    truckIdx: truckIdx,
+    groundY: gndY,
+    truck: { x: 140, y: gndY, w: 90, h: 50, vy: 0, grounded: true, jumping: false, slamming: false, squish: 0, tilt: 0 },
+    jumpPressed: false, jumpHeld: false, battleMoveDir: 0, battleFacing: 1,
+    airborneFrames: 0, flipAngle: 0, flipInProgress: false, flipsCompleted: 0, flipStarted: false,
+    // Power-up state
+    activePowerUp: null, powerUpTimer: 0, megaScale: 1.0,
+    // Tire tracks
+    tireTracks: []
+  };
+}
+
+let players = [];
+let player1 = null;
+let player2 = null;
+
+// Audio state
+let audioMuted = localStorage.getItem('monsterRallyMuted') === 'true';
+let audioCtx = null;
+let audioInitialized = false;
+let engineOsc = null;
+let engineGain = null;
+let engineLfo = null;
+let engineLfoGain = null;
+let bigAirNode = null;
+let bigAirGain = null;
+let bigAirPlaying = false;
+
+// Legacy compat aliases (used by drawing code)
+let score = 0;
+let combo = 0;
+let comboTimer = 0;
+let bestScore = parseInt(localStorage.getItem('monsterRallyBest') || '0');
+
+// Power-ups array
+let powerUps = [];
+let powerUpSpawnTimer = 300;
+
+// Arrays
+let obstacles = [];
+let particles = [];
+let stars = [];
+let groundBumps = [];
+let bgClouds = [];
+let bgMountains = [];
+let dustTrail = [];
+
+// Initialize bg elements
+for (let i = 0; i < 6; i++) {
+  bgClouds.push({ x: Math.random() * W, y: 30 + Math.random() * 80, w: 60 + Math.random() * 80, speed: 0.2 + Math.random() * 0.3 });
+}
+for (let i = 0; i < 8; i++) {
+  bgMountains.push({ x: i * 120, h: 40 + Math.random() * 60, w: 100 + Math.random() * 60 });
+}
+
+// Timers
+let obstacleTimer = 0;
+let starTimer = 0;
+
+// ============================================================
+// SOUND ENGINE (Web Audio API)
+// ============================================================
+function initAudio() {
+  if (audioInitialized) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioInitialized = true;
+    startEngine();
+  } catch(e) {
+    console.warn('Web Audio not available');
+  }
+}
+
+let engineBeatInterval = null;
+
+function startEngine() {
+  if (!audioCtx || audioMuted) return;
+  if (engineBeatInterval) return;
+
+  // Rhythmic kick drum pattern — subtle heartbeat that speeds up with game
+  function playKick() {
+    if (!audioCtx || audioMuted) return;
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(60, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.05);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.08);
+  }
+
+  // Start the beat
+  playKick();
+  engineBeatInterval = setInterval(() => {
+    if (audioMuted || gameState === 'paused') return;
+    playKick();
+  }, 500); // Will be adjusted by updateEngineSound
+}
+
+function stopEngine() {
+  if (engineBeatInterval) {
+    clearInterval(engineBeatInterval);
+    engineBeatInterval = null;
+  }
+  engineOsc = null;
+  engineGain = null;
+  engineLfo = null;
+  engineLfoGain = null;
+}
+
+function updateEngineSound() {
+  if (!audioCtx || audioMuted || !engineBeatInterval) return;
+  // Adjust beat interval based on speed — faster game = faster heartbeat
+  const speedFactor = Math.max(0, (gameSpeed - 1.5) / (maxSpeed - 1.5));
+  const interval = Math.max(200, 600 - speedFactor * 350); // 600ms slow → 250ms fast
+  clearInterval(engineBeatInterval);
+  engineBeatInterval = setInterval(() => {
+    if (audioMuted || gameState === 'paused') return;
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(60, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.05);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.08);
+  }, interval);
+}
+
+function playSound(type, param) {
+  if (!audioCtx || audioMuted) return;
+  const t = audioCtx.currentTime;
+
+  if (type === 'crush') {
+    // White noise burst + low thump
+    const bufferSize = audioCtx.sampleRate * CRUSH_NOISE_DURATION;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 800 + Math.random() * 400;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.value = 0.4;
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    noise.connect(lp);
+    lp.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    noise.start(t);
+    noise.stop(t + 0.15);
+
+    // Thump
+    const thump = audioCtx.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.value = CRUSH_THUMP_FREQ + Math.random() * 20;
+    const thumpGain = audioCtx.createGain();
+    thumpGain.gain.value = 0.5;
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    thump.connect(thumpGain);
+    thumpGain.connect(audioCtx.destination);
+    thump.start(t);
+    thump.stop(t + 0.1);
+  }
+
+  else if (type === 'star') {
+    // Quick ascending C5 E5 G5
+    STAR_NOTES.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const g = audioCtx.createGain();
+      g.gain.value = 0;
+      g.gain.setValueAtTime(0.25, t + i * 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.04 + 0.08);
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.start(t + i * 0.04);
+      osc.stop(t + i * 0.04 + 0.1);
+    });
+  }
+
+  else if (type === 'ramp') {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(RAMP_FREQ_START, t);
+    osc.frequency.exponentialRampToValueAtTime(RAMP_FREQ_END, t + 0.25);
+    const g = audioCtx.createGain();
+    g.gain.value = 0.2;
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.35);
+  }
+
+  else if (type === 'landing') {
+    const volume = Math.min(0.4, (param || 5) * 0.04);
+    const bufferSize = audioCtx.sampleRate * 0.05;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 200;
+    const g = audioCtx.createGain();
+    g.gain.value = volume;
+    noise.connect(lp);
+    lp.connect(g);
+    g.connect(audioCtx.destination);
+    noise.start(t);
+    noise.stop(t + 0.06);
+  }
+
+  else if (type === 'combo') {
+    const comboCount = param || 3;
+    const duration = 0.15 + Math.min(comboCount * 0.03, 0.2);
+    COMBO_CHORD.forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = freq * (1 + (comboCount - 3) * 0.05);
+      const g = audioCtx.createGain();
+      g.gain.value = 0.15;
+      g.gain.exponentialRampToValueAtTime(0.001, t + duration);
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + duration + 0.05);
+    });
+    // High sparkle
+    const sparkle = audioCtx.createOscillator();
+    sparkle.type = 'sine';
+    sparkle.frequency.value = 2000;
+    const sg = audioCtx.createGain();
+    sg.gain.value = 0.1;
+    sg.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    sparkle.connect(sg);
+    sg.connect(audioCtx.destination);
+    sparkle.start(t);
+    sparkle.stop(t + 0.05);
+  }
+
+  else if (type === 'horn') {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(HORN_FREQ, t);
+    osc.frequency.linearRampToValueAtTime(HORN_FREQ * 0.85, t + HORN_DURATION);
+    const g = audioCtx.createGain();
+    g.gain.value = 0.3;
+    g.gain.setValueAtTime(0.3, t + HORN_DURATION * 0.7);
+    g.gain.exponentialRampToValueAtTime(0.001, t + HORN_DURATION);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + HORN_DURATION + 0.05);
+  }
+
+  else if (type === 'powerup') {
+    // Deep whomp + ascending sparkle
+    const thump = audioCtx.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.value = 80;
+    thump.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+    const tg = audioCtx.createGain();
+    tg.gain.value = 0.4;
+    tg.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    thump.connect(tg); tg.connect(audioCtx.destination);
+    thump.start(t); thump.stop(t + 0.35);
+    [600, 800, 1000, 1300].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine'; osc.frequency.value = freq;
+      const g = audioCtx.createGain(); g.gain.value = 0;
+      g.gain.setValueAtTime(0.15, t + 0.05 + i * 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.05 + i * 0.05 + 0.12);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(t + 0.05 + i * 0.05); osc.stop(t + 0.05 + i * 0.05 + 0.15);
+    });
+  }
+
+  else if (type === 'countdown') {
+    const freq = param === 'GO' ? 880 : 440;
+    const dur = param === 'GO' ? 0.3 : 0.15;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'square'; osc.frequency.value = freq;
+    const g = audioCtx.createGain(); g.gain.value = 0.2;
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + dur + 0.05);
+  }
+
+  else if (type === 'flip') {
+    // Triumphant ascending arpeggio
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const g = audioCtx.createGain();
+      g.gain.value = 0;
+      g.gain.setValueAtTime(0.2, t + i * 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.04 + 0.15);
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.start(t + i * 0.04);
+      osc.stop(t + i * 0.04 + 0.2);
+    });
+  }
+}
+
+function startBigAir() {
+  if (!audioCtx || audioMuted || bigAirPlaying) return;
+  bigAirPlaying = true;
+
+  const bufferSize = audioCtx.sampleRate * 3;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+  bigAirNode = audioCtx.createBufferSource();
+  bigAirNode.buffer = buffer;
+  bigAirNode.loop = true;
+
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 800;
+  bp.Q.value = 2;
+
+  bigAirGain = audioCtx.createGain();
+  bigAirGain.gain.value = 0;
+  bigAirGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 0.5);
+
+  bigAirNode.connect(bp);
+  bp.connect(bigAirGain);
+  bigAirGain.connect(audioCtx.destination);
+  bigAirNode.start();
+}
+
+function stopBigAir() {
+  if (!bigAirPlaying || !bigAirGain) return;
+  bigAirPlaying = false;
+  try {
+    bigAirGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+    setTimeout(() => {
+      try { if (bigAirNode) bigAirNode.stop(); } catch(e) {}
+      bigAirNode = null;
+      bigAirGain = null;
+    }, 200);
+  } catch(e) {
+    bigAirNode = null;
+    bigAirGain = null;
+  }
+}
+
+function toggleMute() {
+  audioMuted = !audioMuted;
+  localStorage.setItem('monsterRallyMuted', audioMuted);
+  if (audioMuted) {
+    stopEngine();
+    stopBigAir();
+  } else if (audioInitialized && gameState === 'playing') {
+    startEngine();
+  }
+}
+
+// ============================================================
+// INPUT HANDLING (Two-player support)
+// ============================================================
+
+function getVirtualCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = W / canvas.width;
+  const scaleY = H / canvas.height;
+  let cx, cy;
+  if (e.touches) {
+    cx = (e.touches[0].clientX - rect.left) * scaleX;
+    cy = (e.touches[0].clientY - rect.top) * scaleY;
+  } else {
+    cx = (e.clientX - rect.left) * scaleX;
+    cy = (e.clientY - rect.top) * scaleY;
+  }
+  return { x: cx, y: cy };
+}
+
+let lastJumpTime = 0;
+function playerJump(p) {
+  if (!p) return;
+  const now = Date.now();
+  if (now - lastJumpTime < 20) return; // 20ms debounce for iPad touch
+  lastJumpTime = now;
+  p.jumpPressed = true; p.jumpHeld = true;
+}
+
+function handleDown(e) {
+  e.preventDefault();
+  initAudio();
+  const vc = getVirtualCoords(e);
+
+  if (gameState === 'title') {
+    // Back button (top-left corner)
+    if (vc.x < 70 && vc.y < 35) { try { window.history.back(); } catch(e2) { window.location.href = '/'; } return; }
+    gameState = 'picker'; pickerPlayer = 1; return;
+  }
+  if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
+  if (gameState === 'modeselect') { handleModeSelectClick(vc.x, vc.y); return; }
+  if (gameState === 'playerselect') { handlePlayerSelectClick(vc.x, vc.y); return; }
+  if (gameState === 'paused') { handlePauseClick(vc.x, vc.y); return; }
+  if (gameState === 'gameover') { gameState = 'modeselect'; return; }
+  if (gameState === 'countdown') return;
+
+  // Playing state — check pause button (top-right, left of mute)
+  if (vc.x > W - 70 && vc.x < W - 40 && vc.y < 30) { pauseGame(); return; }
+  if (vc.x > W - 100 && vc.y > H - 60) { playSound('horn'); return; }
+  if (vc.x > W - 45 && vc.y < 45) { toggleMute(); return; }
+
+  // Touch zones: left half = P1, right half = P2 (or P1 in single)
+  if (numPlayers === 2) {
+    if (vc.x < W / 2) playerJump(player1);
+    else playerJump(player2);
+  } else {
+    playerJump(player1);
+  }
+}
+
+function handleUp(e) {
+  e.preventDefault();
+  if (player1) player1.jumpHeld = false;
+  if (player2) player2.jumpHeld = false;
+}
+
+canvas.addEventListener('mousedown', handleDown);
+canvas.addEventListener('mouseup', handleUp);
+canvas.addEventListener('touchstart', handleDown, { passive: false });
+canvas.addEventListener('touchend', handleUp, { passive: false });
+
+document.addEventListener('keydown', (e) => {
+  initAudio();
+
+  // Menu navigation
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; return; }
+    if (gameState === 'picker') { confirmPicker(); return; }
+    if (gameState === 'modeselect') return;
+    if (gameState === 'playerselect') return;
+    if (gameState === 'gameover') { gameState = 'modeselect'; return; }
+  }
+
+  // Mode select keyboard shortcuts
+  if (gameState === 'modeselect') {
+    if (e.code === 'Digit1') selectMode('rally');
+    if (e.code === 'Digit2') selectMode('frenzy');
+    if (e.code === 'Digit3') selectMode('battle');
+    return;
+  }
+  if (gameState === 'playerselect') {
+    if (e.code === 'Digit1') startRallyWithPlayers(1);
+    if (e.code === 'Digit2') startRallyWithPlayers(2);
+    return;
+  }
+
+  // Picker navigation
+  if (gameState === 'picker') {
+    const rc = ROSTER_COUNT;
+    if (e.code === 'ArrowLeft') {
+      if (pickerPlayer === 1) selectedTruck = (selectedTruck + rc - 1) % rc;
+      else selectedTruck2 = (selectedTruck2 + rc - 1) % rc;
+      pickerPage = Math.floor((pickerPlayer === 1 ? selectedTruck : selectedTruck2) / PICKER_PER_PAGE);
+    }
+    if (e.code === 'ArrowRight') {
+      if (pickerPlayer === 1) selectedTruck = (selectedTruck + 1) % rc;
+      else selectedTruck2 = (selectedTruck2 + 1) % rc;
+      pickerPage = Math.floor((pickerPlayer === 1 ? selectedTruck : selectedTruck2) / PICKER_PER_PAGE);
+    }
+    return;
+  }
+
+  if (gameState !== 'playing' && gameState !== 'paused') return;
+
+  // Pause controls
+  if (gameState === 'paused') {
+    if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'Space') { e.preventDefault(); resumeGame(); }
+    if (e.code === 'KeyR') restartGame();
+    if (e.code === 'KeyQ') quitToMenu();
+    return;
+  }
+  if (e.code === 'Escape' || e.code === 'KeyP') { pauseGame(); return; }
+
+  // Player 2 controls: Arrow keys
+  if (e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (numPlayers === 2) playerJump(player2);
+    else playerJump(player1);
+  }
+  if (e.code === 'ArrowDown') {
+    const p = numPlayers === 2 ? player2 : player1;
+    if (p && !p.truck.grounded) p.truck.slamming = true;
+  }
+
+  // Player 1 controls: W/Space for jump, S for slam
+  if (e.code === 'Space') { e.preventDefault(); playerJump(player1); }
+  if (e.code === 'KeyW') { playerJump(player1); }
+  if (e.code === 'KeyS') {
+    if (player1 && !player1.truck.grounded) player1.truck.slamming = true;
+  }
+
+  // Battle mode: horizontal movement
+  if (gameMode === 'battle') {
+    if (e.code === 'KeyA' && player1) player1.battleMoveDir = -1;
+    if (e.code === 'KeyD' && player1) player1.battleMoveDir = 1;
+    if (e.code === 'ArrowLeft' && player2) player2.battleMoveDir = -1;
+    if (e.code === 'ArrowRight' && player2) player2.battleMoveDir = 1;
+  }
+
+  if (e.code === 'KeyH') playSound('horn');
+  if (e.code === 'KeyM') toggleMute();
+
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space' || e.code === 'KeyW') { if (player1) player1.jumpHeld = false; }
+  if (e.code === 'ArrowUp') { if (player2) player2.jumpHeld = false; else if (player1) player1.jumpHeld = false; }
+  // Battle movement stop
+  if (gameMode === 'battle') {
+    if (e.code === 'KeyA' || e.code === 'KeyD') { if (player1) player1.battleMoveDir = 0; }
+    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { if (player2) player2.battleMoveDir = 0; }
+  }
+});
+
+// ============================================================
+// TRUCK PICKER + MODE SELECT + COUNTDOWN
+// ============================================================
+let pickerPage = 0;
+const PICKER_PER_PAGE = 4;
+const PICKER_PAGES = Math.ceil(ROSTER_COUNT / PICKER_PER_PAGE);
+
+function getPickerTruckRects() {
+  const rects = [];
+  const startX = 80, gap = 170, y = 170;
+  const pageStart = pickerPage * PICKER_PER_PAGE;
+  const pageEnd = Math.min(pageStart + PICKER_PER_PAGE, ROSTER_COUNT);
+  for (let i = pageStart; i < pageEnd; i++) {
+    const col = i - pageStart;
+    rects.push({ x: startX + col * gap, y, w: 140, h: 120, idx: i });
+  }
+  return rects;
+}
+
+function handlePickerClick(vx, vy) {
+  // Check page arrows
+  if (vy >= 210 && vy <= 260) {
+    if (vx >= 20 && vx <= 60 && pickerPage > 0) { pickerPage--; return; }
+    if (vx >= W - 60 && vx <= W - 20 && pickerPage < PICKER_PAGES - 1) { pickerPage++; return; }
+  }
+
+  const rects = getPickerTruckRects();
+  for (let i = 0; i < rects.length; i++) {
+    const r = rects[i];
+    if (vx >= r.x && vx <= r.x + r.w && vy >= r.y && vy <= r.y + r.h) {
+      const truckIdx = r.idx;
+      if (pickerPlayer === 1) {
+        if (selectedTruck === truckIdx) confirmPicker();
+        else selectedTruck = truckIdx;
+      } else {
+        if (selectedTruck2 === truckIdx) confirmPicker();
+        else selectedTruck2 = truckIdx;
+      }
+      return;
+    }
+  }
+}
+
+function confirmPicker() {
+  localStorage.setItem('monsterRallyTruck', selectedTruck);
+  if (pickerPlayer === 1) {
+    // Go to mode select
+    gameState = 'modeselect';
+  } else {
+    // P2 picked, start countdown
+    startCountdown();
+  }
+}
+
+function handleModeSelectClick(vx, vy) {
+  const btnW = 200, btnH = 65, gap = 20;
+  const totalH = btnH * 3 + gap * 2;
+  const by = 160;
+  // 3 vertically stacked buttons
+  for (let i = 0; i < 3; i++) {
+    const bx = W / 2 - btnW / 2;
+    const btnY = by + i * (btnH + gap);
+    if (vx >= bx && vx <= bx + btnW && vy >= btnY && vy <= btnY + btnH) {
+      if (i === 0) selectMode('rally');
+      else if (i === 1) selectMode('frenzy');
+      else if (i === 2) selectMode('battle');
+      return;
+    }
+  }
+}
+
+function selectMode(mode) {
+  gameMode = mode;
+  if (mode === 'rally') {
+    // Rally: ask 1P or 2P
+    gameState = 'playerselect';
+  } else if (mode === 'frenzy') {
+    // Frenzy: always 1P
+    numPlayers = 1;
+    startCountdown();
+  } else if (mode === 'battle') {
+    // Battle: always 2P, need P2 to pick truck
+    numPlayers = 2;
+    pickerPlayer = 2;
+    selectedTruck2 = (selectedTruck + 1) % ROSTER_COUNT;
+    gameState = 'picker';
+  }
+}
+
+function handlePlayerSelectClick(vx, vy) {
+  const btnW = 180, btnH = 70, gap = 40;
+  const bx1 = W / 2 - btnW - gap / 2, by = 220;
+  const bx2 = W / 2 + gap / 2;
+  if (vy >= by && vy <= by + btnH) {
+    if (vx >= bx1 && vx <= bx1 + btnW) startRallyWithPlayers(1);
+    else if (vx >= bx2 && vx <= bx2 + btnW) startRallyWithPlayers(2);
+  }
+}
+
+function startRallyWithPlayers(n) {
+  numPlayers = n;
+  if (n === 2) {
+    pickerPlayer = 2;
+    selectedTruck2 = (selectedTruck + 1) % ROSTER_COUNT;
+    gameState = 'picker';
+  } else {
+    startCountdown();
+  }
+}
+
+function startCountdown() {
+  gameState = 'countdown';
+  countdownTimer = 180; // 3 seconds at 60fps
+  initGame();
+}
+
+function initGame() {
+  obstacles = [];
+  particles = [];
+  stars = [];
+  dustTrail = [];
+  powerUps = [];
+  currentEnvIndex = 0;
+  envTransitionTimer = 0;
+  envAnnouncementTimer = 0;
+  lavaBubbles = [];
+
+  // Mode-specific settings
+  if (gameMode === 'battle') {
+    gameSpeed = 0; // no scrolling in battle
+    obstacleTimer = 9999;
+    starTimer = 9999;
+    powerUpSpawnTimer = 9999;
+    roundTimer = 0; // no timer, first to 5 wins
+    battleScores = [0, 0];
+    battleResetTimer = 0;
+  } else if (gameMode === 'frenzy') {
+    gameSpeed = 2.4;
+    obstacleTimer = 10;
+    starTimer = 9999;
+    powerUpSpawnTimer = 9999;
+    roundTimer = 1800; // 30 seconds
+  } else {
+    gameSpeed = 1.6;
+    obstacleTimer = 80;
+    starTimer = 30;
+    powerUpSpawnTimer = 150;
+    roundTimer = 0;
+  }
+
+  players = [];
+  if (gameMode === 'battle') {
+    // Battle: face-to-face arena
+    player1 = createPlayer(selectedTruck, 0);
+    player1.truck.x = 150; // left side facing right
+    player1.battleFacing = 1; // 1 = facing right
+    players.push(player1);
+    player2 = createPlayer(selectedTruck2, 0);
+    player2.truck.x = 620; // right side facing left
+    player2.battleFacing = -1; // -1 = facing left
+    players.push(player2);
+  } else if (numPlayers === 2) {
+    player1 = createPlayer(selectedTruck, -10);
+    players.push(player1);
+    player2 = createPlayer(selectedTruck2, 10);
+    players.push(player2);
+  } else {
+    player1 = createPlayer(selectedTruck, 0);
+    players.push(player1);
+    player2 = null;
+  }
+
+  // Compat aliases
+  score = 0; combo = 0; comboTimer = 0;
+}
+
+function startPlaying() {
+  gameState = 'playing';
+  if (!audioMuted) startEngine();
+}
+
+// ============================================================
+// PAUSE SYSTEM
+// ============================================================
+function pauseGame() {
+  if (gameState !== 'playing') return;
+  gameState = 'paused';
+  // Engine beat skips ticks automatically when paused (checked in setInterval callback)
+  stopBigAir();
+}
+
+function resumeGame() {
+  if (gameState !== 'paused') return;
+  gameState = 'playing';
+  // Engine beat resumes automatically (checked in setInterval callback)
+}
+
+function restartGame() {
+  gameState = 'playing'; // temporarily so stopEngine works
+  stopEngine();
+  stopBigAir();
+  initGame();
+  startCountdown();
+}
+
+function quitToMenu() {
+  stopEngine();
+  stopBigAir();
+  gameState = 'modeselect';
+}
+
+function handlePauseClick(vx, vy) {
+  const btnW = 200, btnH = 50, gap = 15;
+  const bx = W / 2 - btnW / 2;
+  const baseY = 195;
+
+  // Resume button
+  if (vx >= bx && vx <= bx + btnW && vy >= baseY && vy <= baseY + btnH) {
+    resumeGame(); return;
+  }
+  // Restart button
+  const ry = baseY + btnH + gap;
+  if (vx >= bx && vx <= bx + btnW && vy >= ry && vy <= ry + btnH) {
+    restartGame(); return;
+  }
+  // Quit button
+  const qy = ry + btnH + gap;
+  if (vx >= bx && vx <= bx + btnW && vy >= qy && vy <= qy + btnH) {
+    quitToMenu(); return;
+  }
+}
+
+function drawPauseOverlay() {
+  // Semi-transparent dark overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+
+  // "PAUSED" title
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 48px "Arial Black", Impact, sans-serif';
+  ctx.strokeText('PAUSED', W / 2, 150);
+  ctx.fillText('PAUSED', W / 2, 150);
+
+  // Buttons
+  const btnW = 200, btnH = 50, gap = 15;
+  const bx = W / 2 - btnW / 2;
+  const baseY = 195;
+
+  // Resume (green)
+  ctx.fillStyle = '#22cc44';
+  ctx.beginPath(); ctx.roundRect(bx, baseY, btnW, btnH, 12); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 22px "Arial Black", Impact, sans-serif';
+  ctx.fillText('\u25B6  RESUME', W / 2, baseY + 33);
+
+  // Restart (orange)
+  const ry = baseY + btnH + gap;
+  ctx.fillStyle = '#ff8800';
+  ctx.beginPath(); ctx.roundRect(bx, ry, btnW, btnH, 12); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillText('\u21BA  RESTART', W / 2, ry + 33);
+
+  // Quit (red)
+  const qy = ry + btnH + gap;
+  ctx.fillStyle = '#cc2222';
+  ctx.beginPath(); ctx.roundRect(bx, qy, btnW, btnH, 12); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillText('\u2715  QUIT', W / 2, qy + 33);
+
+  // Keyboard hints
+  ctx.fillStyle = '#888'; ctx.font = '12px Arial';
+  ctx.fillText('ESC/P = Resume  \u2022  R = Restart  \u2022  Q = Quit', W / 2, qy + btnH + 30);
+  ctx.textAlign = 'left';
+}
+
+function drawPauseButton() {
+  // Pause icon in top-right (next to mute button, slightly left of it)
+  const px = W - 55, py = 15;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.arc(px, py, 14, 0, Math.PI * 2); ctx.fill();
+  // Two vertical bars
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.fillRect(px - 5, py - 6, 3, 12);
+  ctx.fillRect(px + 2, py - 6, 3, 12);
+}
+
+function drawPickerScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.fillRect(0, 0, W, H);
+  pickerPulse += 0.06;
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 30px "Arial Black", Impact, sans-serif';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+  const title = pickerPlayer === 1 ? 'CHOOSE YOUR RIDE!' : 'PLAYER 2 — PICK YOUR RIDE!';
+  ctx.strokeText(title, W / 2, 55); ctx.fillText(title, W / 2, 55);
+
+  // Category label
+  const pageStart = pickerPage * PICKER_PER_PAGE;
+  const pageLabel = pageStart < 4 ? 'CLASSIC TRUCKS' : pageStart < 8 ? 'MONSTER TRUCKS' : 'CARS & VEHICLES';
+  const pageIcon = pageStart < 8 ? '🏁' : '🚗';
+  ctx.fillStyle = '#aaa'; ctx.font = '14px Arial';
+  ctx.fillText(pageIcon + ' ' + pageLabel, W / 2, 80);
+
+  const rects = getPickerTruckRects();
+  const activeTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
+
+  for (let ri = 0; ri < rects.length; ri++) {
+    const r = rects[ri], t = TRUCK_ROSTER[r.idx];
+    const isSelected = r.idx === activeTruck;
+    const isP1Pick = pickerPlayer === 2 && r.idx === selectedTruck;
+
+    ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
+    if (isP1Pick) ctx.fillStyle = 'rgba(255,100,0,0.1)';
+    ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 10); ctx.fill();
+
+    if (isSelected) {
+      const glow = 0.5 + Math.sin(pickerPulse) * 0.3;
+      ctx.strokeStyle = t.accent; ctx.lineWidth = 3; ctx.globalAlpha = glow;
+      ctx.beginPath(); ctx.roundRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4, 12); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    if (isP1Pick) {
+      ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 10); ctx.stroke();
+      ctx.fillStyle = '#ff4400'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('P1', r.x + r.w / 2, r.y + r.h + 14);
+    }
+
+    // Draw vehicle preview using unified function
+    ctx.save();
+    ctx.translate(r.x + r.w / 2, r.y + 50);
+    ctx.scale(1.2, 1.2);
+    drawVehiclePreview(-45, -25, t, false, 0);
+    ctx.restore();
+
+    // Name
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px "Arial Black", Impact, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(t.name, r.x + r.w / 2, r.y + r.h - 18);
+
+    // Style/type badge
+    let badge, badgeColor;
+    if (t.style === 'classic') { badge = 'CLASSIC'; badgeColor = '#ff6600'; }
+    else if (t.style === 'monster') { badge = 'MONSTER'; badgeColor = '#44ff44'; }
+    else { badge = t.type.toUpperCase(); badgeColor = '#4488ff'; }
+    ctx.fillStyle = badgeColor; ctx.font = '9px Arial';
+    ctx.fillText(badge, r.x + r.w / 2, r.y + 15);
+
+    // Per-truck best score
+    const best = getBestScore(r.idx);
+    if (best > 0) {
+      ctx.fillStyle = '#ffd700'; ctx.font = '11px Arial';
+      ctx.fillText('Best: ⭐ ' + best, r.x + r.w / 2, r.y + r.h - 5);
+    }
+  }
+
+  // Page arrows
+  if (PICKER_PAGES > 1) {
+    ctx.font = 'bold 36px Arial'; ctx.textAlign = 'center';
+    if (pickerPage > 0) {
+      ctx.fillStyle = '#fff';
+      ctx.fillText('◀', 40, 240);
+    } else {
+      ctx.fillStyle = '#333';
+      ctx.fillText('◀', 40, 240);
+    }
+    if (pickerPage < PICKER_PAGES - 1) {
+      ctx.fillStyle = '#fff';
+      ctx.fillText('▶', W - 40, 240);
+    } else {
+      ctx.fillStyle = '#333';
+      ctx.fillText('▶', W - 40, 240);
+    }
+    // Page dots
+    for (let p = 0; p < PICKER_PAGES; p++) {
+      ctx.fillStyle = p === pickerPage ? '#ffcc00' : '#555';
+      ctx.beginPath(); ctx.arc(W / 2 - (PICKER_PAGES - 1) * 8 + p * 16, 310, 4, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  ctx.fillStyle = '#aaa'; ctx.font = '13px Arial'; ctx.textAlign = 'center';
+  const blink = Math.sin(Date.now() * 0.004) > 0;
+  if (blink) { ctx.fillStyle = '#fff'; ctx.fillText('TAP a vehicle, then TAP again to confirm!', W / 2, H - 50); }
+  ctx.fillStyle = '#666'; ctx.font = '12px Arial';
+  ctx.fillText('◀ ▶ to browse pages  •  Arrow keys to pick  •  Space/Enter to confirm', W / 2, H - 30);
+  ctx.textAlign = 'left';
+}
+
+function drawModeSelectScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 34px "Arial Black", Impact, sans-serif';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+  ctx.strokeText('CHOOSE A MODE!', W / 2, 80);
+  ctx.fillText('CHOOSE A MODE!', W / 2, 80);
+
+  // Selected truck preview
+  ctx.save();
+  ctx.translate(W / 2, 125);
+  ctx.scale(0.7, 0.7);
+  drawVehiclePreview(-45, -25, TRUCK_ROSTER[selectedTruck], true, 0);
+  ctx.restore();
+
+  const btnW = 220, btnH = 65, gap = 15;
+  const by = 160;
+  const modes = [
+    { label: 'RALLY', desc: 'Classic driving fun!', color: 'rgba(34,204,68,', key: '1' },
+    { label: 'CRUSH FRENZY', desc: '30 sec smash attack!', color: 'rgba(255,68,0,', key: '2' },
+    { label: 'BATTLE', desc: '2 players, most crushes wins!', color: 'rgba(136,51,204,', key: '3' }
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    const m = modes[i];
+    const btnY = by + i * (btnH + gap);
+    const bx = W / 2 - btnW / 2;
+    const pulse = 0.7 + Math.sin(Date.now() * 0.004 + i * 1.2) * 0.25;
+
+    ctx.fillStyle = m.color + pulse + ')';
+    ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 15); ctx.fill();
+
+    // Border
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 15); ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Arial Black", Impact, sans-serif';
+    ctx.fillText(m.label, W / 2, btnY + 30);
+
+    // Description
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '12px Arial';
+    ctx.fillText(m.desc, W / 2, btnY + 50);
+
+    // Key hint
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '11px Arial';
+    ctx.fillText('[' + m.key + ']', bx + btnW - 20, btnY + 18);
+  }
+
+  ctx.fillStyle = '#666'; ctx.font = '12px Arial';
+  ctx.fillText('Press 1, 2, or 3  •  or tap a button', W / 2, H - 25);
+  ctx.textAlign = 'left';
+}
+
+function drawPlayerSelectScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 36px "Arial Black", Impact, sans-serif';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+  ctx.strokeText('HOW MANY PLAYERS?', W / 2, 140);
+  ctx.fillText('HOW MANY PLAYERS?', W / 2, 140);
+
+  ctx.save();
+  ctx.translate(W / 2, 190);
+  ctx.scale(0.8, 0.8);
+  drawVehiclePreview(-45, -25, TRUCK_ROSTER[selectedTruck], true, 0);
+  ctx.restore();
+
+  const btnW = 180, btnH = 70, gap = 40;
+  const bx1 = W / 2 - btnW - gap / 2, by = 230;
+  const bx2 = W / 2 + gap / 2;
+
+  const pulse1 = 0.7 + Math.sin(Date.now() * 0.004) * 0.25;
+  ctx.fillStyle = `rgba(34,204,68,${pulse1})`;
+  ctx.beginPath(); ctx.roundRect(bx1, by, btnW, btnH, 15); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 28px "Arial Black", Impact, sans-serif';
+  ctx.fillText('1 PLAYER', bx1 + btnW / 2, by + 45);
+
+  const pulse2 = 0.7 + Math.sin(Date.now() * 0.004 + 1) * 0.25;
+  ctx.fillStyle = `rgba(34,100,255,${pulse2})`;
+  ctx.beginPath(); ctx.roundRect(bx2, by, btnW, btnH, 15); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillText('2 PLAYERS', bx2 + btnW / 2, by + 45);
+
+  ctx.fillStyle = '#888'; ctx.font = '14px Arial';
+  ctx.fillText('Press 1 or 2, or tap a button', W / 2, by + btnH + 35);
+  ctx.textAlign = 'left';
+}
+
+function drawGameOverScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+
+  const bounce = Math.sin(Date.now() * 0.005) * 5;
+
+  if (gameMode === 'battle' && player1 && player2) {
+    // Battle sumo: show winner
+    const p1c = TRUCK_ROSTER[player1.truckIdx];
+    const p2c = TRUCK_ROSTER[player2.truckIdx];
+
+    let winText, winColor;
+    if (battleScores[0] >= battleWinScore) { winText = 'PLAYER 1 WINS!'; winColor = p1c.body; }
+    else { winText = 'PLAYER 2 WINS!'; winColor = p2c.body; }
+
+    // Big winner text
+    ctx.fillStyle = winColor;
+    ctx.font = 'bold 44px "Arial Black", Impact, sans-serif';
+    ctx.strokeText(winText, W / 2, 110 + bounce);
+    ctx.fillText(winText, W / 2, 110 + bounce);
+
+    // Score display
+    ctx.save(); ctx.translate(W / 4, 200);
+    ctx.scale(0.8, 0.8);
+    drawVehiclePreview(-45, -25, p1c, false, 0);
+    ctx.restore();
+    ctx.fillStyle = p1c.body; ctx.font = 'bold 18px Arial';
+    ctx.fillText('P1: ' + p1c.name, W / 4, 250);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 36px "Arial Black", Impact, sans-serif';
+    ctx.strokeText(battleScores[0] + ' pts', W / 4, 295);
+    ctx.fillText(battleScores[0] + ' pts', W / 4, 295);
+
+    ctx.save(); ctx.translate(W * 3 / 4, 200);
+    ctx.scale(0.8, 0.8);
+    drawVehiclePreview(-45, -25, p2c, false, 0);
+    ctx.restore();
+    ctx.fillStyle = p2c.body; ctx.font = 'bold 18px Arial';
+    ctx.fillText('P2: ' + p2c.name, W * 3 / 4, 250);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 36px "Arial Black", Impact, sans-serif';
+    ctx.strokeText(battleScores[1] + ' pts', W * 3 / 4, 295);
+    ctx.fillText(battleScores[1] + ' pts', W * 3 / 4, 295);
+
+    ctx.fillStyle = winColor; ctx.font = 'bold 32px "Arial Black", Impact, sans-serif';
+    const winBounce = Math.sin(Date.now() * 0.006) * 4;
+    ctx.strokeText(winText, W / 2, 350 + winBounce);
+    ctx.fillText(winText, W / 2, 350 + winBounce);
+  } else {
+    // Frenzy/Rally: show TIME'S UP
+    ctx.fillStyle = '#ff4400';
+    ctx.font = 'bold 44px "Arial Black", Impact, sans-serif';
+    ctx.strokeText("TIME'S UP!", W / 2, 110 + bounce);
+    ctx.fillText("TIME'S UP!", W / 2, 110 + bounce);
+
+    // Single score
+    ctx.save(); ctx.translate(W / 2, 190);
+    ctx.scale(1.0, 1.0);
+    drawVehiclePreview(-45, -25, TRUCK_ROSTER[player1.truckIdx], false, 0);
+    ctx.restore();
+
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 48px "Arial Black", Impact, sans-serif';
+    ctx.strokeText('⭐ ' + player1.score, W / 2, 280);
+    ctx.fillText('⭐ ' + player1.score, W / 2, 280);
+
+    ctx.fillStyle = '#ffcc00'; ctx.font = 'bold 22px Arial';
+    ctx.fillText('CRUSHES: ' + player1.totalCrushes, W / 2, 320);
+  }
+
+  // Tap to continue
+  const blink = Math.sin(Date.now() * 0.004) > 0;
+  if (blink) {
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
+    ctx.fillText('TAP TO PLAY AGAIN!', W / 2, H - 40);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawCountdown() {
+  const secs = Math.ceil(countdownTimer / 60);
+  const txt = secs > 0 ? String(secs) : 'GO!';
+  const progress = (countdownTimer % 60) / 60;
+  const scale = 1 + (1 - progress) * 0.5;
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.translate(W / 2, H / 2 - 30);
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = progress > 0.1 ? 1 : progress * 10;
+  ctx.fillStyle = txt === 'GO!' ? '#44ff44' : '#fff';
+  ctx.font = 'bold 80px "Arial Black", Impact, sans-serif';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 8;
+  ctx.strokeText(txt, 0, 0); ctx.fillText(txt, 0, 0);
+  ctx.restore();
+  ctx.textAlign = 'left';
+}
+
+// ============================================================
+// ENTITY SPAWNING
+// ============================================================
+function spawnObstacle() {
+  let types;
+  if (gameMode === 'frenzy' || gameMode === 'battle') {
+    types = ['red_racer','red_racer','red_racer','cool_blue','cool_blue','cool_blue',
+             'gold_rush','gold_rush','big_suv','big_suv',
+             'school_bus','stretch_limo',
+             'barrel','barrel','portapotty','tvstack','haybale','haybale'];
+  } else {
+    types = ['red_racer','red_racer','cool_blue','cool_blue','gold_rush','gold_rush',
+             'big_suv','big_suv','school_bus','stretch_limo',
+             'ramp','ramp',
+             'barrel','portapotty','tvstack','haybale','haybale'];
+  }
+  const type = types[Math.floor(Math.random() * types.length)];
+  const obs = { x: W + 50, type, crushed: false, crushAnim: 0 };
+
+  if (type === 'red_racer') { obs.w = 55; obs.h = 28; obs.color = '#e74c3c'; obs.points = 8; }
+  else if (type === 'cool_blue') { obs.w = 55; obs.h = 28; obs.color = '#3498db'; obs.points = 8; }
+  else if (type === 'gold_rush') { obs.w = 55; obs.h = 28; obs.color = '#f39c12'; obs.points = 8; }
+  else if (type === 'big_suv') { obs.w = 65; obs.h = 35; obs.color = '#2c3e50'; obs.points = 10; }
+  else if (type === 'school_bus') { obs.w = 100; obs.h = 40; obs.color = '#f1c40f'; obs.points = 15; }
+  else if (type === 'stretch_limo') { obs.w = 110; obs.h = 30; obs.color = '#ecf0f1'; obs.points = 20; }
+  else if (type === 'ramp') { obs.w = 60; obs.h = 25; obs.color = '#e67e22'; obs.points = 0; }
+  else if (type === 'barrel') { obs.w = 40; obs.h = 30; obs.color = '#8B4513'; obs.points = 8; }
+  else if (type === 'portapotty') { obs.w = 30; obs.h = 45; obs.color = '#2288cc'; obs.points = 15; obs.tipAngle = 0; }
+  else if (type === 'tvstack') { obs.w = 50; obs.h = 40; obs.color = '#555555'; obs.points = 12; }
+  else if (type === 'haybale') { obs.w = 35; obs.h = 25; obs.color = '#DAA520'; obs.points = 5; }
+
+  obs.y = GROUND_Y - (obs.h || 25);
+  obstacles.push(obs);
+}
+
+function spawnStar(x, y) {
+  stars.push({ x: x || W + 50, y: y || (GROUND_Y - 100 - Math.random() * 100), collected: false, bobPhase: Math.random() * Math.PI * 2 });
+}
+
+function spawnCrushParticles(x, y, color) {
+  for (let i = 0; i < 20; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 12,
+      vy: -Math.random() * 10 - 2,
+      size: 3 + Math.random() * 6,
+      color: Math.random() > 0.5 ? color : (Math.random() > 0.5 ? '#ff6600' : '#ffcc00'),
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02,
+      type: 'spark'
+    });
+  }
+  particles.push({
+    x, y: y - 20,
+    vx: 0, vy: -2,
+    size: 1,
+    color: '#fff',
+    life: 1,
+    decay: 0.02,
+    type: 'text',
+    text: combo > 1 ? `CRUSH x${combo}!` : ['BOOM!','CRUSH!','SMASH!','POW!','YEAH!'][Math.floor(Math.random()*5)]
+  });
+}
+
+function spawnCrushParticlesColored(x, y, colors) {
+  for (let i = 0; i < 20; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 12,
+      vy: -Math.random() * 10 - 2,
+      size: 3 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02,
+      type: 'spark'
+    });
+  }
+  particles.push({
+    x, y: y - 20,
+    vx: 0, vy: -2, size: 1, color: '#fff', life: 1, decay: 0.02, type: 'text',
+    text: combo > 1 ? `CRUSH x${combo}!` : ['BOOM!','CRUSH!','SMASH!','POW!','YEAH!'][Math.floor(Math.random()*5)]
+  });
+}
+
+function spawnLandParticles(x, y) {
+  for (let i = 0; i < 10; i++) {
+    particles.push({
+      x: x + (Math.random()-0.5) * 40, y,
+      vx: (Math.random()-0.5) * 4,
+      vy: -Math.random() * 3,
+      size: 2 + Math.random() * 4,
+      color: '#8B7355',
+      life: 1,
+      decay: 0.03,
+      type: 'dust'
+    });
+  }
+}
+
+function spawnStarParticles(x, y) {
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * 4,
+      vy: Math.sin(angle) * 4,
+      size: 3 + Math.random() * 3,
+      color: Math.random() > 0.5 ? '#ffd700' : '#fff200',
+      life: 1,
+      decay: 0.025,
+      type: 'spark'
+    });
+  }
+}
+
+function spawnFlipParticles(x, y, truckIdx, flipCount) {
+  const truckColors = TRUCK_ROSTER[truckIdx || selectedTruck];
+  for (let i = 0; i < 30; i++) {
+    const angle = (i / 30) * Math.PI * 2;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * (3 + Math.random() * 5),
+      vy: Math.sin(angle) * (3 + Math.random() * 5),
+      size: 3 + Math.random() * 5,
+      color: [truckColors.body, truckColors.accent, '#fff', '#ffcc00'][Math.floor(Math.random() * 4)],
+      life: 1,
+      decay: 0.015 + Math.random() * 0.01,
+      type: 'spark'
+    });
+  }
+  const fc = flipCount || 1;
+  particles.push({
+    x, y: y - 30,
+    vx: 0, vy: -2.5, size: 1, color: '#ffcc00', life: 1, decay: 0.015, type: 'text',
+    text: fc > 1 ? `${fc}x BACKFLIP!` : 'BACKFLIP!'
+  });
+}
+
+// ============================================================
+// POWER-UP SPAWNING
+// ============================================================
+function spawnPowerUp() {
+  const speedPct = (gameSpeed - 1.6) / (maxSpeed - 1.6);
+  // Slow-Mo only available after speed bar reaches halfway
+  const available = POWERUP_TYPES.filter(p =>
+    p.effect === 'slowmo' ? speedPct >= 0.5 : true
+  );
+  const type = available[Math.floor(Math.random() * available.length)];
+  powerUps.push({
+    x: W + 50, y: GROUND_Y - 50 - Math.random() * 60,
+    type: type, collected: false, bobPhase: Math.random() * Math.PI * 2,
+    glowPhase: 0
+  });
+}
+
+function drawPowerUp(pu) {
+  const bob = Math.sin(pu.bobPhase) * 8;
+  const px = pu.x, py = pu.y + bob;
+  pu.glowPhase += 0.1;
+
+  // Outer pulsing glow (big and noticeable)
+  const glow = 0.2 + Math.sin(pu.glowPhase) * 0.15;
+  ctx.save();
+  ctx.globalAlpha = glow;
+  ctx.fillStyle = pu.type.color;
+  ctx.beginPath(); ctx.arc(px, py, 32, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  // Inner glow ring
+  ctx.save();
+  ctx.globalAlpha = 0.4 + Math.sin(pu.glowPhase * 1.5) * 0.2;
+  ctx.strokeStyle = pu.type.color; ctx.lineWidth = 3;
+  const ringR = 24 + Math.sin(pu.glowPhase * 2) * 3;
+  ctx.beginPath(); ctx.arc(px, py, ringR, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+
+  // Main circle
+  ctx.fillStyle = pu.type.color;
+  ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2); ctx.fill();
+
+  // White border
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2); ctx.stroke();
+
+  // Icon (bigger)
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px "Arial Black", Impact, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(pu.type.icon, px, py + 6);
+
+  // Name label above
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial';
+  ctx.fillText(pu.type.name, px, py - 26);
+  ctx.textAlign = 'left';
+}
+
+// ============================================================
+// ENVIRONMENT DRAWING
+// ============================================================
+function drawEnvironmentBg(env) {
+  // Sky gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  skyGrad.addColorStop(0, env.skyTop);
+  skyGrad.addColorStop(0.5, env.skyMid);
+  skyGrad.addColorStop(1, env.skyBot);
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sky stars
+  const bright = env.starBright;
+  for (let i = 0; i < 30; i++) {
+    const sx = (i * 127 + 50) % W;
+    const sy = (i * 73 + 10) % (GROUND_Y - 50);
+    const twinkle = 0.3 + Math.abs(Math.sin(Date.now() * 0.001 + i)) * 0.7;
+    ctx.globalAlpha = twinkle * bright;
+    ctx.fillStyle = '#fff';
+    const sz = env.features === 'moon' ? 3 : 2;
+    ctx.fillRect(sx, sy, sz, sz);
+  }
+  ctx.globalAlpha = 1;
+
+  // Feature-specific backgrounds
+  if (env.features === 'city') drawCityBg();
+  else if (env.features === 'neon') drawNeonBg();
+  else if (env.features === 'moon') drawMoonBg();
+  else if (env.features === 'lava') drawLavaBg();
+
+  // Mountains
+  ctx.fillStyle = env.mountainColor;
+  for (const m of bgMountains) {
+    ctx.beginPath();
+    ctx.moveTo(m.x, GROUND_Y);
+    ctx.lineTo(m.x + m.w / 2, GROUND_Y - m.h);
+    ctx.lineTo(m.x + m.w, GROUND_Y);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Clouds (if applicable)
+  if (env.cloudAlpha > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${env.cloudAlpha})`;
+    for (const c of bgClouds) {
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.y, c.w / 2, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Stadium lights (desert only)
+  if (env.features === 'desert') {
+    ctx.fillStyle = 'rgba(255,200,50,0.08)';
+    ctx.beginPath(); ctx.moveTo(50, GROUND_Y - 120); ctx.lineTo(100, GROUND_Y); ctx.lineTo(0, GROUND_Y); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(750, GROUND_Y - 120); ctx.lineTo(800, GROUND_Y); ctx.lineTo(700, GROUND_Y); ctx.fill();
+  }
+}
+
+function drawCityBg() {
+  // Skyline silhouette
+  ctx.fillStyle = '#0d0d1a';
+  const buildings = [
+    { x: 20, w: 50, h: 80 }, { x: 80, w: 35, h: 120 }, { x: 130, w: 60, h: 90 },
+    { x: 210, w: 40, h: 140 }, { x: 270, w: 55, h: 70 }, { x: 340, w: 45, h: 110 },
+    { x: 400, w: 65, h: 130 }, { x: 480, w: 35, h: 85 }, { x: 530, w: 50, h: 150 },
+    { x: 600, w: 40, h: 95 }, { x: 660, w: 55, h: 115 }, { x: 730, w: 45, h: 80 }
+  ];
+  for (const b of buildings) {
+    ctx.fillRect(b.x, GROUND_Y - b.h, b.w, b.h);
+    // Windows
+    ctx.fillStyle = 'rgba(255,200,50,0.3)';
+    for (let wy = GROUND_Y - b.h + 8; wy < GROUND_Y - 10; wy += 12) {
+      for (let wx = b.x + 5; wx < b.x + b.w - 5; wx += 10) {
+        if (Math.random() > 0.3) ctx.fillRect(wx, wy, 5, 7);
+      }
+    }
+    ctx.fillStyle = '#0d0d1a';
+  }
+  // Orange clouds
+  ctx.fillStyle = 'rgba(255,100,50,0.08)';
+  for (const c of bgClouds) {
+    ctx.beginPath(); ctx.ellipse(c.x, c.y + 30, c.w / 2, 20, 0, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawNeonBg() {
+  // Neon spotlights sweeping
+  for (const s of neonSpotlights) {
+    s.angle += s.speed;
+    const endX = s.x + Math.sin(s.angle) * 200;
+    const grad = ctx.createLinearGradient(s.x, 20, endX, GROUND_Y);
+    grad.addColorStop(0, s.color.replace(')', ',0.15)').replace('rgb', 'rgba'));
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = `${s.color}22`;
+    ctx.beginPath();
+    ctx.moveTo(s.x, 20);
+    ctx.lineTo(endX - 40, GROUND_Y);
+    ctx.lineTo(endX + 40, GROUND_Y);
+    ctx.closePath(); ctx.fill();
+  }
+  // Crowd silhouette
+  ctx.fillStyle = '#110022';
+  for (let x = 0; x < W; x += 12) {
+    const h = 8 + Math.sin(x * 0.3) * 4 + Math.sin(x * 0.7 + Date.now() * 0.003) * 2;
+    ctx.beginPath();
+    ctx.arc(x + 6, GROUND_Y - h, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(x + 4, GROUND_Y - h, 4, h);
+  }
+}
+
+function drawMoonBg() {
+  // Earth in background
+  ctx.fillStyle = '#2244aa';
+  ctx.beginPath(); ctx.arc(650, 80, 40, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#33aa55';
+  ctx.beginPath();
+  ctx.arc(640, 75, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.arc(660, 90, 10, 0, Math.PI * 2); ctx.fill();
+  // Atmosphere glow
+  ctx.strokeStyle = 'rgba(100,180,255,0.3)'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(650, 80, 44, 0, Math.PI * 2); ctx.stroke();
+}
+
+function drawLavaBg() {
+  // Volcanic mountains with glow
+  ctx.fillStyle = '#330000';
+  for (const m of bgMountains) {
+    ctx.beginPath();
+    ctx.moveTo(m.x, GROUND_Y); ctx.lineTo(m.x + m.w / 2, GROUND_Y - m.h - 20);
+    ctx.lineTo(m.x + m.w, GROUND_Y); ctx.closePath(); ctx.fill();
+    // Lava glow at peak
+    ctx.fillStyle = 'rgba(255,100,0,0.3)';
+    ctx.beginPath(); ctx.arc(m.x + m.w / 2, GROUND_Y - m.h - 15, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#330000';
+  }
+  // Floating embers
+  for (let i = 0; i < 15; i++) {
+    const ex = (i * 137 + Date.now() * 0.02) % W;
+    const ey = GROUND_Y - 30 - ((Date.now() * 0.03 + i * 50) % 200);
+    ctx.globalAlpha = 0.4 + Math.sin(i + Date.now() * 0.005) * 0.3;
+    ctx.fillStyle = Math.random() > 0.5 ? '#ff6600' : '#ffaa00';
+    ctx.beginPath(); ctx.arc(ex, ey, 1.5 + Math.random(), 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  // Lava bubbles in ground
+  for (let i = lavaBubbles.length - 1; i >= 0; i--) {
+    const b = lavaBubbles[i];
+    b.life -= 0.02;
+    b.y -= 0.5;
+    b.r += 0.1;
+    if (b.life <= 0) { lavaBubbles.splice(i, 1); continue; }
+    ctx.globalAlpha = b.life * 0.6;
+    ctx.fillStyle = '#ff6600';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  if (Math.random() > 0.95) {
+    lavaBubbles.push({ x: Math.random() * W, y: GROUND_Y + 15, r: 2, life: 1 });
+  }
+}
+
+function drawEnvironmentGround(env) {
+  // Ground
+  ctx.fillStyle = env.ground;
+  ctx.fillRect(0, GROUND_Y + 8, W, H - GROUND_Y);
+
+  // Ground texture
+  ctx.fillStyle = env.groundAccent;
+  for (let x = 0; x < W; x += 20) {
+    ctx.fillRect(x, GROUND_Y + 10, 12, 3);
+    ctx.fillRect(x + 7, GROUND_Y + 20, 8, 2);
+  }
+
+  // Moon craters
+  if (env.features === 'moon') {
+    ctx.fillStyle = '#777';
+    const craters = [80, 220, 400, 580, 720];
+    for (const cx of craters) {
+      ctx.beginPath(); ctx.ellipse(cx, GROUND_Y + 20, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // Lava ground glow
+  if (env.features === 'lava') {
+    ctx.fillStyle = 'rgba(255,100,0,0.15)';
+    ctx.fillRect(0, GROUND_Y + 8, W, 6);
+  }
+
+  // Road surface
+  ctx.fillStyle = env.road;
+  ctx.fillRect(0, GROUND_Y + 4, W, 6);
+}
+
+// ============================================================
+// ENTITY DRAWING
+// ============================================================
+
+// Draw truck with custom colors — used by picker preview and gameplay
+// Helper: darken a hex color by ~25%
+function getDarkShade(hex) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  const r = Math.max(0, Math.round(parseInt(hex.substr(0,2),16) * 0.75));
+  const g = Math.max(0, Math.round(parseInt(hex.substr(2,2),16) * 0.75));
+  const b = Math.max(0, Math.round(parseInt(hex.substr(4,2),16) * 0.75));
+  return '#' + ((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+// Helper: draw shared decals for classic and monster trucks
+function _drawTruckDecals(colors, dx, dy, panelW, panelH, bodyX, bodyY, bodyW, bodyH) {
+  ctx.fillStyle = colors.accent;
+  if (colors.decal === 'flames') {
+    for (let i = 0; i < 7; i++) {
+      ctx.beginPath();
+      ctx.moveTo(dx + i * (panelW / 7), dy + panelH);
+      ctx.lineTo(dx + i * (panelW / 7) + (panelW / 14), dy - 2 - Math.random() * 3);
+      ctx.lineTo(dx + (i + 1) * (panelW / 7), dy + panelH);
+      ctx.fill();
+    }
+  } else if (colors.decal === 'bolts') {
+    for (let i = 0; i < 2; i++) {
+      const bx = dx + 4 + i * (panelW * 0.4);
+      ctx.beginPath();
+      ctx.moveTo(bx + 5, dy - 2);
+      ctx.lineTo(bx, dy + panelH * 0.4);
+      ctx.lineTo(bx + 6, dy + panelH * 0.35);
+      ctx.lineTo(bx + 1, dy + panelH + 2);
+      ctx.lineTo(bx + 7, dy + panelH * 0.55);
+      ctx.lineTo(bx + 2, dy + panelH * 0.6);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else if (colors.decal === 'stripes') {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(dx, dy, panelW, panelH); ctx.clip();
+    ctx.fillStyle = colors.accent;
+    for (let i = 0; i < 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(dx + i * 14, dy - 2);
+      ctx.lineTo(dx + i * 14 + 5, dy - 2);
+      ctx.lineTo(dx + i * 14 - 6, dy + panelH + 2);
+      ctx.lineTo(dx + i * 14 - 11, dy + panelH + 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  } else if (colors.decal === 'stars') {
+    for (let i = 0; i < 3; i++) {
+      const sx = dx + 6 + i * (panelW / 3);
+      const sy = dy + panelH / 2;
+      const sr = 4;
+      ctx.beginPath();
+      for (let j = 0; j < 10; j++) {
+        const a = (j * Math.PI / 5) - Math.PI / 2;
+        const rr = j % 2 === 0 ? sr : sr * 0.45;
+        const fn = j === 0 ? 'moveTo' : 'lineTo';
+        ctx[fn](sx + Math.cos(a) * rr, sy + Math.sin(a) * rr);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else if (colors.decal === 'skull') {
+    const sc = dx + panelW * 0.4, scy = dy + panelH * 0.4;
+    ctx.beginPath(); ctx.arc(sc, scy, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(sc - 4, scy + 5); ctx.lineTo(sc, scy + 11); ctx.lineTo(sc + 4, scy + 5); ctx.fill();
+    ctx.fillStyle = colors.body;
+    ctx.beginPath(); ctx.arc(sc - 2.5, scy - 1, 1.5, 0, Math.PI * 2); ctx.arc(sc + 2.5, scy - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+  } else if (colors.decal === 'claws') {
+    ctx.strokeStyle = colors.accent; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(dx + 4 + i * 8, dy - 2);
+      ctx.lineTo(dx + 4 + i * 8 + 5, dy + panelH + 2);
+      ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+  } else if (colors.decal === 'horns') {
+    ctx.strokeStyle = colors.accent; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(bodyX + 5, bodyY + 6);
+    ctx.quadraticCurveTo(bodyX - 6, bodyY - 6, bodyX + 3, bodyY - 3);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bodyX + 5, bodyY + bodyH - 6);
+    ctx.quadraticCurveTo(bodyX - 6, bodyY + bodyH + 6, bodyX + 3, bodyY + bodyH + 3);
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+    ctx.fillStyle = colors.accent;
+    ctx.fillRect(bodyX + 12, bodyY + bodyH / 2 - 2, bodyW * 0.5, 3);
+  } else if (colors.decal === 'hazard') {
+    ctx.save(); ctx.beginPath();
+    ctx.rect(dx, dy, panelW, panelH); ctx.clip();
+    for (let i = -2; i < 10; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#000' : colors.accent;
+      ctx.beginPath();
+      ctx.moveTo(dx + i * 7, dy - 1); ctx.lineTo(dx + i * 7 + 5, dy - 1);
+      ctx.lineTo(dx + i * 7 - 8, dy + panelH + 1); ctx.lineTo(dx + i * 7 - 13, dy + panelH + 1);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawTruckWithColors(tx, ty, tw, th, colors, showExhaust, squishY) {
+  const dark = getDarkShade(colors.body);
+  const bodyW = tw - 10;
+  const bodyX = tx + 5;
+  const totalH = th - 16 - squishY;
+  const bodyBottom = ty + 8 + squishY + totalH;
+
+  // Stepped silhouette dimensions
+  const hoodW = bodyW * 0.25;
+  const cabW = bodyW * 0.40;
+  const bedW = bodyW * 0.35;
+  const cabH = totalH;
+  const hoodH = totalH * 0.70;
+  const bedH = totalH * 0.70;
+  const hoodX = bodyX + bedW + cabW;
+  const cabX = bodyX + bedW;
+  const bedX = bodyX;
+
+  // --- Underside shadow ---
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(bodyX, bodyBottom - 3, bodyW, 3);
+
+  // --- Bed (rear, lower) ---
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.moveTo(bedX, bodyBottom);
+  ctx.lineTo(bedX, bodyBottom - bedH);
+  ctx.lineTo(bedX + bedW, bodyBottom - bedH);
+  ctx.lineTo(bedX + bedW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+  // Bed dark lower panel
+  ctx.fillStyle = dark;
+  ctx.fillRect(bedX, bodyBottom - bedH * 0.35, bedW, bedH * 0.35);
+
+  // --- Cab (middle, tallest) ---
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.moveTo(cabX, bodyBottom);
+  ctx.lineTo(cabX, bodyBottom - cabH);
+  ctx.lineTo(cabX + cabW, bodyBottom - cabH);
+  ctx.lineTo(cabX + cabW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+  // Cab dark lower panel
+  ctx.fillStyle = dark;
+  ctx.fillRect(cabX, bodyBottom - cabH * 0.35, cabW, cabH * 0.35);
+
+  // --- Hood (front, lower) ---
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, bodyBottom);
+  ctx.lineTo(hoodX, bodyBottom - hoodH);
+  ctx.lineTo(hoodX + hoodW - 2, bodyBottom - hoodH + 2);
+  ctx.lineTo(hoodX + hoodW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+  // Hood dark lower panel
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, bodyBottom);
+  ctx.lineTo(hoodX, bodyBottom - hoodH * 0.35);
+  ctx.lineTo(hoodX + hoodW - 1, bodyBottom - hoodH * 0.35 + 1);
+  ctx.lineTo(hoodX + hoodW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Chrome grille (front face of hood) ---
+  const grilleX = hoodX + hoodW - 3;
+  const grilleTop = bodyBottom - hoodH + 3;
+  const grilleBot = bodyBottom - 2;
+  const grilleH = grilleBot - grilleTop;
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(grilleX, grilleTop, 4, grilleH);
+  ctx.fillStyle = '#c0c0c0';
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(grilleX + 0.5, grilleTop + 1 + i * (grilleH / 4), 3, grilleH / 4 - 2);
+  }
+  // Headlights
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(grilleX, grilleTop + 1, 3, 3);
+  ctx.fillRect(grilleX, grilleBot - 4, 3, 3);
+
+  // --- Front bumper ---
+  ctx.fillStyle = '#aaaaaa';
+  ctx.fillRect(hoodX + hoodW - 2, bodyBottom - 7, 5, 8);
+
+  // --- Window (in cab) ---
+  const winMargin = 3;
+  const winX = cabX + winMargin;
+  const winY = bodyBottom - cabH + winMargin;
+  const winW = cabW - winMargin * 2;
+  const winH = cabH * 0.50;
+  ctx.fillStyle = '#7ec8e3';
+  ctx.beginPath();
+  ctx.moveTo(winX + 3, winY);
+  ctx.lineTo(winX + winW, winY);
+  ctx.lineTo(winX + winW, winY + winH);
+  ctx.lineTo(winX, winY + winH);
+  ctx.closePath();
+  ctx.fill();
+  // Reflection highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(winX + 3, winY + 1);
+  ctx.lineTo(winX + winW * 0.4, winY + 1);
+  ctx.lineTo(winX + winW * 0.25, winY + winH * 0.6);
+  ctx.lineTo(winX + 1, winY + winH * 0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Fender arches ---
+  ctx.fillStyle = colors.body;
+  const fwY = bodyBottom;
+  // Front wheel arch
+  ctx.beginPath();
+  ctx.arc(tx + tw - 18, fwY + 5, 17, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(tx + tw - 18, fwY + 5, 17, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.arc(tx + tw - 18, fwY + 5, 15, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  // Rear wheel arch
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(tx + 18, fwY + 5, 17, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.arc(tx + 18, fwY + 5, 15, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Decals (on lower panel of bed + cab) ---
+  const decalX = bedX + 3;
+  const decalY = bodyBottom - bedH * 0.35 + 1;
+  const decalW = bedW + cabW - 10;
+  const decalH = bedH * 0.35 - 5;
+  _drawTruckDecals(colors, decalX, decalY, decalW, decalH, bodyX, bodyBottom - cabH, bodyW, cabH);
+
+  // --- Wheels (14px) ---
+  const wheelR = 14;
+  const wheelY2 = ty + th + 5 + squishY / 2;
+  drawWheelColored(tx + 18, wheelY2, wheelR, colors.body);
+  drawWheelColored(tx + tw - 18, wheelY2, wheelR, colors.body);
+
+  // --- Exhaust flames ---
+  if (showExhaust) {
+    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+    const exW = 8 + Math.random() * 12;
+    ctx.fillStyle = '#ff4400';
+    ctx.beginPath();
+    ctx.moveTo(bedX - 2, bodyBottom - 8);
+    ctx.lineTo(bedX - exW - 5, bodyBottom - 4);
+    ctx.lineTo(bedX - 2, bodyBottom);
+    ctx.fill();
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath();
+    ctx.moveTo(bedX - 2, bodyBottom - 6);
+    ctx.lineTo(bedX - exW, bodyBottom - 4);
+    ctx.lineTo(bedX - 2, bodyBottom - 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawWheelColored(cx, cy, r, hubColor) {
+  // 1. Outer tire
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2. Tread: 8 thick radial lines, rotate with wheelAngle
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 8; i++) {
+    const a = wheelAngle + (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * (r * 0.75), cy + Math.sin(a) * (r * 0.75));
+    ctx.lineTo(cx + Math.cos(a) * (r - 1), cy + Math.sin(a) * (r - 1));
+    ctx.stroke();
+  }
+
+  // 3. Sidewall ring
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = r * 0.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.65, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 4. Rim: chrome disc
+  ctx.fillStyle = '#c8c8c8';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+  // Rim darker edge ring
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.44, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 5. Spokes: 5 thin dark lines
+  ctx.strokeStyle = '#777';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const a = wheelAngle + (i / 5) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * (r * 0.43), cy + Math.sin(a) * (r * 0.43));
+    ctx.stroke();
+  }
+
+  // 6. Hub cap
+  ctx.fillStyle = hubColor;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ============================================================
+// NEW MONSTER TRUCK DRAWING (big wheels, high suspension)
+// ============================================================
+function drawTruckMonster(tx, ty, tw, th, colors, showExhaust, squishY) {
+  const dark = getDarkShade(colors.body);
+  const wheelR = 20;
+  const wheelY = ty + th + 5 + squishY / 2;
+
+  const bodyW = 65, bodyH = 28;
+  const bodyX = tx + (tw - bodyW) / 2;
+  const bodyY = ty + 2 + squishY;
+  const bodyBottom = bodyY + bodyH;
+
+  // Stepped silhouette dimensions
+  const hoodW = bodyW * 0.25;
+  const cabW = bodyW * 0.40;
+  const bedW = bodyW * 0.35;
+  const cabH = bodyH;
+  const hoodH = bodyH * 0.70;
+  const bedH = bodyH * 0.70;
+  const hoodX = bodyX + bedW + cabW;
+  const cabX = bodyX + bedW;
+  const bedX = bodyX;
+
+  // --- Suspension arms (V-shape from body to wheels) ---
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 3;
+  // Front wheel
+  ctx.beginPath();
+  ctx.moveTo(hoodX + 5, bodyBottom); ctx.lineTo(tx + tw - 18, wheelY);
+  ctx.moveTo(hoodX + hoodW - 5, bodyBottom); ctx.lineTo(tx + tw - 18, wheelY);
+  ctx.stroke();
+  // Rear wheel
+  ctx.beginPath();
+  ctx.moveTo(bedX + 5, bodyBottom); ctx.lineTo(tx + 18, wheelY);
+  ctx.moveTo(bedX + bedW - 5, bodyBottom); ctx.lineTo(tx + 18, wheelY);
+  ctx.stroke();
+
+  // --- Underside shadow ---
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(bodyX, bodyBottom - 3, bodyW, 3);
+
+  // --- Bed (rear, lower) ---
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.moveTo(bedX, bodyBottom);
+  ctx.lineTo(bedX, bodyBottom - bedH);
+  ctx.lineTo(bedX + bedW, bodyBottom - bedH);
+  ctx.lineTo(bedX + bedW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(bedX, bodyBottom - bedH * 0.35, bedW, bedH * 0.35);
+
+  // --- Cab (middle, tallest) ---
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.moveTo(cabX, bodyBottom);
+  ctx.lineTo(cabX, bodyBottom - cabH);
+  ctx.lineTo(cabX + cabW, bodyBottom - cabH);
+  ctx.lineTo(cabX + cabW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(cabX, bodyBottom - cabH * 0.35, cabW, cabH * 0.35);
+
+  // --- Hood (front, lower with slope) ---
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, bodyBottom);
+  ctx.lineTo(hoodX, bodyBottom - hoodH);
+  ctx.lineTo(hoodX + hoodW - 2, bodyBottom - hoodH + 2);
+  ctx.lineTo(hoodX + hoodW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, bodyBottom);
+  ctx.lineTo(hoodX, bodyBottom - hoodH * 0.35);
+  ctx.lineTo(hoodX + hoodW - 1, bodyBottom - hoodH * 0.35 + 1);
+  ctx.lineTo(hoodX + hoodW, bodyBottom);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Chrome grille ---
+  const grilleX = hoodX + hoodW - 3;
+  const grilleTop = bodyBottom - hoodH + 3;
+  const grilleBot = bodyBottom - 2;
+  const grilleH = grilleBot - grilleTop;
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(grilleX, grilleTop, 5, grilleH);
+  ctx.fillStyle = '#c0c0c0';
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(grilleX + 0.5, grilleTop + 1 + i * (grilleH / 4), 4, grilleH / 4 - 2);
+  }
+  // Headlights
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(grilleX, grilleTop + 1, 4, 3);
+  ctx.fillRect(grilleX, grilleBot - 4, 4, 3);
+
+  // --- Front bumper ---
+  ctx.fillStyle = '#aaaaaa';
+  ctx.fillRect(hoodX + hoodW - 2, bodyBottom - 8, 6, 10);
+
+  // --- Window ---
+  const winMargin = 3;
+  const winX = cabX + winMargin;
+  const winY = bodyBottom - cabH + winMargin;
+  const winW = cabW - winMargin * 2;
+  const winH = cabH * 0.50;
+  ctx.fillStyle = '#7ec8e3';
+  ctx.beginPath();
+  ctx.moveTo(winX + 3, winY);
+  ctx.lineTo(winX + winW, winY);
+  ctx.lineTo(winX + winW, winY + winH);
+  ctx.lineTo(winX, winY + winH);
+  ctx.closePath();
+  ctx.fill();
+  // Reflection
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.moveTo(winX + 3, winY + 1);
+  ctx.lineTo(winX + winW * 0.4, winY + 1);
+  ctx.lineTo(winX + winW * 0.25, winY + winH * 0.6);
+  ctx.lineTo(winX + 1, winY + winH * 0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Fender arches (larger for monster) ---
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(tx + tw - 18, bodyBottom + 2, 18, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.arc(tx + tw - 18, bodyBottom + 2, 16, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(tx + 18, bodyBottom + 2, 18, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colors.body;
+  ctx.beginPath();
+  ctx.arc(tx + 18, bodyBottom + 2, 16, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Decals ---
+  const decalX = bedX + 3;
+  const decalY = bodyBottom - bedH * 0.35 + 1;
+  const decalW = bedW + cabW - 10;
+  const decalH = bedH * 0.35 - 5;
+  _drawTruckDecals(colors, decalX, decalY, decalW, decalH, bodyX, bodyBottom - cabH, bodyW, cabH);
+
+  // --- Massive wheels ---
+  drawMonsterWheel(tx + 18, wheelY, wheelR, colors.accent);
+  drawMonsterWheel(tx + tw - 18, wheelY, wheelR, colors.accent);
+
+  // --- Exhaust flames ---
+  if (showExhaust) {
+    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+    const exW = 10 + Math.random() * 15;
+    ctx.fillStyle = '#ff4400';
+    ctx.beginPath();
+    ctx.moveTo(bedX - 2, bodyBottom - 10);
+    ctx.lineTo(bedX - exW - 5, bodyBottom - 6);
+    ctx.lineTo(bedX - 2, bodyBottom - 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath();
+    ctx.moveTo(bedX - 2, bodyBottom - 8);
+    ctx.lineTo(bedX - exW, bodyBottom - 6);
+    ctx.lineTo(bedX - 2, bodyBottom - 4);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawMonsterWheel(cx, cy, r, hubColor) {
+  // 1. Outer tire
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+
+  // 2. Chunky tread: 10 thick radial lines, rotate with wheelAngle
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 10; i++) {
+    const a = wheelAngle + (i / 10) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * (r * 0.7), cy + Math.sin(a) * (r * 0.7));
+    ctx.lineTo(cx + Math.cos(a) * (r - 1), cy + Math.sin(a) * (r - 1));
+    ctx.stroke();
+  }
+
+  // 3. Sidewall ring
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = r * 0.2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Shadow on bottom half for depth
+  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI); ctx.fill();
+
+  // 4. Chrome rim
+  ctx.fillStyle = '#c8c8c8';
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2); ctx.fill();
+  // Darker rim edge ring
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.44, 0, Math.PI * 2); ctx.stroke();
+
+  // 5. Spokes: 5 thin dark lines from center to rim edge
+  ctx.strokeStyle = '#777';
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 5; i++) {
+    const a = wheelAngle + (i / 5) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * (r * 0.43), cy + Math.sin(a) * (r * 0.43));
+    ctx.stroke();
+  }
+
+  // 6. Hub cap
+  ctx.fillStyle = hubColor;
+  ctx.beginPath(); ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2); ctx.fill();
+}
+
+// Draw car-type vehicle (for car/suv/bus/limo roster entries)
+function drawCarVehicle(tx, ty, tw, th, colors, vehicleType, squishY) {
+  const bodyY = ty + th * 0.3 + squishY;
+  const bodyH = th * 0.7 - squishY;
+
+  // Body
+  ctx.fillStyle = colors.body;
+  ctx.beginPath(); ctx.roundRect(tx, bodyY, tw, bodyH, 4); ctx.fill();
+
+  // Highlight
+  ctx.fillStyle = colors.highlight;
+  ctx.beginPath(); ctx.roundRect(tx + 3, bodyY + 2, tw - 6, bodyH * 0.3, 2); ctx.fill();
+
+  // Roof / cabin
+  const roofW = vehicleType === 'bus' ? tw * 0.7 : vehicleType === 'limo' ? tw * 0.55 : tw * 0.5;
+  const roofX = vehicleType === 'bus' ? tx + tw * 0.1 : tx + tw * 0.2;
+  ctx.fillStyle = colors.body;
+  ctx.beginPath(); ctx.roundRect(roofX, ty + squishY, roofW, th * 0.4, 3); ctx.fill();
+
+  // Windows
+  ctx.fillStyle = '#88ccff';
+  ctx.beginPath(); ctx.roundRect(roofX + 3, ty + 3 + squishY, roofW - 6, th * 0.3, 2); ctx.fill();
+
+  // Decal stripe
+  if (colors.accent !== '#000') {
+    ctx.fillStyle = colors.accent;
+    ctx.fillRect(tx + 4, bodyY + bodyH * 0.4, tw - 8, 3);
+  }
+
+  // Wheels
+  const wheelR = vehicleType === 'bus' ? 7 : vehicleType === 'limo' ? 6 : 6;
+  const wheelY = ty + th + 3 + squishY / 2;
+  ctx.fillStyle = '#222';
+  ctx.beginPath();
+  ctx.arc(tx + tw * 0.2, wheelY, wheelR, 0, Math.PI * 2);
+  ctx.arc(tx + tw * 0.8, wheelY, wheelR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ccc';
+  ctx.beginPath();
+  ctx.arc(tx + tw * 0.2, wheelY, wheelR * 0.45, 0, Math.PI * 2);
+  ctx.arc(tx + tw * 0.8, wheelY, wheelR * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bus: black stripe
+  if (vehicleType === 'bus') {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(tx + 5, bodyY + bodyH * 0.55, tw - 10, 3);
+    ctx.font = '8px Arial'; ctx.fillStyle = '#000'; ctx.textAlign = 'center';
+    ctx.fillText('SCHOOL BUS', tx + tw / 2, bodyY + bodyH * 0.45);
+    ctx.textAlign = 'left';
+  }
+
+  // Limo: chrome strip + extra windows
+  if (vehicleType === 'limo') {
+    ctx.fillStyle = '#ccc';
+    ctx.fillRect(tx + 5, bodyY + bodyH * 0.5, tw - 10, 2);
+    ctx.fillStyle = '#223';
+    for (let wx = roofX + roofW + 5; wx < tx + tw - 15; wx += 15) {
+      ctx.beginPath(); ctx.roundRect(wx, ty + 3 + squishY, 10, th * 0.3, 2); ctx.fill();
+    }
+  }
+
+  // Exhaust puff when not grounded (moving fast)
+  ctx.globalAlpha = 0.5 + Math.random() * 0.3;
+  const exW = 4 + Math.random() * 6;
+  ctx.fillStyle = '#666';
+  ctx.beginPath();
+  ctx.arc(tx - exW, bodyY + bodyH - 3, 3 + Math.random() * 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+// Unified vehicle preview for picker (works for both monster trucks and cars)
+function drawVehiclePreview(tx, ty, roster, showExhaust, squishY) {
+  if (roster.style === 'monster') {
+    drawTruckMonster(tx, ty, 90, 50, roster, showExhaust, squishY);
+  } else if (!roster.type || roster.type === 'monster' || roster.style === 'classic') {
+    drawTruckWithColors(tx, ty, 90, 50, roster, showExhaust, squishY);
+  } else {
+    const vw = roster.type === 'bus' ? 85 : roster.type === 'limo' ? 95 : roster.type === 'suv' ? 65 : 55;
+    const vh = roster.type === 'bus' ? 35 : roster.type === 'limo' ? 28 : roster.type === 'suv' ? 32 : 25;
+    drawCarVehicle(tx - vw / 2 + 45, ty + (50 - vh) / 2, vw, vh, roster, roster.type, squishY);
+  }
+}
+
+// ============================================================
+// OBSTACLE DRAWING (including new types)
+// ============================================================
+function drawObstacle(obs) {
+  if (obs.type === 'barrel') return drawBarrel(obs);
+  if (obs.type === 'portapotty') return drawPortaPotty(obs);
+  if (obs.type === 'tvstack') return drawTVStack(obs);
+  if (obs.type === 'haybale') return drawHayBale(obs);
+  if (obs.type === 'red_racer' || obs.type === 'cool_blue' || obs.type === 'gold_rush') return drawPickupTruck(obs);
+  if (obs.type === 'big_suv') return drawBigSUV(obs);
+  if (obs.type === 'school_bus') return drawSchoolBus(obs);
+  if (obs.type === 'stretch_limo') return drawStretchLimo(obs);
+  if (obs.type === 'ramp') return drawRamp(obs);
+  return drawPickupTruck(obs); // fallback
+}
+
+function drawBarrel(obs) {
+  const x = obs.x, y = obs.y;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save();
+    ctx.globalAlpha = 1 - cp * 0.5;
+    // Scattered barrel pieces
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(x - 5, GROUND_Y - 5 * (1 - cp), obs.w + 10, 5 * (1 - cp) + 3);
+    ctx.fillStyle = '#A0522D';
+    ctx.beginPath();
+    ctx.arc(x + 10, GROUND_Y - 3, 4 * (1 - cp), 0, Math.PI * 2);
+    ctx.arc(x + 30, GROUND_Y - 2, 3 * (1 - cp), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  // 3 stacked barrels (pyramid: 2 bottom, 1 top)
+  ctx.fillStyle = '#8B4513';
+  // Bottom left
+  ctx.beginPath();
+  ctx.ellipse(x + 10, y + 20, 10, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Bottom right
+  ctx.beginPath();
+  ctx.ellipse(x + 30, y + 20, 10, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Top
+  ctx.beginPath();
+  ctx.ellipse(x + 20, y + 5, 10, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Metal bands
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 1.5;
+  [{ cx: 10, cy: 20 }, { cx: 30, cy: 20 }, { cx: 20, cy: 5 }].forEach(b => {
+    ctx.beginPath();
+    ctx.ellipse(x + b.cx, y + b.cy - 4, 9, 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(x + b.cx, y + b.cy + 4, 9, 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+}
+
+function drawPortaPotty(obs) {
+  const x = obs.x, y = obs.y;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save();
+    ctx.globalAlpha = 1 - cp * 0.5;
+    // Tipping over animation
+    ctx.translate(x + obs.w, GROUND_Y);
+    ctx.rotate(cp * Math.PI / 2);
+    ctx.translate(-(x + obs.w), -GROUND_Y);
+    ctx.fillStyle = '#2288cc';
+    ctx.fillRect(x, y, obs.w, obs.h);
+    ctx.fillStyle = '#1a6699';
+    ctx.fillRect(x + obs.w * 0.35, y + 8, obs.w * 0.3, obs.h - 12);
+    ctx.restore();
+    return;
+  }
+
+  // Main body
+  ctx.fillStyle = '#2288cc';
+  ctx.beginPath();
+  ctx.roundRect(x, y, obs.w, obs.h, 3);
+  ctx.fill();
+
+  // Roof overhang
+  ctx.fillStyle = '#1a6699';
+  ctx.fillRect(x - 2, y - 3, obs.w + 4, 6);
+
+  // Door
+  ctx.fillStyle = '#1a6699';
+  ctx.fillRect(x + obs.w * 0.3, y + 8, obs.w * 0.4, obs.h - 12);
+
+  // Door handle
+  ctx.fillStyle = '#ccc';
+  ctx.fillRect(x + obs.w * 0.6, y + obs.h * 0.5, 3, 5);
+
+  // Vent at top
+  ctx.fillStyle = '#44aadd';
+  ctx.fillRect(x + 5, y + 5, obs.w - 10, 4);
+  ctx.strokeStyle = '#1a6699';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + 7 + i * 5, y + 5);
+    ctx.lineTo(x + 7 + i * 5, y + 9);
+    ctx.stroke();
+  }
+}
+
+function drawTVStack(obs) {
+  const x = obs.x, y = obs.y;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save();
+    ctx.globalAlpha = 1 - cp * 0.5;
+    // Shattered TV pieces
+    ctx.fillStyle = '#555';
+    ctx.fillRect(x - 5, GROUND_Y - 8 * (1 - cp), obs.w + 10, 8 * (1 - cp) + 2);
+    // Static sparks
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = Math.random() > 0.5 ? '#0ff' : '#fff';
+      ctx.fillRect(x + Math.random() * obs.w, GROUND_Y - Math.random() * 10, 3, 2);
+    }
+    ctx.restore();
+    return;
+  }
+
+  // Bottom TV
+  ctx.fillStyle = '#555';
+  ctx.beginPath();
+  ctx.roundRect(x, y + 20, 45, 22, 3);
+  ctx.fill();
+  // Screen
+  ctx.fillStyle = '#333';
+  ctx.fillRect(x + 4, y + 23, 37, 15);
+  // Static
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.5})`;
+    ctx.fillRect(x + 5 + Math.random() * 34, y + 24 + Math.random() * 13, 3, 1);
+  }
+
+  // Top TV (smaller)
+  ctx.fillStyle = '#666';
+  ctx.beginPath();
+  ctx.roundRect(x + 5, y, 35, 20, 3);
+  ctx.fill();
+  ctx.fillStyle = '#333';
+  ctx.fillRect(x + 8, y + 3, 29, 14);
+  for (let i = 0; i < 6; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.5})`;
+    ctx.fillRect(x + 9 + Math.random() * 27, y + 4 + Math.random() * 12, 3, 1);
+  }
+
+  // Antennas on top TV
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + 18, y);
+  ctx.lineTo(x + 10, y - 10);
+  ctx.moveTo(x + 28, y);
+  ctx.lineTo(x + 36, y - 10);
+  ctx.stroke();
+
+  // Antenna tips
+  ctx.fillStyle = '#ccc';
+  ctx.beginPath();
+  ctx.arc(x + 10, y - 10, 2, 0, Math.PI * 2);
+  ctx.arc(x + 36, y - 10, 2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawHayBale(obs) {
+  const x = obs.x, y = obs.y;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save();
+    ctx.globalAlpha = 1 - cp * 0.5;
+    ctx.fillStyle = '#DAA520';
+    const flatH = obs.h * (1 - cp * 0.8);
+    ctx.beginPath();
+    ctx.ellipse(x + obs.w / 2, GROUND_Y - flatH / 2, obs.w / 2 + 5, flatH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  // Main bale (golden circle)
+  ctx.fillStyle = '#DAA520';
+  ctx.beginPath();
+  ctx.ellipse(x + obs.w / 2, y + obs.h / 2, obs.w / 2, obs.h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spiral/line texture
+  ctx.strokeStyle = '#B8860B';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(x + obs.w / 2, y + obs.h / 2, obs.w / 4, obs.h / 4, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(x + obs.w / 2, y + obs.h / 2, obs.w / 8, obs.h / 8, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Horizontal line textures
+  ctx.strokeStyle = 'rgba(139,115,85,0.3)';
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + 5, y + 6 + i * 8);
+    ctx.lineTo(x + obs.w - 5, y + 6 + i * 8);
+    ctx.stroke();
+  }
+
+  // Highlight
+  ctx.fillStyle = 'rgba(255,255,200,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(x + obs.w / 2 - 3, y + obs.h / 3, obs.w / 4, obs.h / 5, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawLimo(obs) {
+  const x = obs.x, y = obs.y;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save();
+    ctx.globalAlpha = 1 - cp * 0.5;
+    ctx.fillStyle = obs.color;
+    const flatH = obs.h * (1 - cp * 0.7);
+    const flatY = GROUND_Y - flatH;
+    ctx.fillRect(x - 5, flatY, obs.w + 10, flatH);
+    ctx.fillStyle = 'rgba(150,200,255,0.4)';
+    for (let i = 0; i < 5; i++) {
+      ctx.fillRect(x + 10 + i * 20, flatY - 2, 10, 4);
+    }
+    ctx.restore();
+    return;
+  }
+
+  // Body (long and sleek)
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.roundRect(x, y + obs.h * 0.35, obs.w, obs.h * 0.65, 5);
+  ctx.fill();
+
+  // Roof
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.roundRect(x + obs.w * 0.12, y, obs.w * 0.6, obs.h * 0.45, 4);
+  ctx.fill();
+
+  // Tinted windows (dark)
+  ctx.fillStyle = '#223';
+  ctx.beginPath();
+  ctx.roundRect(x + obs.w * 0.14, y + 3, obs.w * 0.15, obs.h * 0.35, 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect(x + obs.w * 0.32, y + 3, obs.w * 0.13, obs.h * 0.35, 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect(x + obs.w * 0.48, y + 3, obs.w * 0.13, obs.h * 0.35, 2);
+  ctx.fill();
+
+  // Chrome strip
+  ctx.fillStyle = '#ccc';
+  ctx.fillRect(x + 5, y + obs.h * 0.55, obs.w - 10, 2);
+
+  // Shine effect
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath();
+  ctx.roundRect(x + 5, y + obs.h * 0.38, obs.w - 10, obs.h * 0.15, 2);
+  ctx.fill();
+
+  // Wheels
+  ctx.fillStyle = '#222';
+  ctx.beginPath();
+  ctx.arc(x + obs.w * 0.15, y + obs.h + 2, 6, 0, Math.PI * 2);
+  ctx.arc(x + obs.w * 0.85, y + obs.h + 2, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hubcaps
+  ctx.fillStyle = '#ccc';
+  ctx.beginPath();
+  ctx.arc(x + obs.w * 0.15, y + obs.h + 2, 3, 0, Math.PI * 2);
+  ctx.arc(x + obs.w * 0.85, y + obs.h + 2, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawCar(obs) {
+  if (obs.crushed) {
+    const crushProgress = Math.min(obs.crushAnim, 1);
+    ctx.save();
+    ctx.globalAlpha = 1 - crushProgress * 0.5;
+    ctx.fillStyle = obs.color;
+    const flatH = obs.h * (1 - crushProgress * 0.7);
+    const flatY = GROUND_Y - flatH;
+    ctx.fillRect(obs.x - 5, flatY, obs.w + 10, flatH);
+    ctx.fillStyle = 'rgba(150,200,255,0.4)';
+    for (let i = 0; i < 3; i++) {
+      ctx.fillRect(obs.x + 10 + i * 15, flatY - 2, 8, 4);
+    }
+    ctx.restore();
+    return;
+  }
+
+  const x = obs.x, y = obs.y;
+
+  if (obs.type === 'ramp') {
+    ctx.fillStyle = '#e67e22';
+    ctx.beginPath();
+    ctx.moveTo(x, GROUND_Y);
+    ctx.lineTo(x + obs.w, GROUND_Y);
+    ctx.lineTo(x + obs.w, GROUND_Y - obs.h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#f39c12';
+    for (let i = 0; i < 3; i++) {
+      const sx = x + 10 + i * 18;
+      ctx.beginPath();
+      ctx.moveTo(sx, GROUND_Y);
+      ctx.lineTo(sx + 6, GROUND_Y);
+      const rh = ((sx - x) / obs.w) * obs.h;
+      ctx.lineTo(sx + 6, GROUND_Y - rh);
+      ctx.lineTo(sx, GROUND_Y - rh + 2);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('▲', x + obs.w - 20, GROUND_Y - 5);
+    return;
+  }
+
+  // Car body
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.roundRect(x, y + obs.h * 0.35, obs.w, obs.h * 0.65, 4);
+  ctx.fill();
+
+  // Roof
+  const roofW = obs.type === 'bus' ? obs.w * 0.7 : obs.w * 0.5;
+  const roofX = obs.type === 'bus' ? x + obs.w * 0.1 : x + obs.w * 0.2;
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.roundRect(roofX, y, roofW, obs.h * 0.45, 3);
+  ctx.fill();
+
+  // Windows
+  ctx.fillStyle = '#88ccff';
+  ctx.beginPath();
+  ctx.roundRect(roofX + 3, y + 3, roofW - 6, obs.h * 0.35, 2);
+  ctx.fill();
+
+  // Wheels
+  ctx.fillStyle = '#222';
+  ctx.beginPath();
+  ctx.arc(x + obs.w * 0.2, y + obs.h + 2, 5, 0, Math.PI * 2);
+  ctx.arc(x + obs.w * 0.8, y + obs.h + 2, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (obs.type === 'bus') {
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(x + 5, y + obs.h * 0.5, obs.w - 10, 3);
+  }
+}
+
+// ============================================================
+// NEW NAMED VEHICLE DRAWING (clean vector style)
+// ============================================================
+function drawPickupTruck(obs) {
+  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
+    ctx.fillStyle = obs.color;
+    const flatH = h * (1 - cp * 0.7);
+    ctx.fillRect(x - 3, GROUND_Y - flatH, w + 6, flatH);
+    ctx.fillStyle = 'rgba(150,200,255,0.4)';
+    ctx.fillRect(x + 10, GROUND_Y - flatH - 2, 12, 4);
+    ctx.restore(); return;
+  }
+  const dark = getDarkShade(obs.color);
+  const bottom = y + h;
+  // Stepped silhouette: hood(front 25%), cab(40%), bed(rear 35%)
+  const hoodW = w * 0.25, cabW = w * 0.40, bedW = w * 0.35;
+  const cabH = h, hoodH = h * 0.70, bedH = h * 0.70;
+  const hoodX = x + bedW + cabW, cabX = x + bedW, bedX = x;
+
+  // Underside shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x, bottom - 2, w, 2);
+
+  // Bed
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(bedX, bottom); ctx.lineTo(bedX, bottom - bedH);
+  ctx.lineTo(bedX + bedW, bottom - bedH); ctx.lineTo(bedX + bedW, bottom);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(bedX, bottom - bedH * 0.35, bedW, bedH * 0.35);
+
+  // Cab
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(cabX, bottom); ctx.lineTo(cabX, bottom - cabH);
+  ctx.lineTo(cabX + cabW, bottom - cabH); ctx.lineTo(cabX + cabW, bottom);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(cabX, bottom - cabH * 0.35, cabW, cabH * 0.35);
+
+  // Hood
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, bottom); ctx.lineTo(hoodX, bottom - hoodH);
+  ctx.lineTo(hoodX + hoodW, bottom - hoodH + 2); ctx.lineTo(hoodX + hoodW, bottom);
+  ctx.closePath(); ctx.fill();
+
+  // Small grille
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(hoodX + hoodW - 2, bottom - hoodH + 2, 3, hoodH - 4);
+  ctx.fillStyle = '#c0c0c0';
+  ctx.fillRect(hoodX + hoodW - 1.5, bottom - hoodH + 3, 2, 3);
+  ctx.fillRect(hoodX + hoodW - 1.5, bottom - hoodH + 8, 2, 3);
+
+  // Headlight
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(hoodX + hoodW - 2, bottom - hoodH + 2, 2, 2);
+  // Taillight
+  ctx.fillStyle = '#ff3333';
+  ctx.fillRect(x, bottom - bedH + 1, 2, 3);
+
+  // Window
+  const winM = 2;
+  ctx.fillStyle = '#7ec8e3';
+  ctx.beginPath();
+  ctx.moveTo(cabX + winM + 2, bottom - cabH + winM);
+  ctx.lineTo(cabX + cabW - winM, bottom - cabH + winM);
+  ctx.lineTo(cabX + cabW - winM, bottom - cabH + cabH * 0.50);
+  ctx.lineTo(cabX + winM, bottom - cabH + cabH * 0.50);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillRect(cabX + winM + 1, bottom - cabH + winM + 1, 4, cabH * 0.25);
+
+  // Wheels (5-6px)
+  const wr = 5, wy = y + h + 2;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.2, wy, wr, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.8, wy, wr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#c8c8c8';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.2, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.8, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawBigSUV(obs) {
+  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
+    ctx.translate(x + w / 2, GROUND_Y);
+    ctx.rotate(cp * 0.15);
+    ctx.translate(-(x + w / 2), -GROUND_Y);
+    ctx.fillStyle = obs.color;
+    const flatH = h * (1 - cp * 0.7);
+    ctx.fillRect(x - 3, GROUND_Y - flatH, w + 6, flatH);
+    ctx.restore(); return;
+  }
+  const dark = getDarkShade(obs.color);
+  const bottom = y + h;
+  // SUV is boxier: cab nearly full length, short hood
+  const hoodW = w * 0.18, cabW = w * 0.82;
+  const cabH = h, hoodH = h * 0.65;
+  const hoodX = x + cabW, cabX = x;
+
+  // Underside shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x, bottom - 2, w, 2);
+
+  // Cab (almost full length, tallest)
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(cabX, bottom); ctx.lineTo(cabX, bottom - cabH);
+  ctx.lineTo(cabX + cabW, bottom - cabH); ctx.lineTo(cabX + cabW, bottom);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(cabX, bottom - cabH * 0.30, cabW, cabH * 0.30);
+
+  // Hood (short front, lower)
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, bottom); ctx.lineTo(hoodX, bottom - hoodH);
+  ctx.lineTo(hoodX + hoodW, bottom - hoodH + 2); ctx.lineTo(hoodX + hoodW, bottom);
+  ctx.closePath(); ctx.fill();
+
+  // Roof rack
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cabX + 4, bottom - cabH - 2);
+  ctx.lineTo(cabX + cabW - 4, bottom - cabH - 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cabX + 10, bottom - cabH - 2); ctx.lineTo(cabX + 10, bottom - cabH);
+  ctx.moveTo(cabX + cabW - 10, bottom - cabH - 2); ctx.lineTo(cabX + cabW - 10, bottom - cabH);
+  ctx.stroke();
+
+  // 2 windows with pillar
+  const winTop = bottom - cabH + 3;
+  const winH = cabH * 0.45;
+  const winSec = (cabW - 12) / 2;
+  ctx.fillStyle = '#7ec8e3';
+  // Window 1
+  ctx.beginPath();
+  ctx.moveTo(cabX + 3, winTop + winH); ctx.lineTo(cabX + 5, winTop);
+  ctx.lineTo(cabX + 3 + winSec - 1, winTop); ctx.lineTo(cabX + 3 + winSec - 1, winTop + winH);
+  ctx.closePath(); ctx.fill();
+  // Pillar
+  ctx.fillStyle = obs.color;
+  ctx.fillRect(cabX + 3 + winSec - 1, winTop, 3, winH);
+  // Window 2
+  ctx.fillStyle = '#7ec8e3';
+  ctx.fillRect(cabX + 5 + winSec, winTop, winSec - 2, winH);
+  // Reflections
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillRect(cabX + 5, winTop + 1, 4, winH * 0.5);
+  ctx.fillRect(cabX + 6 + winSec, winTop + 1, 4, winH * 0.5);
+
+  // Chrome grille
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(hoodX + hoodW - 3, bottom - hoodH + 2, 4, hoodH - 4);
+  ctx.fillStyle = '#c0c0c0';
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(hoodX + hoodW - 2.5, bottom - hoodH + 3 + i * ((hoodH - 6) / 3), 3, (hoodH - 6) / 3 - 2);
+  }
+
+  // Headlight + taillight
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(hoodX + hoodW - 2, bottom - hoodH + 2, 3, 3);
+  ctx.fillStyle = '#ff3333';
+  ctx.fillRect(x, bottom - cabH + 3, 2, 4);
+
+  // Chrome strip
+  ctx.fillStyle = '#aaa';
+  ctx.fillRect(x + 3, bottom - cabH * 0.30 - 1, w - 6, 2);
+
+  // Wheels (6px)
+  const wr = 6, wy = y + h + 2;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.2, wy, wr, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.8, wy, wr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#c8c8c8';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.2, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.8, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSchoolBus(obs) {
+  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
+    ctx.fillStyle = '#f1c40f';
+    const flatH = h * (1 - cp * 0.8);
+    ctx.fillRect(x - 5, GROUND_Y - flatH, w + 10, flatH);
+    ctx.fillStyle = '#e67e22';
+    ctx.save(); ctx.translate(x + w - 5, GROUND_Y - flatH);
+    ctx.rotate(-cp * 0.8);
+    ctx.fillRect(0, -8, 15, 8);
+    ctx.restore();
+    ctx.restore(); return;
+  }
+  const bottom = y + h;
+  const busYellow = '#f1c40f';
+  const busDark = '#c89e0c';
+
+  // Bus body — flat front, rectangular
+  ctx.fillStyle = busYellow;
+  ctx.beginPath();
+  ctx.moveTo(x, bottom); ctx.lineTo(x, y);
+  ctx.lineTo(x + w, y); ctx.lineTo(x + w, bottom);
+  ctx.closePath(); ctx.fill();
+
+  // Black trim strip (lower)
+  ctx.fillStyle = '#222';
+  ctx.fillRect(x, bottom - h * 0.18, w, h * 0.18);
+
+  // Underside shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x, bottom - 2, w, 2);
+
+  // Dark lower body
+  ctx.fillStyle = busDark;
+  ctx.fillRect(x, bottom - h * 0.30, w, h * 0.12);
+
+  // Row of windows (5 windows)
+  ctx.fillStyle = '#7ec8e3';
+  const winCount = 5;
+  const winGap = 3;
+  const winAreaStart = x + 8;
+  const winAreaW = w - 20;
+  const singleWinW = (winAreaW - (winCount - 1) * winGap) / winCount;
+  for (let i = 0; i < winCount; i++) {
+    const wx = winAreaStart + i * (singleWinW + winGap);
+    ctx.fillRect(wx, y + 4, singleWinW, h * 0.32);
+  }
+  // Window reflections
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  for (let i = 0; i < winCount; i++) {
+    const wx = winAreaStart + i * (singleWinW + winGap);
+    ctx.fillRect(wx + 1, y + 5, 3, h * 0.20);
+  }
+
+  // "SCHOOL BUS" text
+  ctx.fillStyle = '#333'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('SCHOOL BUS', x + w / 2, y + h * 0.60);
+  ctx.textAlign = 'left';
+
+  // Stop sign arm (left side)
+  ctx.fillStyle = '#cc0000';
+  ctx.beginPath();
+  ctx.moveTo(x - 7, y + h * 0.30);
+  ctx.lineTo(x - 2, y + h * 0.25);
+  ctx.lineTo(x - 2, y + h * 0.50);
+  ctx.lineTo(x - 7, y + h * 0.45);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '4px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('STOP', x - 4.5, y + h * 0.40);
+  ctx.textAlign = 'left';
+
+  // Flat front face
+  ctx.fillStyle = '#e0b200';
+  ctx.fillRect(x + w - 3, y + 2, 4, h - 4);
+
+  // Emergency door (back)
+  ctx.fillStyle = '#d4a800';
+  ctx.fillRect(x + 2, y + h * 0.38, 7, h * 0.45);
+  ctx.strokeStyle = '#999'; ctx.lineWidth = 0.5;
+  ctx.strokeRect(x + 2, y + h * 0.38, 7, h * 0.45);
+
+  // Headlights
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(x + w - 2, y + h * 0.35, 3, 4);
+  ctx.fillRect(x + w - 2, y + h * 0.65, 3, 4);
+  // Taillights
+  ctx.fillStyle = '#ff3333';
+  ctx.fillRect(x, y + h * 0.35, 2, 3);
+  ctx.fillRect(x, y + h * 0.68, 2, 3);
+
+  // Wheels (6px)
+  const wr = 6, wy = y + h + 2;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.15, wy, wr, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.85, wy, wr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#c8c8c8';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.15, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.85, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawStretchLimo(obs) {
+  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
+  if (obs.crushed) {
+    const cp = Math.min(obs.crushAnim, 1);
+    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
+    ctx.fillStyle = obs.color;
+    const compW = w * (1 - cp * 0.3);
+    const flatH = h * (1 - cp * 0.6);
+    ctx.fillRect(x, GROUND_Y - flatH, compW, flatH);
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
+    for (let i = 0; i < 4; i++) {
+      const lx = x + compW - 10 - i * 8;
+      ctx.beginPath(); ctx.moveTo(lx, GROUND_Y - flatH); ctx.lineTo(lx + 3, GROUND_Y); ctx.stroke();
+    }
+    ctx.restore(); return;
+  }
+  const dark = getDarkShade(obs.color);
+  const bottom = y + h;
+  // Very long and low, cab at front ~35%, rest is body
+  const cabW = w * 0.35, bodyRestW = w * 0.65;
+  const cabH = h, bodyRestH = h * 0.70;
+  const cabX = x + bodyRestW;
+
+  // Underside shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(x, bottom - 2, w, 2);
+
+  // Long lower body
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(x, bottom); ctx.lineTo(x, bottom - bodyRestH);
+  ctx.lineTo(x + bodyRestW, bottom - bodyRestH);
+  ctx.lineTo(x + bodyRestW, bottom);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(x, bottom - bodyRestH * 0.30, bodyRestW, bodyRestH * 0.30);
+
+  // Cab (taller front section)
+  ctx.fillStyle = obs.color;
+  ctx.beginPath();
+  ctx.moveTo(cabX, bottom); ctx.lineTo(cabX, bottom - cabH);
+  ctx.lineTo(cabX + cabW, bottom - cabH);
+  ctx.lineTo(cabX + cabW, bottom);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = dark;
+  ctx.fillRect(cabX, bottom - cabH * 0.30, cabW, cabH * 0.30);
+
+  // Chrome trim strip
+  ctx.fillStyle = '#ccc';
+  ctx.fillRect(x + 3, bottom - bodyRestH * 0.35, w - 6, 2);
+
+  // Shine effect on upper body
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fillRect(x + 4, bottom - bodyRestH + 2, w - 8, bodyRestH * 0.25);
+
+  // Tinted dark windows in cab
+  ctx.fillStyle = '#223';
+  const cwm = 3;
+  ctx.beginPath();
+  ctx.moveTo(cabX + cwm + 2, bottom - cabH + cwm);
+  ctx.lineTo(cabX + cabW - cwm, bottom - cabH + cwm);
+  ctx.lineTo(cabX + cabW - cwm, bottom - cabH + cabH * 0.50);
+  ctx.lineTo(cabX + cwm, bottom - cabH + cabH * 0.50);
+  ctx.closePath(); ctx.fill();
+
+  // Additional tinted windows along body (3 small dark windows)
+  const lwTop = bottom - bodyRestH + 3;
+  const lwH = bodyRestH * 0.45;
+  const lwW = bodyRestW * 0.12;
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = '#223';
+    ctx.fillRect(x + 8 + i * (lwW + 5), lwTop, lwW, lwH);
+  }
+
+  // Chrome bumpers
+  ctx.fillStyle = '#ccc';
+  ctx.fillRect(x - 2, bottom - bodyRestH * 0.6, 4, bodyRestH * 0.4);
+  ctx.fillRect(x + w - 2, bottom - cabH * 0.6, 4, cabH * 0.4);
+
+  // Headlights
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(x + w - 3, bottom - cabH + 2, 4, 4);
+  // Taillights
+  ctx.fillStyle = '#ff2222';
+  ctx.fillRect(x, bottom - bodyRestH + 2, 3, 4);
+
+  // 3 wheels visible (front, middle, rear)
+  const wr = 5, wy = y + h + 2;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.10, wy, wr, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.50, wy, wr, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.88, wy, wr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#c8c8c8';
+  ctx.beginPath();
+  ctx.arc(x + w * 0.10, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.50, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.88, wy, wr * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawRamp(obs) {
+  const x = obs.x;
+  // Main ramp body
+  ctx.fillStyle = '#e67e22';
+  ctx.beginPath();
+  ctx.moveTo(x, GROUND_Y); ctx.lineTo(x + obs.w, GROUND_Y);
+  ctx.lineTo(x + obs.w, GROUND_Y - obs.h);
+  ctx.closePath(); ctx.fill();
+  // Support struts
+  ctx.fillStyle = '#d35400';
+  for (let i = 0; i < 3; i++) {
+    const sx = x + 8 + i * 18;
+    ctx.beginPath(); ctx.moveTo(sx, GROUND_Y); ctx.lineTo(sx + 6, GROUND_Y);
+    const rh = ((sx - x) / obs.w) * obs.h;
+    ctx.lineTo(sx + 6, GROUND_Y - rh); ctx.lineTo(sx, GROUND_Y - rh + 2);
+    ctx.closePath(); ctx.fill();
+  }
+  // Surface highlight
+  ctx.strokeStyle = '#f5b041'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x + 2, GROUND_Y - 1);
+  ctx.lineTo(x + obs.w - 1, GROUND_Y - obs.h + 1);
+  ctx.stroke();
+  // Arrow
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+  ctx.fillText('\u25B2', x + obs.w - 20, GROUND_Y - 5);
+}
+
+function drawStar(s) {
+  const bob = Math.sin(s.bobPhase) * 5;
+  const sx = s.x, sy = s.y + bob;
+  const r = 12;
+
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(sx, sy, r + 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
+    const fn = i === 0 ? 'moveTo' : 'lineTo';
+    ctx[fn](sx + Math.cos(a) * r, sy + Math.sin(a) * r);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#fff200';
+  ctx.beginPath();
+  ctx.arc(sx, sy, r * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ============================================================
+// PHYSICS & COLLISION (Multi-player + Power-ups + Environments)
+// ============================================================
+function getGravity() {
+  const env = ENVIRONMENTS[currentEnvIndex];
+  return BASE_GRAVITY * env.gravityMult;
+}
+
+function getEffectiveSpeed() {
+  // Slow-mo check: if any player has slowmo, slow the world
+  for (const p of players) {
+    if (p.activePowerUp && p.activePowerUp.effect === 'slowmo') return gameSpeed * 0.6;
+  }
+  return gameSpeed;
+}
+
+function updatePlayer(p) {
+  const tk = p.truck;
+  const grav = getGravity();
+  const truckColors = TRUCK_ROSTER[p.truckIdx];
+
+  // Jump
+  if (p.jumpPressed && tk.grounded) {
+    tk.vy = JUMP_FORCE;
+    tk.grounded = false;
+    tk.jumping = true;
+    spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
+  }
+  p.jumpPressed = false;
+
+  // Slam
+  if (tk.slamming && !tk.grounded) {
+    tk.vy = SLAM_FORCE;
+    tk.slamming = false;
+  }
+
+  // Mega truck scale
+  if (p.activePowerUp && p.activePowerUp.effect === 'mega') {
+    p.megaScale = Math.min(1.5, p.megaScale + 0.05);
+  } else {
+    p.megaScale = Math.max(1.0, p.megaScale - 0.05);
+  }
+
+  if (!tk.grounded) {
+    tk.vy += grav;
+    tk.y += tk.vy;
+    tk.tilt = tk.vy * 0.5;
+    p.airborneFrames++;
+
+    if (p.airborneFrames === 90) startBigAir();
+
+    // Backflip
+    if (p.airborneFrames >= AIRBORNE_FLIP_THRESHOLD && !p.flipInProgress) {
+      p.flipInProgress = true; p.flipStarted = true;
+    }
+    if (p.flipInProgress) {
+      p.flipAngle += (Math.PI * 2) / FLIP_DURATION;
+      if (p.flipAngle >= Math.PI * 2) {
+        p.flipsCompleted++;
+        p.flipAngle = 0;
+        p.flipInProgress = false;
+        p.score += FLIP_BONUS_POINTS;
+        screenShake = 10; flashTimer = 8; flashColor = truckColors.accent;
+        spawnFlipParticles(tk.x + tk.w / 2, tk.y + tk.h / 2, p.truckIdx, p.flipsCompleted);
+        playSound('flip');
+      }
+    }
+
+    // Ramp collision
+    for (const obs of obstacles) {
+      if (obs.type === 'ramp' && !obs.crushed) {
+        const isMega = p.activePowerUp && p.activePowerUp.effect === 'mega';
+        if (isMega) { obs.crushed = true; obs.crushAnim = 0; p.score += 15; playSound('crush'); continue; }
+        const onRamp = tk.x + tk.w > obs.x && tk.x < obs.x + obs.w;
+        if (onRamp && tk.y + tk.h >= obs.y && tk.vy > 0) {
+          tk.vy = JUMP_FORCE * 1.4;
+          screenShake = 5; flashTimer = 8; flashColor = '#ff8800';
+          spawnLandParticles(tk.x + tk.w / 2, obs.y);
+          p.score += 25; playSound('ramp');
+          particles.push({ x: tk.x + tk.w / 2, y: tk.y - 10, vx: 0, vy: -2, size: 1, color: '#ff8800', life: 1, decay: 0.025, type: 'text', text: 'BIG AIR!' });
+        }
+      }
+    }
+
+    // Landing
+    if (tk.y >= p.groundY) {
+      const fallSpeed = tk.vy;
+      tk.y = p.groundY;
+      tk.vy = 0; tk.grounded = true; tk.jumping = false;
+      tk.squish = 1; tk.tilt = 0; screenShake = 3;
+      spawnLandParticles(tk.x + tk.w / 2, p.groundY + 8);
+      playSound('landing', fallSpeed);
+      stopBigAir();
+      p.flipAngle = 0; p.flipInProgress = false; p.flipStarted = false;
+      p.airborneFrames = 0; p.flipsCompleted = 0;
+    }
+  }
+
+  // Squish
+  if (tk.squish > 0) tk.squish *= 0.85;
+  if (tk.squish < 0.01) tk.squish = 0;
+
+  // Combo timer
+  if (p.comboTimer > 0) { p.comboTimer--; if (p.comboTimer <= 0) p.combo = 0; }
+
+  // Power-up timer
+  if (p.activePowerUp) {
+    p.powerUpTimer--;
+    if (p.powerUpTimer <= 0) { p.activePowerUp = null; }
+  }
+
+  // Tire tracks
+  if (tk.grounded && Math.random() > 0.6) {
+    p.tireTracks.push({ x: tk.x + 18, y: p.groundY + 6, life: 1 });
+    p.tireTracks.push({ x: tk.x + tk.w - 18, y: p.groundY + 6, life: 1 });
+  }
+  for (let i = p.tireTracks.length - 1; i >= 0; i--) {
+    p.tireTracks[i].x -= getEffectiveSpeed() * 0.98;
+    p.tireTracks[i].life -= 0.008;
+    if (p.tireTracks[i].life <= 0 || p.tireTracks[i].x < -10) p.tireTracks.splice(i, 1);
+  }
+  // Cap tire tracks
+  if (p.tireTracks.length > 100) p.tireTracks.splice(0, p.tireTracks.length - 100);
+
+  // Obstacle collision — sync global combo for particle text display
+  combo = p.combo;
+  const isMega = p.activePowerUp && p.activePowerUp.effect === 'mega';
+  const pointsMult = isMega ? 2 : 1;
+
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const obs = obstacles[i];
+    if (obs.crushed || obs.type === 'ramp') continue;
+
+    const truckBottom = tk.y + tk.h;
+    const truckRight = tk.x + tk.w * p.megaScale;
+    const overlap = truckRight > obs.x + 10 && tk.x < obs.x + obs.w - 10;
+
+    if (overlap && truckBottom > obs.y && truckBottom < obs.y + obs.h + 15 && (tk.vy > 0 || isMega)) {
+      obs.crushed = true;
+      p.combo++; p.totalCrushes++; p.comboTimer = (gameMode === 'frenzy' || gameMode === 'battle') ? 120 : 90;
+      const basePoints = obs.points || 10;
+      const points = basePoints * p.combo * pointsMult;
+      p.score += points;
+      screenShake = 8; flashTimer = 6; flashColor = obs.color;
+
+      if (obs.type === 'barrel') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#8B4513', '#A0522D', '#D2691E', '#ffcc00']);
+      else if (obs.type === 'portapotty') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#2288cc', '#44aadd', '#1a6699', '#fff']);
+      else if (obs.type === 'tvstack') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#555', '#888', '#0ff', '#fff', '#333']);
+      else if (obs.type === 'haybale') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#DAA520', '#B8860B', '#F0E68C', '#8B7355']);
+      else if (obs.type === 'school_bus') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#f1c40f', '#e67e22', '#f39c12', '#fff']);
+      else if (obs.type === 'stretch_limo') { spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#ecf0f1', '#ccc', '#fff', '#88ccff']); screenShake = 12; }
+      else spawnCrushParticles(obs.x + obs.w / 2, obs.y, obs.color);
+
+      tk.vy = JUMP_FORCE * 0.6;
+      playSound('crush');
+      if (p.combo >= 3) playSound('combo', p.combo);
+    } else if (overlap && tk.grounded && tk.y + tk.h > obs.y) {
+      obs.crushed = true; obs.crushAnim = 0.5;
+      spawnCrushParticles(obs.x + obs.w / 2, obs.y, obs.color);
+      screenShake = 4; p.score += 2 * pointsMult;
+      playSound('crush');
+    }
+  }
+
+  // Star collision + magnet
+  const hasMagnet = p.activePowerUp && p.activePowerUp.effect === 'magnet';
+  const hasDouble = p.activePowerUp && p.activePowerUp.effect === 'double';
+  for (let i = stars.length - 1; i >= 0; i--) {
+    const s = stars[i];
+    if (s.collected) continue;
+    const dx = (tk.x + tk.w / 2) - s.x;
+    const dy = (tk.y + tk.h / 2) - s.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // Magnet attraction
+    if (hasMagnet && dist < 150) {
+      s.x += dx * 0.08; s.y += dy * 0.08;
+    }
+
+    if (dist < 35 * p.megaScale) {
+      s.collected = true;
+      const starVal = hasDouble ? 30 : 15;
+      p.score += starVal;
+      spawnStarParticles(s.x, s.y);
+      flashTimer = 4; flashColor = '#ffd700';
+      playSound('star');
+    }
+  }
+
+  // Power-up collision
+  for (let i = powerUps.length - 1; i >= 0; i--) {
+    const pu = powerUps[i];
+    if (pu.collected) continue;
+    const dx = (tk.x + tk.w / 2) - pu.x;
+    const dy = (tk.y + tk.h / 2) - pu.y;
+    if (Math.sqrt(dx * dx + dy * dy) < 40) {
+      pu.collected = true;
+      p.activePowerUp = pu.type;
+      p.powerUpTimer = pu.type.duration;
+      playSound('powerup');
+      flashTimer = 8; flashColor = pu.type.color;
+      screenShake = 5;
+      particles.push({ x: pu.x, y: pu.y - 20, vx: 0, vy: -2, size: 1, color: pu.type.color, life: 1, decay: 0.012, type: 'text', text: pu.type.name + '!' });
+    }
+  }
+}
+
+// ============================================================
+// BATTLE MODE (Monster Truck Sumo)
+// ============================================================
+function resetBattlePositions() {
+  player1.truck.x = 150; player1.truck.y = GROUND_Y;
+  player1.truck.vy = 0; player1.truck.grounded = true;
+  player1.truck.squish = 0; player1.truck.tilt = 0;
+  player1.flipAngle = 0; player1.flipInProgress = false;
+
+  player2.truck.x = 620; player2.truck.y = GROUND_Y;
+  player2.truck.vy = 0; player2.truck.grounded = true;
+  player2.truck.squish = 0; player2.truck.tilt = 0;
+  player2.flipAngle = 0; player2.flipInProgress = false;
+
+  battleResetTimer = 90; // brief pause before next round
+}
+
+function updateBattle() {
+  wheelAngle += 0.05;
+
+  // Reset timer (pause between rounds)
+  if (battleResetTimer > 0) {
+    battleResetTimer--;
+    // Screen shake decay
+    if (screenShake > 0) screenShake *= 0.85;
+    if (flashTimer > 0) flashTimer--;
+    // Update particles during reset
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.type === 'spark' || p.type === 'dust') p.vy += 0.15;
+      p.life -= p.decay;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+    return;
+  }
+
+  // Check win condition
+  if (battleScores[0] >= battleWinScore || battleScores[1] >= battleWinScore) {
+    gameState = 'gameover';
+    stopEngine();
+    return;
+  }
+
+  // Update each player's physics
+  for (const p of [player1, player2]) {
+    const tk = p.truck;
+
+    // Jump
+    if (p.jumpPressed && tk.grounded) {
+      tk.vy = JUMP_FORCE;
+      tk.grounded = false;
+      spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
+    }
+    p.jumpPressed = false;
+
+    // Gravity
+    if (!tk.grounded) {
+      tk.vy += GRAVITY;
+      tk.y += tk.vy;
+      tk.tilt = tk.vy * 0.5;
+
+      if (tk.y >= GROUND_Y) {
+        tk.y = GROUND_Y; tk.vy = 0; tk.grounded = true;
+        tk.squish = 1; tk.tilt = 0;
+        spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
+        playSound('landing', 5);
+      }
+    }
+
+    // Squish decay
+    if (tk.squish > 0) tk.squish *= 0.85;
+    if (tk.squish < 0.01) tk.squish = 0;
+  }
+
+  // Movement: auto-charge + player control
+  const t1 = player1.truck, t2 = player2.truck;
+  const moveSpeed = 4;
+  // Auto-charge (always approach)
+  t1.x += battleAutoCharge;
+  t2.x -= battleAutoCharge;
+  // Player-controlled movement (desktop)
+  if (player1.battleMoveDir !== 0) t1.x += player1.battleMoveDir * moveSpeed;
+  if (player2.battleMoveDir !== 0) t2.x += player2.battleMoveDir * moveSpeed;
+
+  // Clamp positions
+  t1.x = Math.max(30, Math.min(W / 2 - 20, t1.x));
+  t2.x = Math.min(W - 30 - t2.w, Math.max(W / 2 + 20 - t2.w, t2.x));
+
+  // Collision check
+  const overlap = t1.x + t1.w > t2.x && t1.x < t2.x + t2.w;
+  if (overlap) {
+    const heightDiff = t1.y - t2.y; // negative = P1 higher (above P2)
+
+    if (heightDiff < -15 && t1.vy > 0) {
+      // P1 landed on P2!
+      battleScores[0]++;
+      screenShake = 12; flashTimer = 10;
+      flashColor = TRUCK_ROSTER[player1.truckIdx].body;
+      t2.squish = 1;
+      playSound('crush');
+      spawnCrushParticlesColored(
+        (t1.x + t2.x + t2.w) / 2, GROUND_Y - 10,
+        [TRUCK_ROSTER[player1.truckIdx].body, TRUCK_ROSTER[player2.truckIdx].body, '#ffcc00', '#fff']
+      );
+      particles.push({
+        x: (t1.x + t2.x + t2.w) / 2, y: GROUND_Y - 40,
+        vx: 0, vy: -2, size: 1, color: '#fff', life: 1, decay: 0.015,
+        type: 'text', text: ['SMASH!','CRUSHED!','STOMPED!'][Math.floor(Math.random() * 3)]
+      });
+      resetBattlePositions();
+    } else if (heightDiff > 15 && t2.vy > 0) {
+      // P2 landed on P1!
+      battleScores[1]++;
+      screenShake = 12; flashTimer = 10;
+      flashColor = TRUCK_ROSTER[player2.truckIdx].body;
+      t1.squish = 1;
+      playSound('crush');
+      spawnCrushParticlesColored(
+        (t1.x + t1.w + t2.x) / 2, GROUND_Y - 10,
+        [TRUCK_ROSTER[player2.truckIdx].body, TRUCK_ROSTER[player1.truckIdx].body, '#ffcc00', '#fff']
+      );
+      particles.push({
+        x: (t1.x + t1.w + t2.x) / 2, y: GROUND_Y - 40,
+        vx: 0, vy: -2, size: 1, color: '#fff', life: 1, decay: 0.015,
+        type: 'text', text: ['SMASH!','CRUSHED!','STOMPED!'][Math.floor(Math.random() * 3)]
+      });
+      resetBattlePositions();
+    } else {
+      // Same height: bounce both back
+      t1.x -= 8; t2.x += 8;
+      screenShake = 4;
+      playSound('landing', 3);
+    }
+  }
+
+  // Screen shake & flash decay
+  if (screenShake > 0) screenShake *= 0.85;
+  if (flashTimer > 0) flashTimer--;
+
+  // Update particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy;
+    if (p.type === 'spark' || p.type === 'dust') p.vy += 0.15;
+    p.life -= p.decay;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function drawBattleArena() {
+  const env = ENVIRONMENTS[0]; // desert background
+  // Sky
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  skyGrad.addColorStop(0, '#0a0020');
+  skyGrad.addColorStop(0.5, '#1a0040');
+  skyGrad.addColorStop(1, '#0f0c29');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, GROUND_Y);
+
+  // Stars
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  for (let i = 0; i < 30; i++) {
+    const sx = (i * 137.5) % W;
+    const sy = (i * 73.1) % (GROUND_Y - 50) + 10;
+    ctx.fillRect(sx, sy, 1.5, 1.5);
+  }
+
+  // Arena ground
+  ctx.fillStyle = '#3a2a1a';
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+  // Dirt oval
+  ctx.fillStyle = '#4a3a2a';
+  ctx.beginPath();
+  ctx.ellipse(W / 2, GROUND_Y + 30, 350, 40, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Center line
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 8]);
+  ctx.beginPath();
+  ctx.moveTo(W / 2, GROUND_Y - 80);
+  ctx.lineTo(W / 2, GROUND_Y + 60);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Crowd silhouettes along edges
+  ctx.fillStyle = 'rgba(50,30,60,0.6)';
+  for (let i = 0; i < 30; i++) {
+    const cx = i * 28 + 5;
+    const ch = 15 + Math.sin(i * 1.7) * 5;
+    ctx.beginPath();
+    ctx.arc(cx, GROUND_Y + 70, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(cx - 4, GROUND_Y + 70, 8, ch);
+  }
+
+  // Spotlights
+  ctx.fillStyle = 'rgba(255,200,100,0.03)';
+  ctx.beginPath();
+  ctx.moveTo(200, 0); ctx.lineTo(100, GROUND_Y); ctx.lineTo(300, GROUND_Y);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(600, 0); ctx.lineTo(500, GROUND_Y); ctx.lineTo(700, GROUND_Y);
+  ctx.fill();
+}
+
+function drawBattleHUD() {
+  const p1c = TRUCK_ROSTER[player1.truckIdx];
+  const p2c = TRUCK_ROSTER[player2.truckIdx];
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+
+  // Score: "P1: 3 — P2: 2"
+  ctx.font = 'bold 28px "Arial Black", Impact, sans-serif';
+  ctx.fillStyle = p1c.body;
+  ctx.strokeText('P1: ' + battleScores[0], W / 4, 35);
+  ctx.fillText('P1: ' + battleScores[0], W / 4, 35);
+
+  ctx.fillStyle = '#fff';
+  ctx.strokeText('—', W / 2, 35);
+  ctx.fillText('—', W / 2, 35);
+
+  ctx.fillStyle = p2c.body;
+  ctx.strokeText('P2: ' + battleScores[1], W * 3 / 4, 35);
+  ctx.fillText('P2: ' + battleScores[1], W * 3 / 4, 35);
+
+  // Score dots (first to 5)
+  for (let i = 0; i < battleWinScore; i++) {
+    ctx.fillStyle = i < battleScores[0] ? p1c.accent : 'rgba(255,255,255,0.2)';
+    ctx.beginPath(); ctx.arc(W / 4 - 40 + i * 18, 55, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = i < battleScores[1] ? p2c.accent : 'rgba(255,255,255,0.2)';
+    ctx.beginPath(); ctx.arc(W * 3 / 4 - 40 + i * 18, 55, 6, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // "FIRST TO 5" label
+  ctx.fillStyle = '#888'; ctx.font = '11px Arial';
+  ctx.fillText('FIRST TO ' + battleWinScore, W / 2, 55);
+
+  // Mute button
+  const muteX = W - 20, muteY = 15;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.arc(muteX, muteY, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '12px Arial';
+  ctx.fillText(audioMuted ? '🔇' : '🔊', muteX, muteY + 4);
+
+  ctx.textAlign = 'left';
+}
+
+function update() {
+  // Always decay visual effects regardless of state
+  if (screenShake > 0) screenShake *= 0.85;
+  if (screenShake < 0.1) screenShake = 0;
+  if (flashTimer > 0) flashTimer--;
+
+  // Skip all updates when paused
+  if (gameState === 'paused') return;
+  if (gameState === 'gameover') return;
+
+  // Countdown
+  if (gameState === 'countdown') {
+    countdownTimer--;
+    const prevSec = Math.ceil((countdownTimer + 1) / 60);
+    const curSec = Math.ceil(countdownTimer / 60);
+    if (curSec !== prevSec && curSec >= 0) {
+      playSound('countdown', curSec === 0 ? 'GO' : curSec);
+    }
+    if (countdownTimer <= 0) startPlaying();
+    return;
+  }
+
+  if (gameState !== 'playing') return;
+
+  // Battle mode: completely different update loop
+  if (gameMode === 'battle') { updateBattle(); return; }
+
+  // Get highest player score for speed/spawning
+  let maxScore = 0;
+  for (const p of players) { if (p.score > maxScore) maxScore = p.score; }
+  score = maxScore; // compat alias
+
+  const effSpeed = getEffectiveSpeed();
+  // Only accelerate in rally mode
+  if (gameMode === 'rally') {
+    gameSpeed = Math.min(maxSpeed, 1.6 + maxScore / 1000);
+  }
+  wheelAngle += effSpeed * 0.08;
+  updateEngineSound();
+
+  // Round timer for frenzy/battle
+  if (roundTimer > 0) {
+    roundTimer--;
+    if (roundTimer <= 0) {
+      gameState = 'gameover';
+      stopEngine();
+      stopBigAir();
+      return;
+    }
+  }
+
+  // Environment progression
+  const newEnv = Math.floor(maxScore / 500) % ENVIRONMENTS.length;
+  if (newEnv !== currentEnvIndex) {
+    currentEnvIndex = newEnv;
+    envAnnouncementText = ENVIRONMENTS[currentEnvIndex].name;
+    envAnnouncementTimer = 120;
+    envTransitionTimer = 30;
+    flashTimer = 15; flashColor = '#fff';
+  }
+  if (envTransitionTimer > 0) envTransitionTimer--;
+  if (envAnnouncementTimer > 0) envAnnouncementTimer--;
+
+  // Update each player
+  for (const p of players) updatePlayer(p);
+
+  // Screen shake & flash decay
+  if (screenShake > 0) screenShake *= 0.85;
+  if (flashTimer > 0) flashTimer--;
+
+  // Spawn obstacles
+  obstacleTimer--;
+  if (obstacleTimer <= 0) {
+    spawnObstacle();
+    if (gameMode === 'frenzy' || gameMode === 'battle') {
+      obstacleTimer = 20 + Math.random() * 20; // wall-to-wall cars!
+    } else {
+      obstacleTimer = 80 + Math.random() * 70 - Math.min(maxScore / 50, 30);
+    }
+  }
+
+  // Spawn stars (rally only)
+  if (gameMode === 'rally') {
+    starTimer--;
+    if (starTimer <= 0) { spawnStar(); starTimer = 50 + Math.random() * 40; }
+  }
+
+  // Spawn power-ups (rally only)
+  if (gameMode === 'rally') {
+    powerUpSpawnTimer--;
+    if (powerUpSpawnTimer <= 0) {
+      spawnPowerUp();
+      powerUpSpawnTimer = 200 + Math.random() * 100;
+    }
+  }
+
+  // Update obstacles
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    obstacles[i].x -= effSpeed;
+    if (obstacles[i].crushed) obstacles[i].crushAnim += 0.05;
+    if (obstacles[i].x < -120) obstacles.splice(i, 1);
+  }
+
+  // Update stars
+  for (let i = stars.length - 1; i >= 0; i--) {
+    stars[i].x -= effSpeed;
+    stars[i].bobPhase += 0.06;
+    if (stars[i].x < -20 || stars[i].collected) stars.splice(i, 1);
+  }
+
+  // Update power-ups
+  for (let i = powerUps.length - 1; i >= 0; i--) {
+    powerUps[i].x -= effSpeed;
+    powerUps[i].bobPhase += 0.06;
+    if (powerUps[i].x < -30 || powerUps[i].collected) powerUps.splice(i, 1);
+  }
+
+  // Update particles (cap at 150)
+  if (particles.length > 150) particles.splice(0, particles.length - 150);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx || 0; p.y += p.vy || 0;
+    if (p.type === 'spark' || p.type === 'dust') p.vy += 0.2;
+    p.life -= p.decay;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // Dust trail
+  if (dustTrail.length > 30) dustTrail.splice(0, dustTrail.length - 30);
+  for (const p of players) {
+    if (p.truck.grounded && Math.random() > 0.5) {
+      dustTrail.push({ x: p.truck.x + 5, y: GROUND_Y + 8 + Math.random() * 4, size: 3 + Math.random() * 5, life: 1 });
+    }
+  }
+  for (let i = dustTrail.length - 1; i >= 0; i--) {
+    dustTrail[i].x -= effSpeed * 0.5;
+    dustTrail[i].life -= 0.03;
+    dustTrail[i].size += 0.1;
+    if (dustTrail[i].life <= 0) dustTrail.splice(i, 1);
+  }
+
+  // Update bg (parallax — mountains slow, clouds slower)
+  for (const c of bgClouds) { c.x -= c.speed; if (c.x < -c.w) c.x = W + 20; }
+  for (const m of bgMountains) { m.x -= effSpeed * 0.1; if (m.x < -m.w) m.x = W + m.w; }
+
+  // Track best scores
+  for (const p of players) {
+    const best = getBestScore(p.truckIdx);
+    if (p.score > best) setBestScore(p.truckIdx, p.score);
+  }
+  if (maxScore > bestScore) { bestScore = maxScore; localStorage.setItem('monsterRallyBest', bestScore); }
+}
+
+// ============================================================
+// HUD & UI
+// ============================================================
+function drawPlayerHUD(p, side) {
+  const isLeft = side === 'left';
+  const x = isLeft ? 20 : W - 170;
+  const truckColors = TRUCK_ROSTER[p.truckIdx];
+
+  // Player label in 2P mode
+  if (numPlayers === 2) {
+    ctx.fillStyle = truckColors.body;
+    ctx.font = 'bold 12px Arial'; ctx.textAlign = isLeft ? 'left' : 'right';
+    ctx.fillText(isLeft ? 'P1' : 'P2', isLeft ? x : x + 150, 18);
+  }
+
+  // Score
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 24px "Arial Black", Impact, sans-serif';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+  ctx.textAlign = isLeft ? 'left' : 'right';
+  const scoreX = isLeft ? x : x + 150;
+  ctx.strokeText('⭐ ' + p.score, scoreX, 38);
+  ctx.fillText('⭐ ' + p.score, scoreX, 38);
+
+  // Combo
+  if (p.combo > 1) {
+    const ca = Math.min(1, p.comboTimer / 30);
+    ctx.globalAlpha = ca;
+    ctx.fillStyle = '#ff6600';
+    ctx.font = 'bold 18px "Arial Black", Impact, sans-serif';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    const ct = p.combo + 'x COMBO!';
+    ctx.strokeText(ct, scoreX, 60);
+    ctx.fillText(ct, scoreX, 60);
+    ctx.globalAlpha = 1;
+  }
+
+  // Power-up timer bar
+  if (p.activePowerUp) {
+    const barX = isLeft ? x : x + 60;
+    const barW = 90;
+    const pct = p.powerUpTimer / p.activePowerUp.duration;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.roundRect(barX, 68, barW, 10, 5); ctx.fill();
+    ctx.fillStyle = p.activePowerUp.color;
+    ctx.beginPath(); ctx.roundRect(barX, 68, barW * pct, 10, 5); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '9px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.activePowerUp.name, barX + barW / 2, 76);
+  }
+
+  ctx.textAlign = 'left';
+}
+
+function drawHUD() {
+  if (numPlayers === 1) {
+    drawPlayerHUD(player1, 'left');
+  } else {
+    drawPlayerHUD(player1, 'left');
+    drawPlayerHUD(player2, 'right');
+    // Touch zone hint (first 5 seconds = ~300 frames)
+    const maxScore = Math.max(player1.score, player2.score);
+    if (maxScore < 15) {
+      ctx.globalAlpha = 0.4;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#fff'; ctx.font = '16px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('P1 TAP', W / 4, H / 2);
+      ctx.fillText('P2 TAP', W * 3 / 4, H / 2);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Round timer for frenzy/battle
+  if (roundTimer > 0) {
+    const secs = Math.ceil(roundTimer / 60);
+    const urgent = secs <= 5;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = urgent ? '#ff4400' : '#fff';
+    ctx.font = 'bold ' + (urgent ? '32' : '26') + 'px "Arial Black", Impact, sans-serif';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+    const timerY = urgent ? 52 + Math.sin(Date.now() * 0.01) * 3 : 50;
+    ctx.strokeText(secs + 's', W / 2, timerY);
+    ctx.fillText(secs + 's', W / 2, timerY);
+    // Mode label
+    ctx.fillStyle = '#ffcc00'; ctx.font = 'bold 11px Arial';
+    ctx.fillText(gameMode === 'battle' ? 'BATTLE' : 'CRUSH FRENZY', W / 2, 18);
+    ctx.textAlign = 'left';
+  }
+
+  // Speed indicator (center-top, only in rally)
+  if (gameMode === 'rally') {
+  const speedPct = (gameSpeed - 1.6) / (maxSpeed - 1.6);
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.roundRect(W / 2 - 45, 8, 90, 14, 7); ctx.fill();
+  const speedColor = speedPct > 0.7 ? '#ff4400' : speedPct > 0.4 ? '#ff8800' : '#22cc66';
+  ctx.fillStyle = speedColor;
+  ctx.beginPath(); ctx.roundRect(W / 2 - 43, 10, Math.max(4, 86 * speedPct), 10, 5); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '8px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('SPEED', W / 2, 18); ctx.textAlign = 'left';
+  } // end rally speed indicator
+
+  // Mute button
+  const muteX = W - 20, muteY = 15;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.arc(muteX, muteY, 12, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
+  ctx.fillText(audioMuted ? '🔇' : '🔊', muteX, muteY + 4); ctx.textAlign = 'left';
+
+  // HONK button
+  const honkX = W - 70, honkY = H - 40;
+  const honkPulse = 0.9 + Math.sin(Date.now() * 0.005) * 0.1;
+  ctx.save(); ctx.translate(honkX, honkY); ctx.scale(honkPulse, honkPulse);
+  ctx.fillStyle = 'rgba(255,100,0,0.7)';
+  ctx.beginPath(); ctx.roundRect(-35, -18, 70, 36, 18); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Arial Black", Impact, sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText('HONK!', 0, 5); ctx.textAlign = 'left';
+  ctx.restore();
+
+  // Environment announcement
+  if (envAnnouncementTimer > 0) {
+    const ea = Math.min(1, envAnnouncementTimer / 30);
+    ctx.globalAlpha = ea;
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 30px "Arial Black", Impact, sans-serif';
+    ctx.textAlign = 'center'; ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
+    ctx.strokeText(envAnnouncementText + '!', W / 2, H / 2 - 60);
+    ctx.fillText(envAnnouncementText + '!', W / 2, H / 2 - 60);
+    ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  }
+
+  // Controls hint (single player, low score)
+  if (numPlayers === 1 && player1 && player1.score < 30) {
+    ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff'; ctx.font = '13px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('TAP or SPACE to JUMP!  •  H = HORN  •  M = MUTE', W / 2, H - 15);
+    ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+  }
+}
+
+// Title screen with animated truck
+let titleTruckX = -100;
+function drawTitleScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Animated truck driving across title
+  titleTruckX += 2;
+  if (titleTruckX > W + 100) titleTruckX = -120;
+  ctx.save();
+  ctx.translate(titleTruckX, 320);
+  ctx.scale(0.8, 0.8);
+  const titleTruckIdx = Math.floor(Date.now() / 4000) % ROSTER_COUNT;
+  drawVehiclePreview(-45, -25, TRUCK_ROSTER[titleTruckIdx], true, 0);
+  ctx.restore();
+
+  titleBounce += 0.05;
+
+  // Individual bouncing letters for "MONSTER"
+  ctx.textAlign = 'center';
+  const word1 = 'MONSTER';
+  ctx.font = 'bold 48px "Arial Black", Impact, sans-serif';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+  const w1Width = ctx.measureText(word1).width;
+  let cx1 = W / 2 - w1Width / 2;
+  for (let i = 0; i < word1.length; i++) {
+    const charBounce = Math.sin(titleBounce + i * 0.3) * 6;
+    const charW = ctx.measureText(word1[i]).width;
+    ctx.fillStyle = i % 2 === 0 ? '#ff4400' : '#ff6622';
+    ctx.strokeText(word1[i], cx1 + charW / 2, 150 + charBounce);
+    ctx.fillText(word1[i], cx1 + charW / 2, 150 + charBounce);
+    cx1 += charW;
+  }
+
+  const word2 = 'RALLY!';
+  ctx.font = 'bold 52px "Arial Black", Impact, sans-serif';
+  const w2Width = ctx.measureText(word2).width;
+  let cx2 = W / 2 - w2Width / 2;
+  for (let i = 0; i < word2.length; i++) {
+    const charBounce = Math.sin(titleBounce + i * 0.3 + 1) * 6;
+    const charW = ctx.measureText(word2[i]).width;
+    ctx.fillStyle = i % 2 === 0 ? '#ffcc00' : '#ffdd44';
+    ctx.strokeText(word2[i], cx2 + charW / 2, 205 + charBounce);
+    ctx.fillText(word2[i], cx2 + charW / 2, 205 + charBounce);
+    cx2 += charW;
+  }
+
+  // Monster truck flanking the title (left side)
+  ctx.save();
+  ctx.translate(W / 2 - 160, 175);
+  ctx.scale(0.7, 0.7);
+  drawTruckWithColors(-45, -25, 90, 50, TRUCK_ROSTER[0], true, 0);
+  ctx.restore();
+
+  // Monster truck flanking the title (right side, flipped)
+  ctx.save();
+  ctx.translate(W / 2 + 160, 175);
+  ctx.scale(-0.7, 0.7);
+  drawTruckWithColors(-45, -25, 90, 50, TRUCK_ROSTER[1], true, 0);
+  ctx.restore();
+
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Arial';
+  const blink = Math.sin(Date.now() * 0.004) > 0;
+  if (blink) ctx.fillText('TAP ANYWHERE TO START!', W / 2, 275);
+
+  ctx.font = '16px Arial'; ctx.fillStyle = '#aaa';
+  ctx.fillText('SPACE / TAP = Jump  •  Crush cars for points!', W / 2, 305);
+
+  if (bestScore > 0) {
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 18px Arial';
+    ctx.fillText('Best: ⭐ ' + bestScore, W / 2, 345);
+  }
+
+  // Version text
+  ctx.fillStyle = '#444'; ctx.font = '10px Arial'; ctx.textAlign = 'right';
+  ctx.fillText('v1.0', W - 10, H - 8);
+
+  // Back button (top-left)
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '14px Arial';
+  ctx.fillText('\u2190 Back', 12, 22);
+
+  ctx.textAlign = 'left';
+}
+
+// ============================================================
+// TRUCK DRAWING (per player)
+// ============================================================
+function drawPlayerTruck(p) {
+  const tk = p.truck;
+  const colors = TRUCK_ROSTER[p.truckIdx];
+  const squishY = tk.squish * 6;
+  const tiltAngle = tk.tilt * 0.05;
+
+  ctx.save();
+
+  // Mega truck scale
+  if (p.megaScale > 1.01) {
+    ctx.translate(tk.x + tk.w / 2, tk.y + tk.h);
+    ctx.scale(p.megaScale, p.megaScale);
+    ctx.translate(-(tk.x + tk.w / 2), -(tk.y + tk.h));
+    // Mega glow
+    ctx.fillStyle = 'rgba(255,136,0,0.2)';
+    ctx.beginPath(); ctx.arc(tk.x + tk.w / 2, tk.y + tk.h / 2, 60, 0, Math.PI * 2); ctx.fill();
+  }
+
+  ctx.translate(tk.x + tk.w / 2, tk.y + tk.h);
+  if (p.flipAngle !== 0) ctx.rotate(p.flipAngle);
+  else ctx.rotate(tiltAngle);
+  ctx.translate(-(tk.x + tk.w / 2), -(tk.y + tk.h));
+
+  // Shadow
+  if (Math.abs(p.flipAngle) < 0.5) {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(tk.x + tk.w / 2, GROUND_Y + 8, tk.w / 2 + 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Suspension bars
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(tk.x + 15, tk.y + tk.h - 5 + squishY);
+  ctx.lineTo(tk.x + 15, tk.y + tk.h + 8 + squishY / 2);
+  ctx.moveTo(tk.x + tk.w - 15, tk.y + tk.h - 5 + squishY);
+  ctx.lineTo(tk.x + tk.w - 15, tk.y + tk.h + 8 + squishY / 2);
+  ctx.stroke();
+
+  // Headlight glow
+  ctx.fillStyle = 'rgba(255,255,200,0.06)';
+  ctx.beginPath();
+  ctx.moveTo(tk.x + tk.w, tk.y + 15 + squishY);
+  ctx.lineTo(tk.x + tk.w + 50, tk.y - 5);
+  ctx.lineTo(tk.x + tk.w + 50, tk.y + tk.h + 15);
+  ctx.closePath(); ctx.fill();
+
+  // Draw the right vehicle type based on style
+  if (colors.style === 'monster') {
+    drawTruckMonster(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY);
+  } else if (!colors.type || colors.type === 'monster' || colors.style === 'classic') {
+    drawTruckWithColors(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY);
+  } else {
+    drawCarVehicle(tk.x, tk.y, tk.w, tk.h, colors, colors.type, squishY);
+  }
+  ctx.restore();
+}
+
+// ============================================================
+// MAIN DRAW
+// ============================================================
+function draw() {
+  const scaleX = canvas.width / W;
+  const scaleY = canvas.height / H;
+  ctx.save();
+  ctx.scale(scaleX, scaleY);
+
+  if (screenShake > 0.5) {
+    ctx.translate((Math.random() - 0.5) * screenShake * 2, (Math.random() - 0.5) * screenShake * 2);
+  }
+
+  // Draw environment background
+  const env = ENVIRONMENTS[currentEnvIndex];
+  drawEnvironmentBg(env);
+
+  // Draw environment ground
+  drawEnvironmentGround(env);
+
+  // Tire tracks
+  for (const p of players) {
+    for (const tt of p.tireTracks) {
+      ctx.globalAlpha = tt.life * 0.25;
+      ctx.fillStyle = '#222';
+      ctx.fillRect(tt.x - 2, tt.y, 4, 2);
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Dust trail
+  for (const d of dustTrail) {
+    ctx.globalAlpha = d.life * 0.3;
+    ctx.fillStyle = env.groundAccent;
+    ctx.beginPath(); ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Environment transition flash
+  if (envTransitionTimer > 0) {
+    ctx.globalAlpha = envTransitionTimer / 30;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+
+  if (gameState === 'playing' || gameState === 'countdown' || gameState === 'gameover' || gameState === 'paused') {
+    // Battle mode: draw arena instead of scrolling level
+    if (gameMode === 'battle') {
+      // Arena is drawn instead of normal environment (override bg)
+      // We already drew environment bg above, so draw arena on top
+      drawBattleArena();
+
+      // Draw trucks facing each other (P2 flipped)
+      if (player2) {
+        ctx.save();
+        const tk2 = player2.truck;
+        ctx.translate(tk2.x + tk2.w / 2, tk2.y + tk2.h);
+        ctx.scale(-1, 1); // flip horizontally
+        ctx.translate(-(tk2.x + tk2.w / 2), -(tk2.y + tk2.h));
+        drawPlayerTruck(player2);
+        ctx.restore();
+      }
+      if (player1) drawPlayerTruck(player1);
+    } else {
+      // Normal mode: draw stars, power-ups, obstacles, trucks
+      // Draw stars
+      for (const s of stars) { if (!s.collected) drawStar(s); }
+
+      // Draw power-ups
+      for (const pu of powerUps) { if (!pu.collected) drawPowerUp(pu); }
+
+      // Draw obstacles
+      for (const obs of obstacles) drawObstacle(obs);
+
+      // Draw trucks (P2 first if exists, so P1 draws on top)
+      if (player2) drawPlayerTruck(player2);
+      if (player1) drawPlayerTruck(player1);
+    }
+
+    // Draw particles
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      if (p.type === 'text') {
+        ctx.fillStyle = p.color;
+        ctx.font = 'bold 20px "Arial Black", Impact, sans-serif';
+        ctx.textAlign = 'center'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+        ctx.strokeText(p.text, p.x, p.y); ctx.fillText(p.text, p.x, p.y);
+      } else {
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1; ctx.textAlign = 'left';
+
+    // Flash effect
+    if (flashTimer > 0) {
+      ctx.globalAlpha = flashTimer / 12;
+      ctx.fillStyle = flashColor;
+      ctx.fillRect(0, 0, W, H);
+      ctx.globalAlpha = 1;
+    }
+
+    if (gameState === 'playing' || gameState === 'paused') {
+      if (gameMode === 'battle') drawBattleHUD();
+      else drawHUD();
+      drawPauseButton();
+    }
+    if (gameState === 'paused') drawPauseOverlay();
+    if (gameState === 'countdown') drawCountdown();
+  }
+
+  if (gameState === 'title') drawTitleScreen();
+  if (gameState === 'picker') drawPickerScreen();
+  if (gameState === 'modeselect') drawModeSelectScreen();
+  if (gameState === 'playerselect') drawPlayerSelectScreen();
+  if (gameState === 'gameover') drawGameOverScreen();
+
+  ctx.restore();
+}
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+let lastFrameTime = 0;
+const FRAME_INTERVAL = 1000 / 60; // Cap at 60fps
+
+function gameLoop(timestamp) {
+  const elapsed = timestamp - lastFrameTime;
+  if (elapsed >= FRAME_INTERVAL) {
+    lastFrameTime = timestamp - (elapsed % FRAME_INTERVAL);
+    update();
+    draw();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// Polyfill roundRect if needed
+if (!ctx.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = [r, r, r, r];
+    const [tl, tr, br, bl] = r;
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + tr);
+    this.lineTo(x + w, y + h - br);
+    this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+    this.lineTo(x + bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - bl);
+    this.lineTo(x, y + tl);
+    this.quadraticCurveTo(x, y, x + tl, y);
+    this.closePath();
+  };
+}
+
+gameLoop();
+</script>
+</body>
+</html>
