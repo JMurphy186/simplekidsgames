@@ -1557,7 +1557,7 @@ function spawnStarParticles(x, y) {
       vx: Math.cos(angle) * 4,
       vy: Math.sin(angle) * 4,
       size: 3 + Math.random() * 3,
-      color: Math.random() > 0.5 ? '#ffd700' : '#fff200',
+      color: ['#ffd700', '#ffdd44', '#cc9900', '#fff'][Math.floor(Math.random() * 4)],
       life: 1,
       decay: 0.025,
       type: 'spark'
@@ -3372,33 +3372,79 @@ function drawRamp(obs) {
   ctx.fillText('\u25B2', x + obs.w - 20, GROUND_Y - 5);
 }
 
+// Star shape helper (used by Star Coin icon)
+function drawStarShape(cx, cy, outerR, innerR, points) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i * Math.PI / points) - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// Star Coin drawing (Concept C — chunky gold coin with embossed star)
+function drawStarCoin(r) {
+  // Glow
+  const glow = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.4);
+  glow.addColorStop(0, 'rgba(255,200,0,0.3)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2); ctx.fill();
+
+  // Thick metallic rim
+  const rimGrad = ctx.createLinearGradient(-r, -r, r, r);
+  rimGrad.addColorStop(0, '#ddaa00'); rimGrad.addColorStop(0.3, '#ffdd44');
+  rimGrad.addColorStop(0.5, '#ddaa00'); rimGrad.addColorStop(0.7, '#ffdd44');
+  rimGrad.addColorStop(1, '#aa7700');
+  ctx.fillStyle = rimGrad;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+  // Inner face
+  const faceGrad = ctx.createRadialGradient(-r * 0.1, -r * 0.1, 0, 0, 0, r * 0.78);
+  faceGrad.addColorStop(0, '#ffcc00'); faceGrad.addColorStop(1, '#b38600');
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.78, 0, Math.PI * 2); ctx.fill();
+
+  // Notched rim
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = r * 0.03;
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.82, Math.sin(a) * r * 0.82);
+    ctx.lineTo(Math.cos(a) * r * 0.92, Math.sin(a) * r * 0.92);
+    ctx.stroke();
+  }
+
+  // Star shadow (emboss effect)
+  ctx.fillStyle = 'rgba(100,70,0,0.3)';
+  drawStarShape(r * 0.02, r * 0.03, r * 0.52, r * 0.24, 5); ctx.fill();
+  // Bright star
+  const starG = ctx.createRadialGradient(0, -r * 0.1, 0, 0, 0, r * 0.5);
+  starG.addColorStop(0, '#fff566'); starG.addColorStop(1, '#ffbb00');
+  ctx.fillStyle = starG;
+  drawStarShape(0, 0, r * 0.5, r * 0.22, 5); ctx.fill();
+  // Star outline
+  ctx.strokeStyle = 'rgba(180,130,0,0.5)'; ctx.lineWidth = r * 0.03;
+  drawStarShape(0, 0, r * 0.5, r * 0.22, 5); ctx.stroke();
+
+  // Shimmer highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.18, -r * 0.32, r * 0.3, r * 0.12, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function drawStar(s) {
   const bob = Math.sin(s.bobPhase) * 5;
   const sx = s.x, sy = s.y + bob;
-  const r = 12;
 
   ctx.save();
-  ctx.globalAlpha = 0.3;
-  ctx.fillStyle = '#ffd700';
-  ctx.beginPath();
-  ctx.arc(sx, sy, r + 6, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.translate(sx, sy);
+  drawStarCoin(12);
   ctx.restore();
-
-  ctx.fillStyle = '#ffd700';
-  ctx.beginPath();
-  for (let i = 0; i < 5; i++) {
-    const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
-    const fn = i === 0 ? 'moveTo' : 'lineTo';
-    ctx[fn](sx + Math.cos(a) * r, sy + Math.sin(a) * r);
-  }
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = '#fff200';
-  ctx.beginPath();
-  ctx.arc(sx, sy, r * 0.35, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // ============================================================
@@ -4029,14 +4075,17 @@ function drawPlayerHUD(p, side) {
     ctx.fillText(isLeft ? 'P1' : 'P2', isLeft ? x : x + 150, 18);
   }
 
-  // Score
+  // Score with coin icon
+  ctx.textAlign = isLeft ? 'left' : 'right';
+  const scoreX = isLeft ? x : x + 150;
+  const coinX = isLeft ? scoreX + 10 : scoreX - 10;
+  ctx.save(); ctx.translate(coinX, 30); drawStarCoin(9); ctx.restore();
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 24px "Arial Black", Impact, sans-serif';
   ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
-  ctx.textAlign = isLeft ? 'left' : 'right';
-  const scoreX = isLeft ? x : x + 150;
-  ctx.strokeText('⭐ ' + p.score, scoreX, 38);
-  ctx.fillText('⭐ ' + p.score, scoreX, 38);
+  const textX = isLeft ? scoreX + 24 : scoreX - 24;
+  ctx.strokeText(p.score, textX, 38);
+  ctx.fillText(p.score, textX, 38);
 
   // Combo
   if (p.combo > 1) {
