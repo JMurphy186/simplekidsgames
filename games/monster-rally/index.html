@@ -630,8 +630,8 @@ function handleDown(e) {
   const vc = getVirtualCoords(e);
 
   if (gameState === 'title') {
-    // Back to games button (top-left)
-    if (vc.x < 140 && vc.y < 50) { window.location.href = '/'; return; }
+    // Back to games button (top-left, 130x50 orange button)
+    if (vc.x < 150 && vc.y < 60) { window.location.href = '/'; return; }
     gameState = 'picker'; pickerPlayer = 1; return;
   }
   if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
@@ -816,7 +816,7 @@ function confirmPicker() {
 
 function handleModeSelectClick(vx, vy) {
   // Back to games (top-left)
-  if (vx < 120 && vy < 40) { window.location.href = '/'; return; }
+  if (vx < 145 && vy < 55) { window.location.href = '/'; return; }
   // Change truck (top-right)
   if (vx > W - 150 && vy < 40) { pickerPlayer = 1; gameState = 'picker'; return; }
 
@@ -837,8 +837,9 @@ function handleModeSelectClick(vx, vy) {
 function selectMode(mode) {
   gameMode = mode;
   if (mode === 'rally') {
-    // Rally: ask 1P or 2P
-    gameState = 'playerselect';
+    // Rally: always 1 player, skip straight to countdown
+    numPlayers = 1;
+    startCountdown();
   } else if (mode === 'frenzy') {
     // Frenzy: always 1P
     numPlayers = 1;
@@ -903,7 +904,7 @@ function initGame() {
     gameSpeed = 2.4;
     obstacleTimer = 10;
     starTimer = 9999;
-    powerUpSpawnTimer = 9999;
+    powerUpSpawnTimer = 150; // power-ups enabled in frenzy!
     roundTimer = 1800; // 30 seconds
   } else {
     gameSpeed = 1.6;
@@ -1050,6 +1051,25 @@ function drawPauseOverlay() {
   ctx.fillStyle = '#888'; ctx.font = '12px Arial';
   ctx.fillText('ESC/P = Resume  \u2022  R = Restart  \u2022  Q = Quit', W / 2, my + btnH + 25);
   ctx.textAlign = 'left';
+}
+
+function drawGamesButton(x, y) {
+  // Prominent orange rounded button — 130x50, easy to tap
+  ctx.save();
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.roundRect(x + 2, y + 2, 130, 44, 12); ctx.fill();
+  // Background
+  ctx.fillStyle = 'rgba(255,107,53,0.85)';
+  ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.fill();
+  // Border
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.stroke();
+  // Text
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px "Arial Black", Impact, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('\uD83C\uDFE0 GAMES', x + 65, y + 30);
+  ctx.restore();
 }
 
 function drawPauseButton() {
@@ -1222,9 +1242,8 @@ function drawModeSelectScreen() {
   ctx.fillStyle = '#666'; ctx.font = '12px Arial';
   ctx.fillText('Press 1, 2, or 3  \u2022  or tap a button', W / 2, H - 25);
 
-  // Back to games (top-left)
-  ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'left';
-  ctx.fillText('\u2190 GAMES', 15, 25);
+  // Back to games (top-left — prominent orange button)
+  drawGamesButton(10, 5);
 
   // Change truck (top-right)
   ctx.textAlign = 'right';
@@ -3782,8 +3801,8 @@ function update() {
     if (starTimer <= 0) { spawnStar(); starTimer = 50 + Math.random() * 40; }
   }
 
-  // Spawn power-ups (rally only)
-  if (gameMode === 'rally') {
+  // Spawn power-ups (rally + frenzy, not battle)
+  if (gameMode === 'rally' || gameMode === 'frenzy') {
     powerUpSpawnTimer--;
     if (powerUpSpawnTimer <= 0) {
       spawnPowerUp();
@@ -4064,11 +4083,8 @@ function drawTitleScreen() {
   ctx.fillStyle = '#444'; ctx.font = '10px Arial'; ctx.textAlign = 'right';
   ctx.fillText('v1.0', W - 10, H - 8);
 
-  // Back to games button (top-left, 120x44 hit area)
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath(); ctx.roundRect(10, 8, 120, 36, 18); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('\u2190 GAMES', 70, 32);
+  // Back to games button (prominent orange button, 130x50)
+  drawGamesButton(15, 10);
 
   ctx.textAlign = 'left';
 }
@@ -4234,6 +4250,22 @@ function draw() {
       ctx.fillStyle = flashColor;
       ctx.fillRect(0, 0, W, H);
       ctx.globalAlpha = 1;
+    }
+
+    // Turbo Boost speed lines
+    if (gameState === 'playing') {
+      for (const p of players) {
+        if (p.activePowerUp && p.activePowerUp.effect === 'turbo') {
+          ctx.globalAlpha = 0.15 + Math.random() * 0.1;
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+          for (let sl = 0; sl < 4; sl++) {
+            const sy = 50 + Math.random() * (GROUND_Y - 60);
+            ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+          break;
+        }
+      }
     }
 
     if (gameState === 'playing' || gameState === 'paused') {
