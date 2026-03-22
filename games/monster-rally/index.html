@@ -1601,42 +1601,127 @@ function spawnPowerUp() {
   });
 }
 
+// ============================================================
+// POWER-UP ICON DRAWING (polished Canvas-drawn icons)
+// ============================================================
+function drawPowerUpGlow(ctx, r, color, intensity) {
+  const grad = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.5);
+  grad.addColorStop(0, color + (intensity || '44'));
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2); ctx.fill();
+}
+
+// Turbo Boost — Speed Bolt (orange circle, speed lines, lightning bolt)
+function drawTurboIcon(ctx, r) {
+  drawPowerUpGlow(ctx, r, '#ff4400');
+  const g = ctx.createRadialGradient(-r*0.1, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#ffaa00'); g.addColorStop(0.6, '#ff4400'); g.addColorStop(1, '#cc2200');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  // Speed lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = r * 0.06;
+  for (let i = 0; i < 3; i++) {
+    const ly = -r*0.3 + i * r * 0.3;
+    ctx.beginPath(); ctx.moveTo(-r * 0.85, ly); ctx.lineTo(-r * 0.45, ly); ctx.stroke();
+  }
+  // Lightning bolt
+  ctx.fillStyle = '#fff'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = r * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(-r*0.25, -r*0.6); ctx.lineTo(r*0.15, -r*0.08); ctx.lineTo(-r*0.05, -r*0.08);
+  ctx.lineTo(r*0.25, r*0.6); ctx.lineTo(-r*0.15, r*0.08); ctx.lineTo(r*0.05, r*0.08);
+  ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+}
+
+// Mega Truck — Shield Star (red circle, hexagonal shield, up-arrow)
+function drawMegaIcon(ctx, r) {
+  drawPowerUpGlow(ctx, r, '#ff3333');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#ff6644'); g.addColorStop(1, '#bb1100');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  // Shield shape
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.7); ctx.lineTo(r*0.55, -r*0.35); ctx.lineTo(r*0.55, r*0.2);
+  ctx.lineTo(0, r*0.65); ctx.lineTo(-r*0.55, r*0.2); ctx.lineTo(-r*0.55, -r*0.35);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = r * 0.05; ctx.stroke();
+  // Up arrow
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.4); ctx.lineTo(r*0.25, -r*0.05); ctx.lineTo(r*0.1, -r*0.05);
+  ctx.lineTo(r*0.1, r*0.3); ctx.lineTo(-r*0.1, r*0.3); ctx.lineTo(-r*0.1, -r*0.05);
+  ctx.lineTo(-r*0.25, -r*0.05); ctx.closePath(); ctx.fill();
+}
+
+// Magnet — Horseshoe Magnet (blue circle, red U-magnet, field lines)
+function drawMagnetIcon(ctx, r) {
+  drawPowerUpGlow(ctx, r, '#4488ff');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#6699ff'); g.addColorStop(1, '#2244aa');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  // Magnet U-shape
+  ctx.strokeStyle = '#ff3333'; ctx.lineWidth = r * 0.2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, -r*0.05, r*0.4, 0, Math.PI); ctx.stroke();
+  // Silver tips
+  ctx.strokeStyle = '#cccccc'; ctx.lineWidth = r * 0.2;
+  ctx.beginPath(); ctx.moveTo(-r*0.4, -r*0.05); ctx.lineTo(-r*0.4, -r*0.35); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(r*0.4, -r*0.05); ctx.lineTo(r*0.4, -r*0.35); ctx.stroke();
+  // Field lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = r * 0.03;
+  ctx.setLineDash([r*0.05, r*0.05]);
+  for (let i = 0; i < 3; i++) {
+    const mr = r * (0.55 + i * 0.12);
+    ctx.beginPath(); ctx.arc(0, -r*0.05, mr, 0.3, Math.PI - 0.3); ctx.stroke();
+  }
+  ctx.setLineDash([]); ctx.lineCap = 'butt';
+}
+
+// Super Jump — Spring Coil (purple circle, white spring, yellow arrow)
+function drawJumpIcon(ctx, r) {
+  drawPowerUpGlow(ctx, r, '#8855ff');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#aa77ff'); g.addColorStop(1, '#5522aa');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  // Spring coils
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = r * 0.08; ctx.lineCap = 'round';
+  const coils = 4, springW = r * 0.4, springH = r * 1.2, startY = r * 0.5;
+  ctx.beginPath();
+  for (let i = 0; i <= coils * 20; i++) {
+    const t = i / (coils * 20);
+    const x = Math.sin(t * coils * Math.PI * 2) * springW;
+    const y = startY - t * springH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke(); ctx.lineCap = 'butt';
+  // Up arrow at top
+  ctx.fillStyle = '#ffcc00';
+  ctx.beginPath(); ctx.moveTo(0, -r*0.75); ctx.lineTo(r*0.2, -r*0.45); ctx.lineTo(-r*0.2, -r*0.45);
+  ctx.closePath(); ctx.fill();
+}
+
+function drawPowerUpIcon(effect, r) {
+  if (effect === 'turbo') drawTurboIcon(ctx, r);
+  else if (effect === 'mega') drawMegaIcon(ctx, r);
+  else if (effect === 'magnet') drawMagnetIcon(ctx, r);
+  else if (effect === 'superjump') drawJumpIcon(ctx, r);
+}
+
 function drawPowerUp(pu) {
   const bob = Math.sin(pu.bobPhase) * 8;
   const px = pu.x, py = pu.y + bob;
   pu.glowPhase += 0.1;
 
-  // Outer pulsing glow (big and noticeable)
-  const glow = 0.2 + Math.sin(pu.glowPhase) * 0.15;
+  // Draw the polished icon
   ctx.save();
-  ctx.globalAlpha = glow;
-  ctx.fillStyle = pu.type.color;
-  ctx.beginPath(); ctx.arc(px, py, 32, 0, Math.PI * 2); ctx.fill();
+  ctx.translate(px, py);
+  drawPowerUpIcon(pu.type.effect, 22);
   ctx.restore();
-
-  // Inner glow ring
-  ctx.save();
-  ctx.globalAlpha = 0.4 + Math.sin(pu.glowPhase * 1.5) * 0.2;
-  ctx.strokeStyle = pu.type.color; ctx.lineWidth = 3;
-  const ringR = 24 + Math.sin(pu.glowPhase * 2) * 3;
-  ctx.beginPath(); ctx.arc(px, py, ringR, 0, Math.PI * 2); ctx.stroke();
-  ctx.restore();
-
-  // Main circle
-  ctx.fillStyle = pu.type.color;
-  ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2); ctx.fill();
-
-  // White border
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.arc(px, py, 20, 0, Math.PI * 2); ctx.stroke();
-
-  // Icon (bigger)
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px "Arial Black", Impact, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText(pu.type.icon, px, py + 6);
 
   // Name label above
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial';
-  ctx.fillText(pu.type.name, px, py - 26);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+  ctx.strokeText(pu.type.name, px, py - 28);
+  ctx.fillText(pu.type.name, px, py - 28);
   ctx.textAlign = 'left';
 }
 
@@ -3966,18 +4051,25 @@ function drawPlayerHUD(p, side) {
     ctx.globalAlpha = 1;
   }
 
-  // Power-up timer bar
+  // Power-up timer bar + icon
   if (p.activePowerUp) {
-    const barX = isLeft ? x : x + 60;
-    const barW = 90;
+    const iconR = 12;
+    const iconX = isLeft ? x + iconR : x + 150 - iconR;
+    const barX = isLeft ? x + iconR * 2 + 4 : x + 60;
+    const barW = 70;
     const pct = p.powerUpTimer / p.activePowerUp.duration;
+    // Mini icon
+    ctx.save(); ctx.translate(iconX, 74);
+    drawPowerUpIcon(p.activePowerUp.effect, iconR);
+    ctx.restore();
+    // Timer bar
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.beginPath(); ctx.roundRect(barX, 68, barW, 10, 5); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(barX, 69, barW, 10, 5); ctx.fill();
     ctx.fillStyle = p.activePowerUp.color;
-    ctx.beginPath(); ctx.roundRect(barX, 68, barW * pct, 10, 5); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '9px Arial';
+    ctx.beginPath(); ctx.roundRect(barX, 69, barW * pct, 10, 5); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '8px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(p.activePowerUp.name, barX + barW / 2, 76);
+    ctx.fillText(p.activePowerUp.name, barX + barW / 2, 77);
   }
 
   ctx.textAlign = 'left';
