@@ -121,7 +121,7 @@ const POWERUP_TYPES = [
   { name: 'MEGA TRUCK', color: '#ff8800', icon: '↑', duration: 300, effect: 'mega' },
   { name: 'MAGNET', color: '#4488ff', icon: '⊃', duration: 480, effect: 'magnet' },
   { name: 'TURBO BOOST', color: '#ff4400', icon: '⚡', duration: 240, effect: 'turbo' },
-  { name: 'DOUBLE STARS', color: '#ffd700', icon: 'x2', duration: 600, effect: 'double' }
+  { name: 'SUPER JUMP', color: '#8855ff', icon: '\u2191', duration: 480, effect: 'superjump' }
 ];
 
 // Sound constants
@@ -818,8 +818,8 @@ function confirmPicker() {
 function handleModeSelectClick(vx, vy) {
   // Back to games (top-left)
   if (vx < 145 && vy < 55) { window.location.href = '/'; return; }
-  // Change truck (top-right)
-  if (vx > W - 150 && vy < 40) { pickerPlayer = 1; gameState = 'picker'; return; }
+  // Change truck (top-right, 130x44 button at W-145, 5)
+  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; gameState = 'picker'; return; }
 
   const btnW = 200, btnH = 65, gap = 20;
   const by = 160;
@@ -944,6 +944,13 @@ function initGame() {
 function startPlaying() {
   gameState = 'playing';
   if (!audioMuted) startEngine();
+  // Immediate engagement — spawn first obstacle and star right away
+  obstacleTimer = 15;
+  if (gameMode !== 'battle') {
+    spawnStar(450, GROUND_Y - 80);
+    spawnObstacle();
+    if (obstacles.length > 0) obstacles[obstacles.length - 1].x = 550;
+  }
 }
 
 // ============================================================
@@ -977,9 +984,10 @@ function quitToMenu() {
 }
 
 function handlePauseClick(vx, vy) {
-  const btnW = 200, btnH = 50, gap = 15;
+  // MUST match drawPauseOverlay layout exactly
+  const btnW = 200, btnH = 45, gap = 12;
   const bx = W / 2 - btnW / 2;
-  const baseY = 195;
+  const baseY = 130;
 
   // Resume button
   if (vx >= bx && vx <= bx + btnW && vy >= baseY && vy <= baseY + btnH) {
@@ -1070,6 +1078,20 @@ function drawGamesButton(x, y) {
   ctx.fillStyle = '#fff'; ctx.font = 'bold 18px "Arial Black", Impact, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('\uD83C\uDFE0 GAMES', x + 65, y + 30);
+  ctx.restore();
+}
+
+function drawChangeTruckButton(x, y) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.roundRect(x + 2, y + 2, 130, 44, 12); ctx.fill();
+  ctx.fillStyle = 'rgba(255,107,53,0.85)';
+  ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Arial Black", Impact, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('\uD83D\uDE9B TRUCK', x + 65, y + 30);
   ctx.restore();
 }
 
@@ -1246,10 +1268,8 @@ function drawModeSelectScreen() {
   // Back to games (top-left — prominent orange button)
   drawGamesButton(10, 5);
 
-  // Change truck (top-right)
-  ctx.textAlign = 'right';
-  ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.font = 'bold 13px Arial';
-  ctx.fillText('CHANGE TRUCK \u2192', W - 15, 25);
+  // Change truck (top-right — prominent orange button, matching GAMES button)
+  drawChangeTruckButton(W - 145, 5);
 
   ctx.textAlign = 'left';
 }
@@ -3277,9 +3297,10 @@ function updatePlayer(p) {
   const grav = getGravity();
   const truckColors = TRUCK_ROSTER[p.truckIdx];
 
-  // Jump
+  // Jump (Super Jump = 1.8x force)
   if (p.jumpPressed && tk.grounded) {
-    tk.vy = JUMP_FORCE;
+    const jumpMult = (p.activePowerUp && p.activePowerUp.effect === 'superjump') ? 1.8 : 1.0;
+    tk.vy = JUMP_FORCE * jumpMult;
     tk.grounded = false;
     tk.jumping = true;
     spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
@@ -3422,7 +3443,7 @@ function updatePlayer(p) {
 
   // Star collision + magnet
   const hasMagnet = p.activePowerUp && p.activePowerUp.effect === 'magnet';
-  const hasDouble = p.activePowerUp && p.activePowerUp.effect === 'double';
+  const hasSuperJump = p.activePowerUp && p.activePowerUp.effect === 'superjump';
   for (let i = stars.length - 1; i >= 0; i--) {
     const s = stars[i];
     if (s.collected) continue;
@@ -3438,7 +3459,7 @@ function updatePlayer(p) {
 
     if (dist < 35 * p.megaScale) {
       s.collected = true;
-      const starVal = hasDouble ? 30 : 15;
+      const starVal = 15;
       p.score += starVal;
       spawnStarParticles(s.x, s.y);
       flashTimer = 4; flashColor = '#ffd700';
@@ -4253,7 +4274,7 @@ function draw() {
       ctx.globalAlpha = 1;
     }
 
-    // Turbo Boost speed lines
+    // Turbo Boost speed lines + Super Jump trail
     if (gameState === 'playing') {
       for (const p of players) {
         if (p.activePowerUp && p.activePowerUp.effect === 'turbo') {
@@ -4264,7 +4285,18 @@ function draw() {
             ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
           }
           ctx.globalAlpha = 1;
-          break;
+        }
+        if (p.activePowerUp && p.activePowerUp.effect === 'superjump') {
+          // Purple glow trail behind truck
+          const tk = p.truck;
+          for (let t = 1; t <= 4; t++) {
+            ctx.globalAlpha = 0.3 - t * 0.06;
+            ctx.fillStyle = '#8855ff';
+            ctx.beginPath();
+            ctx.arc(tk.x + tk.w / 2 - t * 12, tk.y + tk.h / 2 + t * 3, 8 - t, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
         }
       }
     }
