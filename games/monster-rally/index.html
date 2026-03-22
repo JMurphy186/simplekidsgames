@@ -1459,12 +1459,12 @@ function spawnObstacle() {
     types = ['red_racer','red_racer','red_racer','cool_blue','cool_blue','cool_blue',
              'gold_rush','gold_rush','big_suv','big_suv',
              'school_bus','stretch_limo',
-             'barrel','barrel','portapotty','tvstack','haybale','haybale'];
+             'barrel','barrel','portapotty','tvstack','trashcan','trashcan'];
   } else {
     types = ['red_racer','red_racer','cool_blue','cool_blue','gold_rush','gold_rush',
              'big_suv','big_suv','school_bus','stretch_limo',
              'ramp','ramp',
-             'barrel','portapotty','tvstack','haybale','haybale'];
+             'barrel','portapotty','tvstack','trashcan','trashcan'];
   }
   const type = types[Math.floor(Math.random() * types.length)];
   const obs = { x: W + 50, type, crushed: false, crushAnim: 0 };
@@ -1479,7 +1479,7 @@ function spawnObstacle() {
   else if (type === 'barrel') { obs.w = 40; obs.h = 30; obs.color = '#8B4513'; obs.points = 8; }
   else if (type === 'portapotty') { obs.w = 30; obs.h = 45; obs.color = '#2288cc'; obs.points = 15; obs.tipAngle = 0; }
   else if (type === 'tvstack') { obs.w = 50; obs.h = 40; obs.color = '#555555'; obs.points = 12; }
-  else if (type === 'haybale') { obs.w = 35; obs.h = 25; obs.color = '#DAA520'; obs.points = 5; }
+  else if (type === 'trashcan') { obs.w = 35; obs.h = 30; obs.color = '#33aa33'; obs.points = 5; }
 
   obs.y = GROUND_Y - (obs.h || 25);
   obstacles.push(obs);
@@ -2583,7 +2583,7 @@ function drawObstacle(obs) {
   if (obs.type === 'barrel') return drawBarrel(obs);
   if (obs.type === 'portapotty') return drawPortaPotty(obs);
   if (obs.type === 'tvstack') return drawTVStack(obs);
-  if (obs.type === 'haybale') return drawHayBale(obs);
+  if (obs.type === 'trashcan') return drawTrashCans(obs);
   if (obs.type === 'red_racer' || obs.type === 'cool_blue' || obs.type === 'gold_rush') return drawPickupTruck(obs);
   if (obs.type === 'big_suv') return drawBigSUV(obs);
   if (obs.type === 'school_bus') return drawSchoolBus(obs);
@@ -2693,10 +2693,8 @@ function drawTVStack(obs) {
     const cp = Math.min(obs.crushAnim, 1);
     ctx.save();
     ctx.globalAlpha = 1 - cp * 0.5;
-    // Shattered TV pieces
     ctx.fillStyle = '#555';
     ctx.fillRect(x - 5, GROUND_Y - 8 * (1 - cp), obs.w + 10, 8 * (1 - cp) + 2);
-    // Static sparks
     for (let i = 0; i < 5; i++) {
       ctx.fillStyle = Math.random() > 0.5 ? '#0ff' : '#fff';
       ctx.fillRect(x + Math.random() * obs.w, GROUND_Y - Math.random() * 10, 3, 2);
@@ -2705,43 +2703,50 @@ function drawTVStack(obs) {
     return;
   }
 
-  // Bottom TV
-  ctx.fillStyle = '#555';
-  ctx.beginPath();
-  ctx.roundRect(x, y + 20, 45, 22, 3);
-  ctx.fill();
-  // Screen
+  // Flicker: every ~30 frames, briefly flash brightness
+  const flicker = (Math.floor(Date.now() / 500) % 3 === 0) ? 0.7 : 0.3;
+
+  // Bottom TV (CRT)
+  ctx.fillStyle = '#4a4a4a';
+  ctx.beginPath(); ctx.roundRect(x, y + 20, 45, 22, 3); ctx.fill();
   ctx.fillStyle = '#333';
   ctx.fillRect(x + 4, y + 23, 37, 15);
-  // Static
-  for (let i = 0; i < 8; i++) {
-    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.5})`;
-    ctx.fillRect(x + 5 + Math.random() * 34, y + 24 + Math.random() * 13, 3, 1);
+  // Animated static — random horizontal lines each frame
+  for (let i = 0; i < 6; i++) {
+    const ly = y + 24 + Math.random() * 13;
+    const brightness = Math.random() * flicker;
+    ctx.fillStyle = `rgba(255,255,255,${brightness})`;
+    ctx.fillRect(x + 5, ly, 35, 1);
   }
+  // Screen tint
+  ctx.fillStyle = `rgba(100,200,255,${flicker * 0.15})`;
+  ctx.fillRect(x + 4, y + 23, 37, 15);
+  // Buttons on side
+  ctx.fillStyle = '#888';
+  ctx.beginPath(); ctx.arc(x + 44, y + 28, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + 44, y + 33, 1.5, 0, Math.PI * 2); ctx.fill();
 
-  // Top TV (smaller)
-  ctx.fillStyle = '#666';
-  ctx.beginPath();
-  ctx.roundRect(x + 5, y, 35, 20, 3);
-  ctx.fill();
+  // Top TV (smaller CRT)
+  ctx.fillStyle = '#5a5a5a';
+  ctx.beginPath(); ctx.roundRect(x + 5, y, 35, 20, 3); ctx.fill();
   ctx.fillStyle = '#333';
   ctx.fillRect(x + 8, y + 3, 29, 14);
-  for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.5})`;
-    ctx.fillRect(x + 9 + Math.random() * 27, y + 4 + Math.random() * 12, 3, 1);
+  // Animated static
+  for (let i = 0; i < 5; i++) {
+    const ly = y + 4 + Math.random() * 12;
+    const brightness = Math.random() * flicker;
+    ctx.fillStyle = `rgba(255,255,255,${brightness})`;
+    ctx.fillRect(x + 9, ly, 27, 1);
   }
+  ctx.fillStyle = `rgba(100,200,255,${flicker * 0.12})`;
+  ctx.fillRect(x + 8, y + 3, 29, 14);
 
-  // Antennas on top TV
-  ctx.strokeStyle = '#888';
-  ctx.lineWidth = 1.5;
+  // Rabbit ear antennas
+  ctx.strokeStyle = '#999'; ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(x + 18, y);
-  ctx.lineTo(x + 10, y - 10);
-  ctx.moveTo(x + 28, y);
-  ctx.lineTo(x + 36, y - 10);
+  ctx.moveTo(x + 18, y); ctx.lineTo(x + 10, y - 10);
+  ctx.moveTo(x + 28, y); ctx.lineTo(x + 36, y - 10);
   ctx.stroke();
-
-  // Antenna tips
   ctx.fillStyle = '#ccc';
   ctx.beginPath();
   ctx.arc(x + 10, y - 10, 2, 0, Math.PI * 2);
@@ -2749,51 +2754,78 @@ function drawTVStack(obs) {
   ctx.fill();
 }
 
-function drawHayBale(obs) {
+function drawTrashCans(obs) {
   const x = obs.x, y = obs.y;
   if (obs.crushed) {
     const cp = Math.min(obs.crushAnim, 1);
     ctx.save();
     ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.fillStyle = '#DAA520';
-    const flatH = obs.h * (1 - cp * 0.8);
-    ctx.beginPath();
-    ctx.ellipse(x + obs.w / 2, GROUND_Y - flatH / 2, obs.w / 2 + 5, flatH / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // Bins scatter outward
+    ctx.fillStyle = '#33aa33';
+    ctx.save(); ctx.translate(x + 5, GROUND_Y - 8 * (1 - cp));
+    ctx.rotate(-cp * 0.5);
+    ctx.fillRect(-4, -10, 8, 10);
+    ctx.restore();
+    ctx.save(); ctx.translate(x + obs.w - 5, GROUND_Y - 6 * (1 - cp));
+    ctx.rotate(cp * 0.7);
+    ctx.fillRect(-4, -10, 8, 10);
+    ctx.restore();
+    // Lids flying off
+    ctx.fillStyle = '#227722';
+    ctx.save(); ctx.translate(x + 10, GROUND_Y - 12 * (1 - cp) - cp * 8);
+    ctx.rotate(cp * 2);
+    ctx.fillRect(-5, -2, 10, 3);
+    ctx.restore();
+    ctx.save(); ctx.translate(x + obs.w - 8, GROUND_Y - 10 * (1 - cp) - cp * 12);
+    ctx.rotate(-cp * 1.5);
+    ctx.fillRect(-4, -2, 8, 3);
+    ctx.restore();
     ctx.restore();
     return;
   }
 
-  // Main bale (golden circle)
-  ctx.fillStyle = '#DAA520';
-  ctx.beginPath();
-  ctx.ellipse(x + obs.w / 2, y + obs.h / 2, obs.w / 2, obs.h / 2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Ground shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath(); ctx.ellipse(x + obs.w / 2, GROUND_Y + 2, obs.w / 2 + 3, 3, 0, 0, Math.PI * 2); ctx.fill();
 
-  // Spiral/line texture
-  ctx.strokeStyle = '#B8860B';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.ellipse(x + obs.w / 2, y + obs.h / 2, obs.w / 4, obs.h / 4, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(x + obs.w / 2, y + obs.h / 2, obs.w / 8, obs.h / 8, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Horizontal line textures
-  ctx.strokeStyle = 'rgba(139,115,85,0.3)';
-  for (let i = 0; i < 3; i++) {
+  // Helper: draw one wheelie bin
+  function drawBin(bx, by, bw, bh, tilt) {
+    ctx.save();
+    if (tilt) { ctx.translate(bx + bw / 2, by + bh); ctx.rotate(tilt); ctx.translate(-(bx + bw / 2), -(by + bh)); }
+    // Body (tapered: narrower at bottom)
+    const bodyGrad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+    bodyGrad.addColorStop(0, '#227722'); bodyGrad.addColorStop(0.4, '#33bb33');
+    bodyGrad.addColorStop(0.6, '#33bb33'); bodyGrad.addColorStop(1, '#227722');
+    ctx.fillStyle = bodyGrad;
     ctx.beginPath();
-    ctx.moveTo(x + 5, y + 6 + i * 8);
-    ctx.lineTo(x + obs.w - 5, y + 6 + i * 8);
-    ctx.stroke();
+    ctx.moveTo(bx + 1, by + bh); ctx.lineTo(bx, by + 4);
+    ctx.lineTo(bx + bw, by + 4); ctx.lineTo(bx + bw - 1, by + bh);
+    ctx.closePath(); ctx.fill();
+    // Lid (darker green)
+    ctx.fillStyle = '#1a5c1a';
+    ctx.beginPath(); ctx.roundRect(bx - 1, by, bw + 2, 5, 2); ctx.fill();
+    // Handle groove
+    ctx.fillStyle = '#115511';
+    ctx.fillRect(bx + bw * 0.3, by + 5, bw * 0.4, 2);
+    // Horizontal ridges
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5;
+    for (let r = 0; r < 3; r++) {
+      ctx.beginPath(); ctx.moveTo(bx + 1, by + 10 + r * 5); ctx.lineTo(bx + bw - 1, by + 10 + r * 5); ctx.stroke();
+    }
+    // Highlight streak
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(bx + bw * 0.25, by + 6, bw * 0.15, bh - 8);
+    // Wheels (two small circles at bottom)
+    ctx.fillStyle = '#333';
+    ctx.beginPath(); ctx.arc(bx + 2, by + bh + 1, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx + bw - 2, by + bh + 1, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   }
 
-  // Highlight
-  ctx.fillStyle = 'rgba(255,255,200,0.2)';
-  ctx.beginPath();
-  ctx.ellipse(x + obs.w / 2 - 3, y + obs.h / 3, obs.w / 4, obs.h / 5, -0.3, 0, Math.PI * 2);
-  ctx.fill();
+  // 3 bins: back center (higher), two front side by side
+  drawBin(x + 10, y - 2, 12, 20, 0); // back center
+  drawBin(x, y + 8, 12, 20, 0); // front left
+  drawBin(x + 20, y + 8, 12, 20, 0.15); // front right (tilted)
 }
 
 function drawLimo(obs) {
@@ -3345,31 +3377,66 @@ function drawStretchLimo(obs) {
 }
 
 function drawRamp(obs) {
-  const x = obs.x;
-  // Main ramp body
-  ctx.fillStyle = '#e67e22';
+  const x = obs.x, w = obs.w, h = obs.h;
+
+  // Triangle ramp shape with yellow/black hazard stripes
+  ctx.save();
   ctx.beginPath();
-  ctx.moveTo(x, GROUND_Y); ctx.lineTo(x + obs.w, GROUND_Y);
-  ctx.lineTo(x + obs.w, GROUND_Y - obs.h);
-  ctx.closePath(); ctx.fill();
-  // Support struts
-  ctx.fillStyle = '#d35400';
-  for (let i = 0; i < 3; i++) {
-    const sx = x + 8 + i * 18;
-    ctx.beginPath(); ctx.moveTo(sx, GROUND_Y); ctx.lineTo(sx + 6, GROUND_Y);
-    const rh = ((sx - x) / obs.w) * obs.h;
-    ctx.lineTo(sx + 6, GROUND_Y - rh); ctx.lineTo(sx, GROUND_Y - rh + 2);
+  ctx.moveTo(x, GROUND_Y); ctx.lineTo(x + w, GROUND_Y);
+  ctx.lineTo(x + w, GROUND_Y - h);
+  ctx.closePath();
+  ctx.clip();
+
+  // Diagonal hazard stripes
+  const stripeW = 8;
+  for (let i = -2; i < 12; i++) {
+    ctx.fillStyle = i % 2 === 0 ? '#ffcc00' : '#222';
+    ctx.beginPath();
+    const sx = x + i * stripeW;
+    ctx.moveTo(sx, GROUND_Y + 5);
+    ctx.lineTo(sx + stripeW, GROUND_Y + 5);
+    ctx.lineTo(sx + stripeW - h * 0.8, GROUND_Y - h - 5);
+    ctx.lineTo(sx - h * 0.8, GROUND_Y - h - 5);
     ctx.closePath(); ctx.fill();
   }
-  // Surface highlight
-  ctx.strokeStyle = '#f5b041'; ctx.lineWidth = 2;
+  ctx.restore();
+
+  // Edge outline
+  ctx.strokeStyle = '#b8960e'; ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x + 2, GROUND_Y - 1);
-  ctx.lineTo(x + obs.w - 1, GROUND_Y - obs.h + 1);
+  ctx.moveTo(x, GROUND_Y); ctx.lineTo(x + w, GROUND_Y);
+  ctx.lineTo(x + w, GROUND_Y - h);
+  ctx.closePath(); ctx.stroke();
+
+  // Flashing orange warning light at peak
+  const lightOn = (Math.floor(Date.now() / 333) % 2 === 0); // flash ~3Hz
+  const lightX = x + w, lightY = GROUND_Y - h - 6;
+
+  // Pole
+  ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(lightX, GROUND_Y - h); ctx.lineTo(lightX, lightY + 3);
   ctx.stroke();
-  // Arrow
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
-  ctx.fillText('\u25B2', x + obs.w - 20, GROUND_Y - 5);
+
+  // Light glow
+  if (lightOn) {
+    ctx.fillStyle = 'rgba(255,160,0,0.25)';
+    ctx.beginPath(); ctx.arc(lightX, lightY, 10, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Light bulb
+  const bulbGrad = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, 5);
+  if (lightOn) {
+    bulbGrad.addColorStop(0, '#ffcc00');
+    bulbGrad.addColorStop(1, '#ff8800');
+  } else {
+    bulbGrad.addColorStop(0, '#664400');
+    bulbGrad.addColorStop(1, '#442200');
+  }
+  ctx.fillStyle = bulbGrad;
+  ctx.beginPath(); ctx.arc(lightX, lightY, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(lightX, lightY, 4, 0, Math.PI * 2); ctx.stroke();
 }
 
 // Star shape helper (used by Star Coin icon)
@@ -3596,7 +3663,7 @@ function updatePlayer(p) {
       if (obs.type === 'barrel') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#8B4513', '#A0522D', '#D2691E', '#ffcc00']);
       else if (obs.type === 'portapotty') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#2288cc', '#44aadd', '#1a6699', '#fff']);
       else if (obs.type === 'tvstack') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#555', '#888', '#0ff', '#fff', '#333']);
-      else if (obs.type === 'haybale') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#DAA520', '#B8860B', '#F0E68C', '#8B7355']);
+      else if (obs.type === 'trashcan') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#33aa33', '#227722', '#999', '#44cc44']);
       else if (obs.type === 'school_bus') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#f1c40f', '#e67e22', '#f39c12', '#fff']);
       else if (obs.type === 'stretch_limo') { spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#ecf0f1', '#ccc', '#fff', '#88ccff']); screenShake = 12; }
       else spawnCrushParticles(obs.x + obs.w / 2, obs.y, obs.color);
