@@ -11,33 +11,76 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    background: #1a1a2e;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100dvh;
-    height: 100vh; /* fallback for older browsers */
+    background: #0B0E18;
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
     overflow: hidden;
     position: fixed;
+    top: 0; left: 0;
     font-family: 'Arial Black', 'Impact', sans-serif;
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
   }
-  canvas {
-    border-radius: 12px;
-    box-shadow: 0 0 40px rgba(255, 100, 0, 0.3);
-    max-width: 100vw;
-    max-height: 100dvh;
-    max-height: 100vh;
+  #game {
+    display: block;
+    width: 100vw;
+    height: 100dvh;
+    height: 100vh;
+    margin: 0; padding: 0;
+    border: none; border-radius: 0;
+    outline: none; box-shadow: none;
     cursor: pointer;
+  }
+  #rotate-msg {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #0B0E18;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'Arial Black', Impact, sans-serif;
+    text-align: center;
+    gap: 20px;
+  }
+  #rotate-msg .rotate-icon {
+    font-size: 64px;
+    animation: rotatePhone 2s ease-in-out infinite;
+  }
+  #rotate-msg .rotate-text {
+    font-size: 22px;
+    color: #ffcc00;
+  }
+  #rotate-msg .rotate-sub {
+    font-size: 14px;
+    color: #888;
+  }
+  @keyframes rotatePhone {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(90deg); }
+    50% { transform: rotate(90deg); }
+    75% { transform: rotate(0deg); }
+  }
+  @media (orientation: portrait) {
+    #rotate-msg { display: flex; }
+    #game { display: none; }
+  }
+  @media (orientation: landscape) {
+    #rotate-msg { display: none; }
+    #game { display: block; }
   }
 </style>
 </head>
 <body>
+<div id="rotate-msg">
+  <span class="rotate-icon">📱</span>
+  <span class="rotate-text">Rotate your device!</span>
+  <span class="rotate-sub">This game plays best in landscape mode</span>
+</div>
 <canvas id="game"></canvas>
 <script>
 const canvas = document.getElementById('game');
@@ -47,16 +90,12 @@ const ctx = canvas.getContext('2d');
 // RESPONSIVE SIZING
 // ============================================================
 function resize() {
-  const ratio = 800 / 450;
+  // Fill the entire screen — canvas CSS is 100vw x 100dvh
+  // Set canvas resolution to match actual pixel dimensions
   const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
   const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  if (vw / vh > ratio) {
-    canvas.height = vh;
-    canvas.width = vh * ratio;
-  } else {
-    canvas.width = vw;
-    canvas.height = vw / ratio;
-  }
+  canvas.width = vw;
+  canvas.height = vh;
 }
 resize();
 window.addEventListener('resize', resize);
@@ -602,8 +641,9 @@ function toggleMute() {
 
 function getVirtualCoords(e) {
   const rect = canvas.getBoundingClientRect();
-  const scaleX = W / canvas.width;
-  const scaleY = H / canvas.height;
+  // Map from CSS display size to virtual 800x450 coords
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
   let cx, cy;
   if (e.touches) {
     cx = (e.touches[0].clientX - rect.left) * scaleX;
