@@ -40,11 +40,8 @@
     gap: 16px;
   }
   #rotate-overlay .phone-icon { font-size: 60px; animation: tiltPhone 1.5s ease-in-out infinite; }
+  #rotate-overlay .dismiss { font-size: 14px; opacity: 0.5; margin-top: 10px; }
   @keyframes tiltPhone { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
-  @media (orientation: portrait) and (max-width: 900px) {
-    #rotate-overlay { display: flex !important; }
-    canvas { display: none !important; }
-  }
 </style>
 </head>
 <body>
@@ -52,6 +49,7 @@
 <div id="rotate-overlay">
   <div class="phone-icon">📱</div>
   <div>Rotate your device!</div>
+  <div class="dismiss">Tap to continue anyway</div>
 </div>
 <script>
 // ============================================================
@@ -1338,6 +1336,38 @@ canvas.addEventListener('click', e => {
 
   handleAction();
 });
+
+// --- ORIENTATION HANDLING ---
+const rotateOverlay = document.getElementById('rotate-overlay');
+let rotateOverlayDismissed = false;
+
+function checkOrientation() {
+  if (rotateOverlayDismissed) return;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const isMobile = window.innerWidth < 900 || window.innerHeight < 900;
+  if (isPortrait && isMobile) {
+    rotateOverlay.style.display = 'flex';
+    canvas.style.display = 'none';
+  } else {
+    rotateOverlay.style.display = 'none';
+    canvas.style.display = 'block';
+    resize();
+  }
+}
+
+rotateOverlay.addEventListener('click', () => {
+  rotateOverlayDismissed = true;
+  rotateOverlay.style.display = 'none';
+  canvas.style.display = 'block';
+  resize();
+});
+
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', () => { setTimeout(checkOrientation, 200); });
+if (window.screen && window.screen.orientation) {
+  window.screen.orientation.addEventListener('change', () => { setTimeout(checkOrientation, 200); });
+}
+checkOrientation();
 
 // --- INIT ---
 initStars();
