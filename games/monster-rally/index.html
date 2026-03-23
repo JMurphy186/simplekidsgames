@@ -1084,6 +1084,7 @@ function initGame() {
     starTimer = 9999;
     powerUpSpawnTimer = 150; // power-ups enabled in frenzy!
     roundTimer = 3600; // 60 seconds
+    currentEnvIndex = Math.floor(Math.random() * ENVIRONMENTS.length); // random level each session
   } else if (gameMode === 'endless') {
     // Endless: old rally behavior, cycling environments, no campaign
     gameSpeed = 1.9;
@@ -3820,8 +3821,8 @@ function update() {
     }
   }
 
-  // Environment progression (only in non-campaign modes)
-  if (gameMode !== 'rally') {
+  // Environment progression (endless only — frenzy stays on one random env)
+  if (gameMode === 'endless') {
   const newEnv = Math.floor(maxScore / 500) % ENVIRONMENTS.length;
   if (newEnv !== currentEnvIndex) {
     currentEnvIndex = newEnv;
