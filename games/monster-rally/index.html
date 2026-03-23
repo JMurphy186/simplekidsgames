@@ -996,7 +996,7 @@ function handleModeSelectClick(vx, vy) {
   if (vx > W - 150 && vy < 55) { pickerPlayer = 1; gameState = 'picker'; return; }
 
   const btnW = 220, btnH = 52, gap = 10;
-  const by = 160;
+  const by = 195;
   for (let i = 0; i < 3; i++) {
     const bx = W / 2 - btnW / 2;
     const btnY = by + i * (btnH + gap);
@@ -1387,50 +1387,51 @@ function drawModeSelectScreen() {
   ctx.strokeText('CHOOSE A MODE!', W / 2, 80);
   ctx.fillText('CHOOSE A MODE!', W / 2, 80);
 
-  // Spotlight showcase for selected truck
+  // Spotlight showcase for selected truck (compact, above buttons)
   const truckInfo = TRUCK_ROSTER[selectedTruck];
-  const showcaseX = W / 2, showcaseY = 120;
+  const showcaseX = W / 2, showcaseY = 108;
 
   // Radial light cone behind truck
-  const lightGrad = ctx.createRadialGradient(showcaseX, showcaseY, 5, showcaseX, showcaseY, 70);
+  const lightGrad = ctx.createRadialGradient(showcaseX, showcaseY, 3, showcaseX, showcaseY, 50);
   lightGrad.addColorStop(0, (truckInfo.accent || '#ffcc00') + '22');
   lightGrad.addColorStop(0.6, (truckInfo.accent || '#ffcc00') + '08');
   lightGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = lightGrad;
-  ctx.beginPath(); ctx.arc(showcaseX, showcaseY, 70, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(showcaseX, showcaseY, 50, 0, Math.PI * 2); ctx.fill();
 
   // Glowing platform arc
   ctx.strokeStyle = truckInfo.accent || '#ffcc00';
-  ctx.lineWidth = 2;
-  ctx.globalAlpha = 0.4;
-  ctx.beginPath(); ctx.ellipse(showcaseX, showcaseY + 22, 55, 8, 0, 0, Math.PI * 2); ctx.stroke();
-  ctx.globalAlpha = 0.15;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.35;
+  ctx.beginPath(); ctx.ellipse(showcaseX, showcaseY + 16, 40, 6, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.globalAlpha = 0.12;
   ctx.fillStyle = truckInfo.accent || '#ffcc00';
-  ctx.beginPath(); ctx.ellipse(showcaseX, showcaseY + 22, 55, 8, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(showcaseX, showcaseY + 16, 40, 6, 0, 0, Math.PI * 2); ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Truck preview
+  // Truck preview (smaller)
   ctx.save();
   ctx.translate(showcaseX, showcaseY);
-  ctx.scale(0.75, 0.75);
+  ctx.scale(0.55, 0.55);
   drawVehiclePreview(-45, -25, truckInfo, true, 0, selectedTruck);
   ctx.restore();
 
   // Truck name + style badge below
   ctx.textAlign = 'center';
+  const badgeY = showcaseY + 26;
   if (truckInfo.style === 'pro') {
-    ctx.fillStyle = '#76FF03'; ctx.font = 'bold 9px Arial';
-    ctx.fillText('PRO', showcaseX, showcaseY + 34);
+    ctx.fillStyle = '#76FF03'; ctx.font = 'bold 8px Arial';
+    ctx.fillText('PRO', showcaseX, badgeY);
   } else if (truckInfo.style === 'hd') {
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 9px Arial';
-    ctx.fillText('HD', showcaseX, showcaseY + 34);
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 8px Arial';
+    ctx.fillText('HD', showcaseX, badgeY);
   }
   ctx.fillStyle = truckInfo.accent || '#fff';
-  ctx.font = 'bold 13px "Arial Black", Impact, sans-serif';
-  ctx.fillText(truckInfo.name, showcaseX, showcaseY + 46);
+  ctx.font = 'bold 11px "Arial Black", Impact, sans-serif';
+  ctx.fillText(truckInfo.name, showcaseX, badgeY + 12);
 
   const btnW = 220, btnH = 52, gap = 10;
-  const by = 160;
+  const by = 195;
   const endlessUnlocked = localStorage.getItem('mr_endless_unlocked') === 'true';
   const modes = [
     { label: 'RALLY', desc: '8-level campaign!', color: 'rgba(34,204,68,', key: '1' },
