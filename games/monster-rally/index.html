@@ -874,7 +874,7 @@ function handleDown(e) {
   if (gameState === 'title') {
     // Back to games button (top-left, 130x50 orange button)
     if (vc.x < 150 && vc.y < 60) { window.location.href = '/'; return; }
-    gameState = 'picker'; pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); return;
+    gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return;
   }
   if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
   if (gameState === 'modeselect') { handleModeSelectClick(vc.x, vc.y); return; }
@@ -932,7 +932,7 @@ document.addEventListener('keydown', (e) => {
   // Menu navigation
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
-    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); return; }
+    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
     if (gameState === 'picker') { confirmPicker(); return; }
     if (gameState === 'modeselect') return;
     if (gameState === 'gameover') { gameState = 'modeselect'; return; }
