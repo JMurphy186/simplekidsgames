@@ -275,12 +275,16 @@ const hdAssetMap = {};
 // TRUCK ROSTER
 // ============================================================
 const TRUCK_ROSTER = [
-  // Classic monster trucks (original 4)
-  { name: 'Flame Crusher', body: '#ff4400', accent: '#ffcc00', highlight: '#ff6622', decal: 'flames', style: 'classic', type: 'monster' },
-  { name: 'Blue Thunder', body: '#2255ff', accent: '#00ccff', highlight: '#4477ff', decal: 'bolts', style: 'classic', type: 'monster' },
-  { name: 'Green Machine', body: '#22cc44', accent: '#88ff00', highlight: '#44dd66', decal: 'stripes', style: 'classic', type: 'monster' },
-  { name: 'Purple Nightmare', body: '#8833cc', accent: '#ff44ff', highlight: '#aa55dd', decal: 'stars', style: 'classic', type: 'monster' },
-  // Pro Stadium trucks (SVG, 450x350 viewBox)
+  // Slots 1-4: Classic HD (SVG, 400x250 viewBox)
+  { name: 'Flame Crusher', body: '#FF8C00', accent: '#FFD600', highlight: '#E65100', decal: 'zigzag', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#ff4400', flameInner: '#ffcc00',
+    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
+  { name: 'Blue Thunder', body: '#2962FF', accent: '#64B5F6', highlight: '#0000FF', decal: 'lightning', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#2962FF', flameInner: '#64B5F6',
+    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
+  { name: 'Green Machine', body: '#64DD17', accent: '#B2FF59', highlight: '#33691E', decal: 'dashes', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#33691E', flameInner: '#B2FF59',
+    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
+  { name: 'Purple Nightmare', body: '#9C27B0', accent: '#E040FB', highlight: '#4A148C', decal: 'stars', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#7B1FA2', flameInner: '#E040FB',
+    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
+  // Slots 5-8: Pro Stadium (SVG, 450x350 viewBox)
   { name: 'Grave Stomper', body: '#111118', accent: '#76FF03', highlight: '#000', decal: 'skull', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#76FF03', flameInner: '#B2FF59',
     svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 15, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
   { name: 'Red Rampage', body: '#D32F2F', accent: '#FF8A80', highlight: '#B71C1C', decal: 'claws', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#D32F2F', flameInner: '#FF8A80',
@@ -289,16 +293,7 @@ const TRUCK_ROSTER = [
     svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 15, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
   { name: 'Toxic Crusher', body: '#33691E', accent: '#76FF03', highlight: '#1B5E20', decal: 'hazard', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#33691E', flameInner: '#76FF03',
     svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 0, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
-  // HD SVG trucks
-  { name: 'Flame Crusher HD', body: '#FF8C00', accent: '#FFD600', highlight: '#E65100', decal: 'zigzag', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#ff4400', flameInner: '#ffcc00',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  { name: 'Blue Thunder HD', body: '#2962FF', accent: '#64B5F6', highlight: '#0000FF', decal: 'lightning', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#2962FF', flameInner: '#64B5F6',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  { name: 'Green Machine HD', body: '#64DD17', accent: '#B2FF59', highlight: '#33691E', decal: 'dashes', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#33691E', flameInner: '#B2FF59',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  { name: 'Purple Nightmare HD', body: '#9C27B0', accent: '#E040FB', highlight: '#4A148C', decal: 'stars', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#7B1FA2', flameInner: '#E040FB',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  // Cars (the crushable ones, now playable!)
+  // Slots 9+: Cars (playable crushable vehicles)
   { name: 'Red Racer', body: '#e74c3c', accent: '#ff6b6b', highlight: '#c0392b', decal: 'stripes', style: 'car', type: 'car' },
   { name: 'Cool Blue', body: '#3498db', accent: '#74b9ff', highlight: '#2980b9', decal: 'stripes', style: 'car', type: 'car' },
   { name: 'Gold Rush', body: '#f39c12', accent: '#ffeaa7', highlight: '#e67e22', decal: 'flames', style: 'car', type: 'car' },
@@ -309,7 +304,7 @@ const TRUCK_ROSTER = [
 const ROSTER_COUNT = TRUCK_ROSTER.length;
 
 // Populate HD asset map by scanning roster for renderMode === 'svg'
-const hdAssetsList = [gsAssets, rrAssets, tbAssets, tcAssets, fchdAssets, btAssets, gmAssets, pnAssets];
+const hdAssetsList = [fchdAssets, btAssets, gmAssets, pnAssets, gsAssets, rrAssets, tbAssets, tcAssets];
 let hdIdx = 0;
 for (let i = 0; i < TRUCK_ROSTER.length; i++) {
   if (TRUCK_ROSTER[i].renderMode === 'svg') {
@@ -1284,10 +1279,7 @@ function drawPickerScreen() {
 
   // Category label
   const pageStart = pickerPage * PICKER_PER_PAGE;
-  const pageLabel = pageStart < 4 ? 'CLASSIC TRUCKS' : pageStart < 8 ? 'MONSTER TRUCKS' : 'CARS & VEHICLES';
-  const pageIcon = pageStart < 8 ? '🏁' : '🚗';
   ctx.fillStyle = '#aaa'; ctx.font = '14px Arial';
-  ctx.fillText(pageIcon + ' ' + pageLabel, W / 2, 80);
 
   const rects = getPickerTruckRects();
   const activeTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
@@ -1326,15 +1318,7 @@ function drawPickerScreen() {
     ctx.textAlign = 'center';
     ctx.fillText(t.name, r.x + r.w / 2, r.y + r.h - 18);
 
-    // Style/type badge
-    let badge, badgeColor;
-    if (t.style === 'hd') { badge = 'HD'; badgeColor = '#ffd700'; }
-    else if (t.style === 'pro') { badge = 'PRO'; badgeColor = '#76FF03'; }
-    else if (t.style === 'classic') { badge = 'CLASSIC'; badgeColor = '#ff6600'; }
-    else if (t.style === 'monster') { badge = 'MONSTER'; badgeColor = '#44ff44'; }
-    else { badge = t.type.toUpperCase(); badgeColor = '#4488ff'; }
-    ctx.fillStyle = badgeColor; ctx.font = '9px Arial';
-    ctx.fillText(badge, r.x + r.w / 2, r.y + 15);
+    // (badges removed — trucks speak for themselves)
 
     // Per-truck best score
     const best = getBestScore(r.idx);
@@ -1418,17 +1402,9 @@ function drawModeSelectScreen() {
 
   // Truck name + style badge below
   ctx.textAlign = 'center';
-  const badgeY = showcaseY + 26;
-  if (truckInfo.style === 'pro') {
-    ctx.fillStyle = '#76FF03'; ctx.font = 'bold 8px Arial';
-    ctx.fillText('PRO', showcaseX, badgeY);
-  } else if (truckInfo.style === 'hd') {
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 8px Arial';
-    ctx.fillText('HD', showcaseX, badgeY);
-  }
   ctx.fillStyle = truckInfo.accent || '#fff';
   ctx.font = 'bold 11px "Arial Black", Impact, sans-serif';
-  ctx.fillText(truckInfo.name, showcaseX, badgeY + 12);
+  ctx.fillText(truckInfo.name, showcaseX, showcaseY + 36);
 
   const btnW = 220, btnH = 52, gap = 10;
   const by = 195;
@@ -2389,473 +2365,14 @@ function _drawTruckDecals(colors, dx, dy, panelW, panelH, bodyX, bodyY, bodyW, b
   }
 }
 
-function drawTruckWithColors(tx, ty, tw, th, colors, showExhaust, squishY) {
-  const dark = getDarkShade(colors.body);
-  const bodyW = tw - 10;
-  const bodyX = tx + 5;
-  const totalH = th - 16 - squishY;
-  const bodyBottom = ty + 8 + squishY + totalH;
-
-  // Stepped silhouette dimensions
-  const hoodW = bodyW * 0.25;
-  const cabW = bodyW * 0.40;
-  const bedW = bodyW * 0.35;
-  const cabH = totalH;
-  const hoodH = totalH * 0.70;
-  const bedH = totalH * 0.70;
-  const hoodX = bodyX + bedW + cabW;
-  const cabX = bodyX + bedW;
-  const bedX = bodyX;
-
-  // --- Underside shadow ---
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(bodyX, bodyBottom - 3, bodyW, 3);
-
-  // --- Bed (rear, lower) ---
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.moveTo(bedX, bodyBottom);
-  ctx.lineTo(bedX, bodyBottom - bedH);
-  ctx.lineTo(bedX + bedW, bodyBottom - bedH);
-  ctx.lineTo(bedX + bedW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-  // Bed dark lower panel
-  ctx.fillStyle = dark;
-  ctx.fillRect(bedX, bodyBottom - bedH * 0.35, bedW, bedH * 0.35);
-
-  // --- Cab (middle, tallest) ---
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.moveTo(cabX, bodyBottom);
-  ctx.lineTo(cabX, bodyBottom - cabH);
-  ctx.lineTo(cabX + cabW, bodyBottom - cabH);
-  ctx.lineTo(cabX + cabW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-  // Cab dark lower panel
-  ctx.fillStyle = dark;
-  ctx.fillRect(cabX, bodyBottom - cabH * 0.35, cabW, cabH * 0.35);
-
-  // --- Hood (front, lower) ---
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.moveTo(hoodX, bodyBottom);
-  ctx.lineTo(hoodX, bodyBottom - hoodH);
-  ctx.lineTo(hoodX + hoodW - 2, bodyBottom - hoodH + 2);
-  ctx.lineTo(hoodX + hoodW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-  // Hood dark lower panel
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.moveTo(hoodX, bodyBottom);
-  ctx.lineTo(hoodX, bodyBottom - hoodH * 0.35);
-  ctx.lineTo(hoodX + hoodW - 1, bodyBottom - hoodH * 0.35 + 1);
-  ctx.lineTo(hoodX + hoodW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- Chrome grille (front face of hood) ---
-  const grilleX = hoodX + hoodW - 3;
-  const grilleTop = bodyBottom - hoodH + 3;
-  const grilleBot = bodyBottom - 2;
-  const grilleH = grilleBot - grilleTop;
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(grilleX, grilleTop, 4, grilleH);
-  ctx.fillStyle = '#c0c0c0';
-  for (let i = 0; i < 4; i++) {
-    ctx.fillRect(grilleX + 0.5, grilleTop + 1 + i * (grilleH / 4), 3, grilleH / 4 - 2);
-  }
-  // Headlights
-  ctx.fillStyle = '#ffffcc';
-  ctx.fillRect(grilleX, grilleTop + 1, 3, 3);
-  ctx.fillRect(grilleX, grilleBot - 4, 3, 3);
-
-  // --- Front bumper ---
-  ctx.fillStyle = '#aaaaaa';
-  ctx.fillRect(hoodX + hoodW - 2, bodyBottom - 7, 5, 8);
-
-  // --- Window (in cab) ---
-  const winMargin = 3;
-  const winX = cabX + winMargin;
-  const winY = bodyBottom - cabH + winMargin;
-  const winW = cabW - winMargin * 2;
-  const winH = cabH * 0.50;
-  ctx.fillStyle = '#7ec8e3';
-  ctx.beginPath();
-  ctx.moveTo(winX + 3, winY);
-  ctx.lineTo(winX + winW, winY);
-  ctx.lineTo(winX + winW, winY + winH);
-  ctx.lineTo(winX, winY + winH);
-  ctx.closePath();
-  ctx.fill();
-  // Reflection highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.beginPath();
-  ctx.moveTo(winX + 3, winY + 1);
-  ctx.lineTo(winX + winW * 0.4, winY + 1);
-  ctx.lineTo(winX + winW * 0.25, winY + winH * 0.6);
-  ctx.lineTo(winX + 1, winY + winH * 0.6);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- Fender arches ---
-  ctx.fillStyle = colors.body;
-  const fwY = bodyBottom;
-  // Front wheel arch
-  ctx.beginPath();
-  ctx.arc(tx + tw - 18, fwY + 5, 17, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(tx + tw - 18, fwY + 5, 17, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.arc(tx + tw - 18, fwY + 5, 15, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  // Rear wheel arch
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(tx + 18, fwY + 5, 17, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.arc(tx + 18, fwY + 5, 15, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- Decals (on lower panel of bed + cab) ---
-  const decalX = bedX + 3;
-  const decalY = bodyBottom - bedH * 0.35 + 1;
-  const decalW = bedW + cabW - 10;
-  const decalH = bedH * 0.35 - 5;
-  _drawTruckDecals(colors, decalX, decalY, decalW, decalH, bodyX, bodyBottom - cabH, bodyW, cabH);
-
-  // --- Wheels (14px) ---
-  const wheelR = 14;
-  const wheelY2 = ty + th + 5 + squishY / 2;
-  drawWheelColored(tx + 18, wheelY2, wheelR, colors.body);
-  drawWheelColored(tx + tw - 18, wheelY2, wheelR, colors.body);
-
-  // --- Exhaust flames ---
-  if (showExhaust) {
-    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
-    const exW = 8 + Math.random() * 12;
-    ctx.fillStyle = '#ff4400';
-    ctx.beginPath();
-    ctx.moveTo(bedX - 2, bodyBottom - 8);
-    ctx.lineTo(bedX - exW - 5, bodyBottom - 4);
-    ctx.lineTo(bedX - 2, bodyBottom);
-    ctx.fill();
-    ctx.fillStyle = '#ffcc00';
-    ctx.beginPath();
-    ctx.moveTo(bedX - 2, bodyBottom - 6);
-    ctx.lineTo(bedX - exW, bodyBottom - 4);
-    ctx.lineTo(bedX - 2, bodyBottom - 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-}
-
-function drawWheelColored(cx, cy, r, hubColor) {
-  // 1. Outer tire
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 2. Tread: 8 thick radial lines, rotate with wheelAngle
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 8; i++) {
-    const a = wheelAngle + (i / 8) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * (r * 0.75), cy + Math.sin(a) * (r * 0.75));
-    ctx.lineTo(cx + Math.cos(a) * (r - 1), cy + Math.sin(a) * (r - 1));
-    ctx.stroke();
-  }
-
-  // 3. Sidewall ring
-  ctx.strokeStyle = '#2a2a2a';
-  ctx.lineWidth = r * 0.2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.65, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // 4. Rim: chrome disc
-  ctx.fillStyle = '#c8c8c8';
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2);
-  ctx.fill();
-  // Rim darker edge ring
-  ctx.strokeStyle = '#999';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.44, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // 5. Spokes: 5 thin dark lines
-  ctx.strokeStyle = '#777';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 5; i++) {
-    const a = wheelAngle + (i / 5) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(a) * (r * 0.43), cy + Math.sin(a) * (r * 0.43));
-    ctx.stroke();
-  }
-
-  // 6. Hub cap
-  ctx.fillStyle = hubColor;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// ============================================================
-// NEW MONSTER TRUCK DRAWING (big wheels, high suspension)
-// ============================================================
-function drawTruckMonster(tx, ty, tw, th, colors, showExhaust, squishY) {
-  const dark = getDarkShade(colors.body);
-  const wheelR = 20;
-  const wheelY = ty + th + 5 + squishY / 2;
-
-  const bodyW = 65, bodyH = 28;
-  const bodyX = tx + (tw - bodyW) / 2;
-  const bodyY = ty + 2 + squishY;
-  const bodyBottom = bodyY + bodyH;
-
-  // Stepped silhouette dimensions
-  const hoodW = bodyW * 0.25;
-  const cabW = bodyW * 0.40;
-  const bedW = bodyW * 0.35;
-  const cabH = bodyH;
-  const hoodH = bodyH * 0.70;
-  const bedH = bodyH * 0.70;
-  const hoodX = bodyX + bedW + cabW;
-  const cabX = bodyX + bedW;
-  const bedX = bodyX;
-
-  // --- Suspension arms (V-shape from body to wheels) ---
-  ctx.strokeStyle = '#555';
-  ctx.lineWidth = 3;
-  // Front wheel
-  ctx.beginPath();
-  ctx.moveTo(hoodX + 5, bodyBottom); ctx.lineTo(tx + tw - 18, wheelY);
-  ctx.moveTo(hoodX + hoodW - 5, bodyBottom); ctx.lineTo(tx + tw - 18, wheelY);
-  ctx.stroke();
-  // Rear wheel
-  ctx.beginPath();
-  ctx.moveTo(bedX + 5, bodyBottom); ctx.lineTo(tx + 18, wheelY);
-  ctx.moveTo(bedX + bedW - 5, bodyBottom); ctx.lineTo(tx + 18, wheelY);
-  ctx.stroke();
-
-  // --- Underside shadow ---
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(bodyX, bodyBottom - 3, bodyW, 3);
-
-  // --- Bed (rear, lower) ---
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.moveTo(bedX, bodyBottom);
-  ctx.lineTo(bedX, bodyBottom - bedH);
-  ctx.lineTo(bedX + bedW, bodyBottom - bedH);
-  ctx.lineTo(bedX + bedW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(bedX, bodyBottom - bedH * 0.35, bedW, bedH * 0.35);
-
-  // --- Cab (middle, tallest) ---
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.moveTo(cabX, bodyBottom);
-  ctx.lineTo(cabX, bodyBottom - cabH);
-  ctx.lineTo(cabX + cabW, bodyBottom - cabH);
-  ctx.lineTo(cabX + cabW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(cabX, bodyBottom - cabH * 0.35, cabW, cabH * 0.35);
-
-  // --- Hood (front, lower with slope) ---
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.moveTo(hoodX, bodyBottom);
-  ctx.lineTo(hoodX, bodyBottom - hoodH);
-  ctx.lineTo(hoodX + hoodW - 2, bodyBottom - hoodH + 2);
-  ctx.lineTo(hoodX + hoodW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.moveTo(hoodX, bodyBottom);
-  ctx.lineTo(hoodX, bodyBottom - hoodH * 0.35);
-  ctx.lineTo(hoodX + hoodW - 1, bodyBottom - hoodH * 0.35 + 1);
-  ctx.lineTo(hoodX + hoodW, bodyBottom);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- Chrome grille ---
-  const grilleX = hoodX + hoodW - 3;
-  const grilleTop = bodyBottom - hoodH + 3;
-  const grilleBot = bodyBottom - 2;
-  const grilleH = grilleBot - grilleTop;
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(grilleX, grilleTop, 5, grilleH);
-  ctx.fillStyle = '#c0c0c0';
-  for (let i = 0; i < 4; i++) {
-    ctx.fillRect(grilleX + 0.5, grilleTop + 1 + i * (grilleH / 4), 4, grilleH / 4 - 2);
-  }
-  // Headlights
-  ctx.fillStyle = '#ffffcc';
-  ctx.fillRect(grilleX, grilleTop + 1, 4, 3);
-  ctx.fillRect(grilleX, grilleBot - 4, 4, 3);
-
-  // --- Front bumper ---
-  ctx.fillStyle = '#aaaaaa';
-  ctx.fillRect(hoodX + hoodW - 2, bodyBottom - 8, 6, 10);
-
-  // --- Window ---
-  const winMargin = 3;
-  const winX = cabX + winMargin;
-  const winY = bodyBottom - cabH + winMargin;
-  const winW = cabW - winMargin * 2;
-  const winH = cabH * 0.50;
-  ctx.fillStyle = '#7ec8e3';
-  ctx.beginPath();
-  ctx.moveTo(winX + 3, winY);
-  ctx.lineTo(winX + winW, winY);
-  ctx.lineTo(winX + winW, winY + winH);
-  ctx.lineTo(winX, winY + winH);
-  ctx.closePath();
-  ctx.fill();
-  // Reflection
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.beginPath();
-  ctx.moveTo(winX + 3, winY + 1);
-  ctx.lineTo(winX + winW * 0.4, winY + 1);
-  ctx.lineTo(winX + winW * 0.25, winY + winH * 0.6);
-  ctx.lineTo(winX + 1, winY + winH * 0.6);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- Fender arches (larger for monster) ---
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(tx + tw - 18, bodyBottom + 2, 18, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.arc(tx + tw - 18, bodyBottom + 2, 16, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.arc(tx + 18, bodyBottom + 2, 18, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = colors.body;
-  ctx.beginPath();
-  ctx.arc(tx + 18, bodyBottom + 2, 16, Math.PI, 0);
-  ctx.closePath();
-  ctx.fill();
-
-  // --- Decals ---
-  const decalX = bedX + 3;
-  const decalY = bodyBottom - bedH * 0.35 + 1;
-  const decalW = bedW + cabW - 10;
-  const decalH = bedH * 0.35 - 5;
-  _drawTruckDecals(colors, decalX, decalY, decalW, decalH, bodyX, bodyBottom - cabH, bodyW, cabH);
-
-  // --- Massive wheels ---
-  drawMonsterWheel(tx + 18, wheelY, wheelR, colors.accent);
-  drawMonsterWheel(tx + tw - 18, wheelY, wheelR, colors.accent);
-
-  // --- Exhaust flames ---
-  if (showExhaust) {
-    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
-    const exW = 10 + Math.random() * 15;
-    ctx.fillStyle = '#ff4400';
-    ctx.beginPath();
-    ctx.moveTo(bedX - 2, bodyBottom - 10);
-    ctx.lineTo(bedX - exW - 5, bodyBottom - 6);
-    ctx.lineTo(bedX - 2, bodyBottom - 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffcc00';
-    ctx.beginPath();
-    ctx.moveTo(bedX - 2, bodyBottom - 8);
-    ctx.lineTo(bedX - exW, bodyBottom - 6);
-    ctx.lineTo(bedX - 2, bodyBottom - 4);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-}
-
-function drawMonsterWheel(cx, cy, r, hubColor) {
-  // 1. Outer tire
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
-
-  // 2. Chunky tread: 10 thick radial lines, rotate with wheelAngle
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 3;
-  for (let i = 0; i < 10; i++) {
-    const a = wheelAngle + (i / 10) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a) * (r * 0.7), cy + Math.sin(a) * (r * 0.7));
-    ctx.lineTo(cx + Math.cos(a) * (r - 1), cy + Math.sin(a) * (r - 1));
-    ctx.stroke();
-  }
-
-  // 3. Sidewall ring
-  ctx.strokeStyle = '#2a2a2a';
-  ctx.lineWidth = r * 0.2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r * 0.6, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Shadow on bottom half for depth
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI); ctx.fill();
-
-  // 4. Chrome rim
-  ctx.fillStyle = '#c8c8c8';
-  ctx.beginPath(); ctx.arc(cx, cy, r * 0.45, 0, Math.PI * 2); ctx.fill();
-  // Darker rim edge ring
-  ctx.strokeStyle = '#999';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(cx, cy, r * 0.44, 0, Math.PI * 2); ctx.stroke();
-
-  // 5. Spokes: 5 thin dark lines from center to rim edge
-  ctx.strokeStyle = '#777';
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 5; i++) {
-    const a = wheelAngle + (i / 5) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(a) * (r * 0.43), cy + Math.sin(a) * (r * 0.43));
-    ctx.stroke();
-  }
-
-  // 6. Hub cap
-  ctx.fillStyle = hubColor;
-  ctx.beginPath(); ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2); ctx.fill();
-}
-
+// Canvas truck functions removed — all trucks now use SVG rendering
 // ============================================================
 // HD SVG TRUCK DRAWING (generalized for all HD trucks)
 // ============================================================
 function drawTruckHD(tx, ty, tw, th, showExhaust, squishY, assets, flameOuter, flameInner, meta) {
   if (!assets || !assets.loaded) {
-    drawTruckWithColors(tx, ty, tw, th, TRUCK_ROSTER[0], showExhaust, squishY);
+    // Fallback: draw a simple colored rectangle if SVG not loaded
+    ctx.fillStyle = '#ff4400'; ctx.fillRect(tx, ty, tw, th);
     return;
   }
 
@@ -2992,12 +2509,8 @@ function drawCarVehicle(tx, ty, tw, th, colors, vehicleType, squishY) {
 // Unified vehicle preview for picker (works for both monster trucks and cars)
 function drawVehiclePreview(tx, ty, roster, showExhaust, squishY, rosterIdx) {
   if (roster.renderMode === 'svg') {
-    const a = hdAssetMap[rosterIdx !== undefined ? rosterIdx : 8];
+    const a = hdAssetMap[rosterIdx !== undefined ? rosterIdx : 0];
     drawTruckHD(tx, ty, 90, 50, showExhaust, squishY, a, roster.flameOuter, roster.flameInner, roster.svgMeta);
-  } else if (roster.style === 'monster') {
-    drawTruckMonster(tx, ty, 90, 50, roster, showExhaust, squishY);
-  } else if (!roster.type || roster.type === 'monster' || roster.style === 'classic') {
-    drawTruckWithColors(tx, ty, 90, 50, roster, showExhaust, squishY);
   } else {
     const vw = roster.type === 'bus' ? 85 : roster.type === 'limo' ? 95 : roster.type === 'suv' ? 65 : 55;
     const vh = roster.type === 'bus' ? 35 : roster.type === 'limo' ? 28 : roster.type === 'suv' ? 32 : 25;
@@ -4584,14 +4097,14 @@ function drawTitleScreen() {
   ctx.save();
   ctx.translate(W / 2 - 160, 175);
   ctx.scale(0.7, 0.7);
-  drawTruckWithColors(-45, -25, 90, 50, TRUCK_ROSTER[0], true, 0);
+  drawVehiclePreview(-45, -25, TRUCK_ROSTER[0], true, 0, 0);
   ctx.restore();
 
   // Monster truck flanking the title (right side, flipped)
   ctx.save();
   ctx.translate(W / 2 + 160, 175);
   ctx.scale(-0.7, 0.7);
-  drawTruckWithColors(-45, -25, 90, 50, TRUCK_ROSTER[1], true, 0);
+  drawVehiclePreview(-45, -25, TRUCK_ROSTER[1], true, 0, 1);
   ctx.restore();
 
   ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Arial';
@@ -4675,10 +4188,6 @@ function drawPlayerTruck(p) {
   if (colors.renderMode === 'svg') {
     const a = hdAssetMap[p.truckIdx];
     drawTruckHD(tk.x, tk.y, tk.w, tk.h, !tk.grounded, squishY, a, colors.flameOuter, colors.flameInner, colors.svgMeta);
-  } else if (colors.style === 'monster') {
-    drawTruckMonster(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY);
-  } else if (!colors.type || colors.type === 'monster' || colors.style === 'classic') {
-    drawTruckWithColors(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY);
   } else {
     drawCarVehicle(tk.x, tk.y, tk.w, tk.h, colors, colors.type, squishY);
   }
