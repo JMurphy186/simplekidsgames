@@ -1059,10 +1059,21 @@ function drawWorldTitle() {
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Lives display
+  // Lives display — mini ships
+  const miniW = 12 * scale;
+  const miniH = 16 * scale;
+  const miniGap = 4 * scale;
+  const totalLivesW = MAX_LIVES * (miniW + miniGap) - miniGap;
+  const livesStartX = W / 2 - totalLivesW / 2 - 30 * scale;
+  const livesY = H * 0.6;
+  for (let i = 0; i < MAX_LIVES; i++) {
+    drawMiniShip(livesStartX + miniW / 2 + i * (miniW + miniGap), livesY, miniW, miniH, i < lives);
+  }
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
-  ctx.fillText(`❤️ ${lives}  |  Score: ${score}`, W / 2, H * 0.62);
+  ctx.textAlign = 'left';
+  ctx.fillText(`|  Score: ${score}`, livesStartX + totalLivesW + 12 * scale, livesY + 5 * scale);
+  ctx.textAlign = 'center';
 
   drawMenuButton();
 }
