@@ -25,32 +25,10 @@
     top: 0; left: 0;
     width: 100%; height: 100%;
   }
-  #rotate-overlay {
-    display: none;
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #0a0a2e;
-    color: #fff;
-    font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
-    font-size: 24px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    gap: 16px;
-  }
-  #rotate-overlay .phone-icon { font-size: 60px; animation: tiltPhone 1.5s ease-in-out infinite; }
-  #rotate-overlay .dismiss { font-size: 14px; opacity: 0.5; margin-top: 10px; }
-  @keyframes tiltPhone { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
-<div id="rotate-overlay">
-  <div class="phone-icon">📱</div>
-  <div>Rotate your device!</div>
-  <div class="dismiss">Tap to continue anyway</div>
-</div>
 <script>
 // ============================================================
 // SPACE DODGE v0.1 — Simple Kids Games
@@ -310,6 +288,7 @@ function resize() {
   scale = Math.min(W / 800, H / 500);
 }
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => { setTimeout(resize, 200); });
 if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
 resize();
 
@@ -2116,38 +2095,6 @@ canvas.addEventListener('click', e => {
 
   handleAction();
 });
-
-// --- ORIENTATION HANDLING ---
-const rotateOverlay = document.getElementById('rotate-overlay');
-let rotateOverlayDismissed = false;
-
-function checkOrientation() {
-  if (rotateOverlayDismissed) return;
-  const isPortrait = window.innerHeight > window.innerWidth;
-  const isMobile = window.innerWidth < 900 || window.innerHeight < 900;
-  if (isPortrait && isMobile) {
-    rotateOverlay.style.display = 'flex';
-    canvas.style.display = 'none';
-  } else {
-    rotateOverlay.style.display = 'none';
-    canvas.style.display = 'block';
-    resize();
-  }
-}
-
-rotateOverlay.addEventListener('click', () => {
-  rotateOverlayDismissed = true;
-  rotateOverlay.style.display = 'none';
-  canvas.style.display = 'block';
-  resize();
-});
-
-window.addEventListener('resize', checkOrientation);
-window.addEventListener('orientationchange', () => { setTimeout(checkOrientation, 200); });
-if (window.screen && window.screen.orientation) {
-  window.screen.orientation.addEventListener('change', () => { setTimeout(checkOrientation, 200); });
-}
-checkOrientation();
 
 // --- INIT ---
 initStars();
