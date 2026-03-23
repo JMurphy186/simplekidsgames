@@ -197,3 +197,82 @@ simplekidsgames/
 - [ ] Best scores persist in localStorage per truck
 - [ ] No console errors
 - [ ] Canvas scales properly on window resize and orientation change
+
+---
+
+# Space Dodge (`games/space-dodge/index.html`)
+
+**Status:** v0.1 live — HD SVG ship + asteroids, auto-blasters, 5-world campaign, endless mode
+
+## Architecture
+- **Single HTML file**, same as Monster Rally — Canvas API, Web Audio API, no external assets
+- **SVG art** loaded as base64 data URIs, drawn via `drawImage()` with Canvas rotation
+- **60fps frame cap**, `100dvh`, `visualViewport` API, Safari initial paint fix
+- **Landscape-only** with portrait rotate overlay
+
+## Game Modes
+- **Campaign:** 5 worlds (Deep Space → Nebula → Asteroid Belt → Ice Field → Supernova) with progression bar. Title card + 3-2-1 countdown between worlds. Beat all 5 → victory screen → Endless unlocked.
+- **Endless:** Unlocked after campaign. Background cycles through worlds. High score tracked.
+
+## Core Mechanics
+- Left/right movement only (arrow keys, A/D, touch drag)
+- Auto-firing blasters (every ~0.47s) — no button needed
+- 3 lives with hearts — hit = funny wobble + invincibility frames
+- Progression bar: blasted asteroids = 3x progress, dodged = 1x
+- "GREAT RUN!" on game over (no punishment language)
+
+## SVG Assets
+- **Ship body:** `SHIP_SVG_B64` — metallic fuselage, blue hull panels, red fins/nose, cockpit viewport. Exhaust is animated Canvas (not in SVG).
+- **Asteroid:** `ASTEROID_SVG_B64` — gradient rock body, edge highlights, fissures, 3 craters with depth. All asteroids use same SVG at different scales + rotations.
+
+## localStorage Keys
+- `sd_best` — best score (int)
+- `sd_endless` — endless mode unlocked (`'true'`)
+
+## World Definitions
+Each world in the `WORLDS[]` array has: `name`, `bg` (background color), `starColor` (RGB array), `accent` (UI color), `baseSpeed`, `spawnStart`, `spawnMin`, `speedInc`, `spawnDec`, `threshold` (progress points to advance).
+
+| # | World | Background | Star Tint | Threshold | Difficulty |
+|---|-------|-----------|-----------|-----------|------------|
+| 1 | Deep Space | Dark blue | White | 50 pts | Easy — learn the game |
+| 2 | Nebula | Purple | Lavender | 80 pts | Faster, tighter spawns |
+| 3 | Asteroid Belt | Dark brown | Amber | 120 pts | Dense field |
+| 4 | Ice Field | Deep cyan | Ice blue | 160 pts | Fast and tight |
+| 5 | Supernova | Dark red | Pink | 200 pts | Final push |
+
+## Queued (Not Built)
+- Full environment backgrounds per world (Canvas-drawn atmospheric art)
+- Bonus objects: Alien Saucer (+500), Golden Comet (+1000), Supply Capsule (+250)
+- Power-ups: Plasma Laser, Energy Shield, Hyper-Drive
+- SVG mockups exist for all queued items (reference HTML files in repo root)
+- Cross-game coin economy with Monster Rally
+
+## Important Patterns
+- **Visual-only changes** = no physics modifications — always specify this in prompts
+- **Single HTML file, no external assets** — everything embedded
+- Ship exhaust is always Canvas-animated, never part of the SVG
+- Asteroid SVG has no drop shadow filter — Canvas handles rotation cleaner without it
+- World speed/spawn values reset per world via `worldFrameCount` (not global `frameCount`)
+
+## Do NOT
+- Add npm, webpack, vite, or any build tooling
+- Create separate JS/CSS files — everything stays in the single `index.html`
+- Use external image or audio assets (URLs, files, CDNs)
+- Add punishment language ("Game Over", "You Lost") — use encouraging phrasing
+- Modify the landing page (root `index.html`) when working on Space Dodge
+- Change collision boxes when changing vehicle art (visual-only changes)
+
+## Testing Checklist
+- [ ] Ship renders as SVG with animated Canvas exhaust
+- [ ] Asteroids render as SVG at various scales and rotations
+- [ ] Auto-blasters fire every ~0.47s
+- [ ] Left/right controls work (keyboard + touch drag)
+- [ ] 3 lives with hearts displayed, wobble on hit
+- [ ] Campaign: 5 worlds with progression bar, transitions, countdown
+- [ ] Level complete screen shows stats
+- [ ] Victory screen after World 5 with confetti + unlock
+- [ ] Endless mode accessible after campaign completion
+- [ ] localStorage persists high score and endless unlock
+- [ ] Portrait mode shows rotate overlay
+- [ ] 60fps on desktop Chrome and iPad Safari
+- [ ] No console errors
