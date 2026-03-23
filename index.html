@@ -16,6 +16,9 @@
 <meta name="twitter:title" content="Simple Kids Games — Free Browser Games for Kids">
 <meta name="twitter:description" content="Free, ad-free browser games for kids of all ages. No downloads, no accounts. Just fun!">
 <meta name="twitter:image" content="https://simplekidsgames.com/og-image.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -680,8 +683,19 @@ a { text-decoration: none; color: inherit; }
         </div>
       </a>
 
-      <!-- 2-10: Coming Soon -->
-      <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>🚀</div><div class="card-bottom"><div class="card-name">Space Dodge</div><div class="card-sub">Coming Soon</div></div></div>
+      <!-- 2. Space Dodge — LIVE -->
+      <a href="games/space-dodge/" class="game-card live">
+        <div class="card-thumb" style="background: linear-gradient(135deg, #0a0a2e, #1a0a3e); display:flex; align-items:center; justify-content:center; font-size:48px;">
+          <div class="play-badge">PLAY!</div>
+          🚀
+        </div>
+        <div class="card-bottom">
+          <div class="card-name">Space Dodge</div>
+          <div class="card-sub live-sub">🌌 Action • Space</div>
+        </div>
+      </a>
+
+      <!-- 3-10: Coming Soon -->
       <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>🎨</div><div class="card-bottom"><div class="card-name">Color Splash</div><div class="card-sub">Coming Soon</div></div></div>
       <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>🐸</div><div class="card-bottom"><div class="card-name">Frog Jump</div><div class="card-sub">Coming Soon</div></div></div>
       <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>🧁</div><div class="card-bottom"><div class="card-name">Cake Catch</div><div class="card-sub">Coming Soon</div></div></div>
@@ -853,9 +867,10 @@ a { text-decoration: none; color: inherit; }
   const screenFlash = document.getElementById('screenFlash');
   let inserting = false;
 
-  // Available games (add more as they go live)
+  // Available games (INSERT COIN picks randomly)
   const games = [
-    { name: 'Monster Rally', url: 'games/monster-rally/' }
+    { name: 'Monster Rally', url: 'games/monster-rally/' },
+    { name: 'Space Dodge', url: 'games/space-dodge/' }
   ];
 
   function insertCoin() {
@@ -917,7 +932,7 @@ a { text-decoration: none; color: inherit; }
         insertText.style.animation = 'coinBlink 0.5s step-end infinite';
       }, 300);
 
-      // Pick a random game (just Monster Rally for now)
+      // Pick a random game from the roster
       const game = games[Math.floor(Math.random() * games.length)];
 
       // Navigate after the flash
