@@ -7,7 +7,7 @@
 <link rel="icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="Dodge asteroids in space! A free, ad-free browser game for kids.">
+<meta name="description" content="Dodge and blast asteroids in space! A free, ad-free browser game for kids.">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
@@ -76,12 +76,35 @@ const INVINCIBLE_DURATION = 120; // frames (~2s)
 const WOBBLE_DURATION = 30; // frames
 const MAX_LIVES = 3;
 const STAR_COUNT = 120;
+const BLASTER_FIRE_RATE = 28; // frames between shots (~0.47s)
+const BLASTER_SPEED = 7;
+const BLASTER_WIDTH = 4;
+const BLASTER_HEIGHT = 14;
+
+// --- SVG SHIP ASSET ---
+const SHIP_SVG_B64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMEUwRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOUU5RTlFIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJibHVlQWNjZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyOTYyRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMEQ0N0ExIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJyZWRBY2NlbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGNTI1MiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNEMzJGMkYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmRvd0dyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjODFENEZBIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAyNzdCRCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwgLTEwKSI+CiAgICA8cGF0aCBkPSJNIDEwMCAyMzAgTCA0MCAzMjAgTCA5MCAzMTAgTCAxMTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSA0MCAzMjAgTCA5MCAzMTAgTCA2NSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAyMDAgMjMwIEwgMjYwIDMyMCBMIDIxMCAzMTAgTCAxOTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAyNjAgMzIwIEwgMjEwIDMxMCBMIDIzNSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAxNTAgNTAgQyA5MCAxMjAgODAgMjIwIDkwIDMwMCBRIDE1MCAzMjAgMjEwIDMwMCBDIDIyMCAyMjAgMjEwIDEyMCAxNTAgNTAgWiIgZmlsbD0idXJsKCNib2R5R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDYwIEMgMTEwIDEzMCAxMDAgMjIwIDExMCAyOTAgUSAxMzAgMjk1IDE1MCAyOTUgWiIgZmlsbD0idXJsKCNibHVlQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAxNTAgNjAgQyAxOTAgMTMwIDIwMCAyMjAgMTkwIDI5MCBRIDE3MCAyOTUgMTUwIDI5NSBaIiBmaWxsPSJ1cmwoI2JsdWVBY2NlbnQpIi8+CiAgICA8cGF0aCBkPSJNIDE0NSA3MCBMIDE1NSA3MCBMIDE2MCAyOTUgTCAxNDAgMjk1IFoiIGZpbGw9IiNFMEUwRTAiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDcwIEwgMTU1IDcwIEwgMTYwIDI5NSBMIDE1MCAyOTUgWiIgZmlsbD0iI0ZGRkZGRiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjM1IiBmaWxsPSIjNDI0MjQyIi8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjMwIiBmaWxsPSIjNzU3NTc1Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjI2IiBmaWxsPSJ1cmwoI3dpbmRvd0dyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDEzNSAxNDUgQSAyMCAyMCAwIDAgMSAxNjUgMTQ1IEEgMTUgMTUgMCAwIDAgMTM1IDE0NSBaIiBmaWxsPSIjRkZGRkZGIiBvcGFjaXR5PSIwLjYiLz4KICAgIDxyZWN0IHg9IjEwMCIgeT0iMjIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYiIGZpbGw9IiNGRkZGRkYiIHJ4PSIzIi8+CiAgICA8cGF0aCBkPSJNIDExNSAzMDAgUSAxNTAgMzE1IDE4NSAzMDAgTCAxNzUgMzE1IFEgMTUwIDMyNSAxMjUgMzE1IFoiIGZpbGw9IiM0MjQyNDIiLz4KICAgIDxyZWN0IHg9IjEzNSIgeT0iMzA1IiB3aWR0aD0iMzAiIGhlaWdodD0iNSIgZmlsbD0iIzIxMjEyMSIvPgogICAgPHBhdGggZD0iTSAxMTUgMTIwIEMgMTI1IDExNSAxNDAgMTEwIDE1MCAxMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY0QjVGNiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMTg1IDEyMCBDIDE3NSAxMTUgMTYwIDExMCAxNTAgMTEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NEI1RjYiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8cGF0aCBkPSJNIDExMCAyNjAgTCAxNDAgMjYwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxNTY1QzAiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPHBhdGggZD0iTSAxOTAgMjYwIEwgMTYwIDI2MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTU2NUMwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDUwIEMgMTQwIDcwIDEzNSA5MCAxMzUgOTAgQyAxNDUgODUgMTU1IDg1IDE2NSA5MCBDIDE2NSA5MCAxNjAgNzAgMTUwIDUwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogIDwvZz4KPC9zdmc+Cg==';
+const shipImg = new Image();
+shipImg.src = SHIP_SVG_B64;
+let shipImgReady = false;
+shipImg.onload = () => { shipImgReady = true; };
+// SVG viewBox: 300x400. Body spans roughly x:40-260 (wings), y:40-325 (nose to nozzle)
+const SVG_VB_W = 300;
+const SVG_VB_H = 400;
+
+// --- SVG ASTEROID ASSET ---
+const ASTEROID_SVG_B64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InJvY2tHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ExODg3RiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzc5NTU0OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzRTI3MjMiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImNyYXRlckdyYWQiIGN4PSIzMCUiIGN5PSIzMCUiIHI9IjcwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM1RDQwMzciIHN0b3Atb3BhY2l0eT0iMC44Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzIxMjEyMSIgc3RvcC1vcGFjaXR5PSIwLjkiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgMTAwKSI+CiAgICA8cGF0aCBkPSJNIDAgLTg1IEMgNDAgLTkwIDc1IC02MCA4NSAtMjAgQyA5NSAxNSA4MCA2MCA1MCA4MCBDIDE1IDEwMCAtNDAgODUgLTcwIDU1IEMgLTEwMCAyMCAtOTUgLTQwIC02MCAtNzAgQyAtMzAgLTkwIC0xMCAtODAgMCAtODUgWiIgZmlsbD0idXJsKCNyb2NrR3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMCAtODUgQyA0MCAtOTAgNzUgLTYwIDg1IC0yMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRDdDQ0M4IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC40Ii8+CiAgICA8cGF0aCBkPSJNIC02MCAtNzAgQyAtMzAgLTkwIC0xMCAtODAgMCAtODUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0Q3Q0NDOCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuMyIvPgogICAgPHBhdGggZD0iTSAtNTAgMCBRIC0yMCAtMTAgMCAyMCBUIDQwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiM0RTM0MkUiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjYiLz4KICAgIDxwYXRoIGQ9Ik0gMzAgLTQwIFEgNDAgLTEwIDIwIDEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM0RTM0MkUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gLTIwIC01MCBRIDAgLTMwIC0xMCAtMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzNFMjcyMyIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNCIvPgogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDUsIC0xNSkiPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjE4IiBmaWxsPSJ1cmwoI2NyYXRlckdyYWQpIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjApIi8+CiAgICAgIDxwYXRoIGQ9Ik0gLTE1IDEwIFEgMCAyMCAxNSA1IiBmaWxsPSJub25lIiBzdHJva2U9IiNCQ0FBQTQiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMzUsIDQ1KSI+CiAgICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIxNiIgZmlsbD0idXJsKCNjcmF0ZXJHcmFkKSIvPgogICAgICA8cGF0aCBkPSJNIC0xMCAxMCBRIDAgMTggMTAgNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQkNBQUE0IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC40Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDAsIC0zNSkiPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIxMCIgcnk9IjE0IiBmaWxsPSJ1cmwoI2NyYXRlckdyYWQpIiB0cmFuc2Zvcm09InJvdGF0ZSgzMCkiLz4KICAgIDwvZz4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iNTAiIHI9IjQiIGZpbGw9IiMzRTI3MjMiIG9wYWNpdHk9IjAuOCIvPgogICAgPGNpcmNsZSBjeD0iLTEwIiBjeT0iLTYwIiByPSI1IiBmaWxsPSIjM0UyNzIzIiBvcGFjaXR5PSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iLTQ1IiByPSIzIiBmaWxsPSIjM0UyNzIzIiBvcGFjaXR5PSIwLjkiLz4KICAgIDxjaXJjbGUgY3g9Ii02MCIgY3k9IjEwIiByPSIzIiBmaWxsPSIjMjEyMTIxIiBvcGFjaXR5PSIwLjYiLz4KICA8L2c+Cjwvc3ZnPgo=';
+const asteroidImg = new Image();
+asteroidImg.src = ASTEROID_SVG_B64;
+let asteroidImgReady = false;
+asteroidImg.onload = () => { asteroidImgReady = true; };
 
 // --- GAME STATE ---
 let W, H, scale;
 let gameState = 'title'; // title | playing | gameover
 let ship = {};
 let asteroids = [];
+let blasters = [];
+let blasterTimer = 0;
 let stars = [];
 let particles = [];
 let score = 0;
@@ -155,6 +178,22 @@ function playSound(type) {
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
       osc.start(t); osc.stop(t + 0.3);
       break;
+    case 'blaster':
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
+      gain.gain.setValueAtTime(0.08, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      osc.start(t); osc.stop(t + 0.1);
+      break;
+    case 'explode':
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, t);
+      osc.frequency.exponentialRampToValueAtTime(60, t + 0.2);
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+      break;
   }
 }
 
@@ -222,78 +261,67 @@ function drawShip(x, y, w, h, wobble) {
   const hw = w / 2;
   const hh = h / 2;
 
-  // Exhaust flame
-  const flameH = 10 + Math.random() * 8;
-  const flameW = w * 0.3;
-  ctx.fillStyle = '#ff6600';
+  // Animated Canvas exhaust flames (drawn BEHIND ship)
+  const flameH = 14 + Math.random() * 12;
+  const flameW = w * 0.35;
+  // Outer flame
+  ctx.fillStyle = '#E65100';
   ctx.beginPath();
-  ctx.moveTo(-flameW / 2, hh);
-  ctx.lineTo(0, hh + flameH);
-  ctx.lineTo(flameW / 2, hh);
+  ctx.moveTo(-flameW / 2, hh * 0.75);
+  ctx.quadraticCurveTo(-flameW * 0.1, hh + flameH * 0.7, 0, hh + flameH);
+  ctx.quadraticCurveTo(flameW * 0.1, hh + flameH * 0.7, flameW / 2, hh * 0.75);
   ctx.fill();
-  // inner flame
-  ctx.fillStyle = '#ffcc00';
+  // Mid flame
+  ctx.fillStyle = '#FFB300';
   ctx.beginPath();
-  ctx.moveTo(-flameW / 4, hh);
-  ctx.lineTo(0, hh + flameH * 0.6);
-  ctx.lineTo(flameW / 4, hh);
+  ctx.moveTo(-flameW / 3, hh * 0.75);
+  ctx.quadraticCurveTo(0, hh + flameH * 0.6, 0, hh + flameH * 0.8);
+  ctx.quadraticCurveTo(0, hh + flameH * 0.6, flameW / 3, hh * 0.75);
   ctx.fill();
-
-  // Body (rounded rocket shape)
-  const grad = ctx.createLinearGradient(-hw, 0, hw, 0);
-  grad.addColorStop(0, '#2196F3');
-  grad.addColorStop(0.5, '#42A5F5');
-  grad.addColorStop(1, '#1976D2');
-  ctx.fillStyle = grad;
+  // Core flame
+  ctx.fillStyle = '#FFFFFF';
   ctx.beginPath();
-  ctx.moveTo(0, -hh);
-  ctx.bezierCurveTo(hw * 0.3, -hh, hw, -hh * 0.4, hw, hh * 0.5);
-  ctx.lineTo(hw * 0.6, hh);
-  ctx.lineTo(-hw * 0.6, hh);
-  ctx.lineTo(-hw, hh * 0.5);
-  ctx.bezierCurveTo(-hw, -hh * 0.4, -hw * 0.3, -hh, 0, -hh);
+  ctx.moveTo(-flameW / 6, hh * 0.75);
+  ctx.quadraticCurveTo(0, hh + flameH * 0.3, 0, hh + flameH * 0.5);
+  ctx.quadraticCurveTo(0, hh + flameH * 0.3, flameW / 6, hh * 0.75);
   ctx.fill();
 
-  // Nose cone
-  ctx.fillStyle = '#f44336';
-  ctx.beginPath();
-  ctx.moveTo(0, -hh);
-  ctx.bezierCurveTo(hw * 0.15, -hh, hw * 0.35, -hh * 0.55, hw * 0.35, -hh * 0.35);
-  ctx.lineTo(-hw * 0.35, -hh * 0.35);
-  ctx.bezierCurveTo(-hw * 0.35, -hh * 0.55, -hw * 0.15, -hh, 0, -hh);
-  ctx.fill();
-
-  // Window
-  ctx.fillStyle = '#bbdefb';
-  ctx.strokeStyle = '#90caf9';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(0, -hh * 0.1, hw * 0.28, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  // window shine
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.beginPath();
-  ctx.arc(-hw * 0.07, -hh * 0.18, hw * 0.1, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Fins (left)
-  ctx.fillStyle = '#f44336';
-  ctx.beginPath();
-  ctx.moveTo(-hw, hh * 0.3);
-  ctx.lineTo(-hw - w * 0.2, hh + 4);
-  ctx.lineTo(-hw * 0.5, hh);
-  ctx.fill();
-  // Fin (right)
-  ctx.beginPath();
-  ctx.moveTo(hw, hh * 0.3);
-  ctx.lineTo(hw + w * 0.2, hh + 4);
-  ctx.lineTo(hw * 0.5, hh);
-  ctx.fill();
-
-  // Body stripe
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(-hw * 0.6, hh * 0.15, w * 0.6, 3);
+  // SVG ship body
+  if (shipImgReady) {
+    // The SVG has wings extending to edges — draw it sized to include wing span
+    // Ship draw width is wider than hitbox to show wings
+    const drawW = w * 1.7;
+    const drawH = h * 1.3;
+    ctx.drawImage(shipImg, -drawW / 2, -drawH / 2, drawW, drawH);
+  } else {
+    // Fallback: simple Canvas ship while SVG loads
+    const grad = ctx.createLinearGradient(-hw, 0, hw, 0);
+    grad.addColorStop(0, '#2962FF');
+    grad.addColorStop(0.5, '#42A5F5');
+    grad.addColorStop(1, '#0D47A1');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -hh);
+    ctx.bezierCurveTo(hw * 0.3, -hh, hw, -hh * 0.4, hw, hh * 0.5);
+    ctx.lineTo(hw * 0.6, hh);
+    ctx.lineTo(-hw * 0.6, hh);
+    ctx.lineTo(-hw, hh * 0.5);
+    ctx.bezierCurveTo(-hw, -hh * 0.4, -hw * 0.3, -hh, 0, -hh);
+    ctx.fill();
+    // Nose
+    ctx.fillStyle = '#f44336';
+    ctx.beginPath();
+    ctx.moveTo(0, -hh);
+    ctx.bezierCurveTo(hw * 0.15, -hh, hw * 0.35, -hh * 0.55, hw * 0.35, -hh * 0.35);
+    ctx.lineTo(-hw * 0.35, -hh * 0.35);
+    ctx.bezierCurveTo(-hw * 0.35, -hh * 0.55, -hw * 0.15, -hh, 0, -hh);
+    ctx.fill();
+    // Window
+    ctx.fillStyle = '#81D4FA';
+    ctx.beginPath();
+    ctx.arc(0, -hh * 0.1, hw * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }
@@ -304,50 +332,24 @@ function drawAsteroid(a) {
   ctx.translate(a.x, a.y);
   ctx.rotate(a.rot);
 
-  // jagged circle
-  const grad = ctx.createRadialGradient(0, 0, a.r * 0.2, 0, 0, a.r);
-  grad.addColorStop(0, '#a0896e');
-  grad.addColorStop(0.6, '#8b7355');
-  grad.addColorStop(1, '#6b5540');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  const pts = a.shape;
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  ctx.closePath();
-  ctx.fill();
-
-  // craters
-  ctx.fillStyle = 'rgba(0,0,0,0.2)';
-  for (const c of a.craters) {
+  if (asteroidImgReady) {
+    // SVG viewBox 200x200, asteroid shape spans ~170px diameter
+    // Scale so game radius matches visual radius
+    const drawSize = a.r * 2.35;
+    ctx.drawImage(asteroidImg, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
+  } else {
+    // Canvas fallback
+    const grad = ctx.createRadialGradient(0, 0, a.r * 0.2, 0, 0, a.r);
+    grad.addColorStop(0, '#a0896e');
+    grad.addColorStop(0.6, '#8b7355');
+    grad.addColorStop(1, '#6b5540');
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.arc(0, 0, a.r, 0, Math.PI * 2);
     ctx.fill();
   }
 
   ctx.restore();
-}
-
-function makeAsteroidShape(r) {
-  const pts = [];
-  const numPts = 8 + Math.floor(Math.random() * 4);
-  for (let i = 0; i < numPts; i++) {
-    const angle = (i / numPts) * Math.PI * 2;
-    const dist = r * (0.75 + Math.random() * 0.35);
-    pts.push({ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist });
-  }
-  return pts;
-}
-
-function makeAsteroidCraters(r) {
-  const craters = [];
-  const count = 1 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < count; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const d = Math.random() * r * 0.5;
-    craters.push({ x: Math.cos(a) * d, y: Math.sin(a) * d, r: r * (0.1 + Math.random() * 0.15) });
-  }
-  return craters;
 }
 
 function spawnAsteroid() {
@@ -358,9 +360,7 @@ function spawnAsteroid() {
     r: r,
     speed: currentSpeed * (0.7 + Math.random() * 0.6),
     rot: Math.random() * Math.PI * 2,
-    rotSpeed: (Math.random() - 0.5) * 0.04,
-    shape: makeAsteroidShape(r),
-    craters: makeAsteroidCraters(r)
+    rotSpeed: (Math.random() - 0.5) * 0.04
   });
 }
 
@@ -402,6 +402,76 @@ function drawParticles() {
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+}
+
+// --- BLASTERS ---
+function spawnBlaster() {
+  blasters.push({
+    x: ship.x,
+    y: ship.y - ship.h / 2,
+    w: BLASTER_WIDTH * scale,
+    h: BLASTER_HEIGHT * scale
+  });
+  playSound('blaster');
+}
+
+function updateBlasters() {
+  for (let i = blasters.length - 1; i >= 0; i--) {
+    const b = blasters[i];
+    b.y -= BLASTER_SPEED * scale;
+    if (b.y + b.h < 0) { blasters.splice(i, 1); continue; }
+
+    // Check collision with asteroids
+    for (let j = asteroids.length - 1; j >= 0; j--) {
+      const a = asteroids[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      if (dx * dx + dy * dy < (a.r + b.w) * (a.r + b.w)) {
+        // Asteroid destroyed!
+        spawnExplosionParticles(a.x, a.y, a.r);
+        playSound('explode');
+        score++;
+        if (score % 50 === 0) playSound('score');
+        asteroids.splice(j, 1);
+        blasters.splice(i, 1);
+        break;
+      }
+    }
+  }
+}
+
+function drawBlasters() {
+  for (const b of blasters) {
+    // Glowing pellet
+    ctx.shadowColor = '#42A5F5';
+    ctx.shadowBlur = 8;
+    const grad = ctx.createLinearGradient(b.x, b.y - b.h / 2, b.x, b.y + b.h / 2);
+    grad.addColorStop(0, '#90caf9');
+    grad.addColorStop(0.5, '#42A5F5');
+    grad.addColorStop(1, '#1565C0');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, b.w / 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function spawnExplosionParticles(x, y, radius) {
+  const count = 10 + Math.floor(radius * 0.4);
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1.5 + Math.random() * 4;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 25 + Math.random() * 20,
+      maxLife: 45,
+      size: 2 + Math.random() * 4,
+      color: ['#ff6600', '#ffcc00', '#a0896e', '#fff', '#ff3333'][Math.floor(Math.random() * 5)]
+    });
+  }
 }
 
 // --- HEARTS ---
@@ -478,24 +548,25 @@ function drawTitle() {
   // Subtitle
   ctx.fillStyle = '#42A5F5';
   ctx.font = `${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('Dodge the asteroids!', W / 2, H * 0.2);
+  ctx.fillText('Dodge and blast the asteroids!', W / 2, H * 0.2);
 
   // Floating asteroids (decorative)
   const decT = Date.now() / 1000;
   for (let i = 0; i < 3; i++) {
     const ax = W * (0.15 + i * 0.35) + Math.sin(decT + i * 2) * 20;
     const ay = H * 0.7 + Math.cos(decT * 0.7 + i) * 15;
+    const aSize = (36 + i * 10) * scale;
     ctx.save();
     ctx.translate(ax, ay);
     ctx.rotate(decT * 0.3 * (i % 2 === 0 ? 1 : -1));
-    ctx.fillStyle = '#6b5540';
-    ctx.beginPath();
-    ctx.arc(0, 0, 18 + i * 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.beginPath();
-    ctx.arc(3, -3, 5, 0, Math.PI * 2);
-    ctx.fill();
+    if (asteroidImgReady) {
+      ctx.drawImage(asteroidImg, -aSize / 2, -aSize / 2, aSize, aSize);
+    } else {
+      ctx.fillStyle = '#6b5540';
+      ctx.beginPath();
+      ctx.arc(0, 0, aSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -563,7 +634,7 @@ function drawGameOver() {
   ctx.fillText(score, W / 2, H * 0.48);
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.font = `${Math.round(16 * scale)}px Arial, sans-serif`;
-  ctx.fillText('ASTEROIDS DODGED', W / 2, H * 0.55);
+  ctx.fillText('ASTEROIDS CLEARED', W / 2, H * 0.55);
 
   // New best
   if (score >= bestScore && score > 0) {
@@ -606,6 +677,8 @@ function startGame() {
   gameState = 'playing';
   ship = { x: W / 2, y: H * 0.8, w: SHIP_WIDTH * scale, h: SHIP_HEIGHT * scale, speed: 6 };
   asteroids = [];
+  blasters = [];
+  blasterTimer = 0;
   particles = [];
   score = 0;
   lives = MAX_LIVES;
@@ -651,6 +724,13 @@ function update() {
 
   // Clamp
   ship.x = Math.max(ship.w / 2, Math.min(W - ship.w / 2, ship.x));
+
+  // Auto-fire blasters
+  blasterTimer++;
+  if (blasterTimer >= BLASTER_FIRE_RATE) {
+    spawnBlaster();
+    blasterTimer = 0;
+  }
 
   // Timers
   if (invincibleTimer > 0) invincibleTimer--;
@@ -707,6 +787,7 @@ function update() {
     }
   }
 
+  updateBlasters();
   updateParticles();
 }
 
@@ -730,6 +811,9 @@ function draw() {
 
   // Asteroids
   for (const a of asteroids) drawAsteroid(a);
+
+  // Blasters
+  drawBlasters();
 
   // Ship
   drawShip(ship.x, ship.y, ship.w, ship.h, wobbleTimer);
