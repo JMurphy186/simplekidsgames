@@ -552,41 +552,132 @@ function spawnExplosionParticles(x, y, radius) {
   }
 }
 
-// --- HEARTS ---
-function drawHearts() {
-  const heartSize = 18 * scale;
-  const startX = 14;
-  const startY = 14;
+// --- LIFE METER (Mini Ships) ---
+function drawLives() {
+  const shipW = 16 * scale;
+  const shipH = 22 * scale;
+  const gap = 6 * scale;
+  const startX = 14 + shipW / 2;
+  const startY = 8;
+
+  // "LIVES" label
+  ctx.fillStyle = 'rgba(100,200,255,0.6)';
+  ctx.font = `bold ${Math.round(7 * scale)}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('LIVES', startX + (MAX_LIVES - 1) * (shipW + gap) / 2, startY);
+
   for (let i = 0; i < MAX_LIVES; i++) {
-    const x = startX + i * (heartSize + 8);
-    const y = startY;
-    drawHeart(x, y, heartSize, i < lives ? '#f44336' : '#333');
+    const x = startX + i * (shipW + gap);
+    const y = startY + 6 * scale + shipH / 2;
+    const alive = i < lives;
+    drawMiniShip(x, y, shipW, shipH, alive);
   }
 }
 
-function drawHeart(x, y, size, color) {
+function drawMiniShip(x, y, w, h, alive) {
   ctx.save();
   ctx.translate(x, y);
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  const s = size / 2;
-  ctx.moveTo(0, s * 0.3);
-  ctx.bezierCurveTo(-s, -s * 0.5, -s, -s, 0, -s * 0.4);
-  ctx.bezierCurveTo(s, -s, s, -s * 0.5, 0, s * 0.3);
-  ctx.fill();
-  // shine
-  if (color !== '#333') {
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+
+  const hw = w / 2;
+  const hh = h / 2;
+
+  if (alive) {
+    // Animated thruster flame
+    const flameH = 4 + Math.random() * 4;
+    const flameW = w * 0.3;
+    ctx.fillStyle = '#FF8F00';
     ctx.beginPath();
-    ctx.arc(-s * 0.25, -s * 0.35, s * 0.2, 0, Math.PI * 2);
+    ctx.moveTo(-flameW / 2, hh);
+    ctx.quadraticCurveTo(0, hh + flameH, flameW / 2, hh);
     ctx.fill();
+    ctx.fillStyle = '#FFD54F';
+    ctx.beginPath();
+    ctx.moveTo(-flameW / 4, hh);
+    ctx.quadraticCurveTo(0, hh + flameH * 0.6, flameW / 4, hh);
+    ctx.fill();
+
+    // Body
+    const grad = ctx.createLinearGradient(-hw, 0, hw, 0);
+    grad.addColorStop(0, '#9E9E9E');
+    grad.addColorStop(0.5, '#E0E0E0');
+    grad.addColorStop(1, '#9E9E9E');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, -hh);
+    ctx.bezierCurveTo(hw * 0.4, -hh, hw * 0.8, -hh * 0.3, hw * 0.7, hh * 0.6);
+    ctx.lineTo(-hw * 0.7, hh * 0.6);
+    ctx.bezierCurveTo(-hw * 0.8, -hh * 0.3, -hw * 0.4, -hh, 0, -hh);
+    ctx.fill();
+
+    // Blue panels
+    ctx.fillStyle = '#2962FF';
+    ctx.beginPath();
+    ctx.moveTo(0, -hh * 0.7);
+    ctx.lineTo(hw * 0.5, hh * 0.4);
+    ctx.lineTo(0, hh * 0.5);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -hh * 0.7);
+    ctx.lineTo(-hw * 0.5, hh * 0.4);
+    ctx.lineTo(0, hh * 0.5);
+    ctx.fill();
+
+    // Red nose
+    ctx.fillStyle = '#FF5252';
+    ctx.beginPath();
+    ctx.moveTo(0, -hh);
+    ctx.bezierCurveTo(hw * 0.2, -hh, hw * 0.3, -hh * 0.6, 0, -hh * 0.5);
+    ctx.bezierCurveTo(-hw * 0.3, -hh * 0.6, -hw * 0.2, -hh, 0, -hh);
+    ctx.fill();
+
+    // Wings
+    ctx.fillStyle = '#D32F2F';
+    ctx.beginPath();
+    ctx.moveTo(-hw * 0.6, hh * 0.2);
+    ctx.lineTo(-hw, hh * 0.8);
+    ctx.lineTo(-hw * 0.4, hh * 0.6);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(hw * 0.6, hh * 0.2);
+    ctx.lineTo(hw, hh * 0.8);
+    ctx.lineTo(hw * 0.4, hh * 0.6);
+    ctx.fill();
+
+    // Cockpit
+    ctx.fillStyle = '#81D4FA';
+    ctx.beginPath();
+    ctx.arc(0, -hh * 0.05, hw * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Ghost ship — greyed out, faded
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = '#666';
+    ctx.beginPath();
+    ctx.moveTo(0, -hh);
+    ctx.bezierCurveTo(hw * 0.4, -hh, hw * 0.8, -hh * 0.3, hw * 0.7, hh * 0.6);
+    ctx.lineTo(-hw * 0.7, hh * 0.6);
+    ctx.bezierCurveTo(-hw * 0.8, -hh * 0.3, -hw * 0.4, -hh, 0, -hh);
+    ctx.fill();
+    // Ghost wings
+    ctx.beginPath();
+    ctx.moveTo(-hw * 0.6, hh * 0.2);
+    ctx.lineTo(-hw, hh * 0.8);
+    ctx.lineTo(-hw * 0.4, hh * 0.6);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(hw * 0.6, hh * 0.2);
+    ctx.lineTo(hw, hh * 0.8);
+    ctx.lineTo(hw * 0.4, hh * 0.6);
+    ctx.fill();
+    ctx.globalAlpha = 1;
   }
+
   ctx.restore();
 }
 
 // --- HUD ---
 function drawHUD() {
-  drawHearts();
+  drawLives();
 
   // Score
   ctx.fillStyle = '#fff';
