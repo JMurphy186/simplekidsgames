@@ -188,14 +188,14 @@ const ENVIRONMENTS = [
 
 // Campaign level configs (8 levels)
 const CAMPAIGN_LEVELS = [
-  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.4, maxSpeed: 4.0, speedRamp: 1200, obstGap: 170, starFreq: 40, countdownSecs: 60 },
-  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 1.5, maxSpeed: 4.5, speedRamp: 1100, obstGap: 160, starFreq: 40, countdownSecs: 60 },
-  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60 },
-  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 1.7, maxSpeed: 5.5, speedRamp: 900,  obstGap: 140, starFreq: 45, countdownSecs: 60 },
-  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60 },
-  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 1.8, maxSpeed: 5.5, speedRamp: 850,  obstGap: 130, starFreq: 45, countdownSecs: 60 },
-  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 1.9, maxSpeed: 6.0, speedRamp: 800,  obstGap: 120, starFreq: 50, countdownSecs: 60 },
-  { envIndex: 7, name: 'RAINBOW ROAD',   baseSpeed: 1.6, maxSpeed: 5.5, speedRamp: 900,  obstGap: 140, starFreq: 25, countdownSecs: 30 }
+  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.6, maxSpeed: 4.5, speedRamp: 1200, obstGap: 170, starFreq: 40, countdownSecs: 60, nameColor: '#cc9966' },
+  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 1.7, maxSpeed: 5.0, speedRamp: 1100, obstGap: 160, starFreq: 40, countdownSecs: 60, nameColor: '#ff8844' },
+  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 1.8, maxSpeed: 5.5, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60, nameColor: '#cc44ff' },
+  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 1.9, maxSpeed: 6.0, speedRamp: 900,  obstGap: 140, starFreq: 45, countdownSecs: 60, nameColor: '#6688aa' },
+  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 1.8, maxSpeed: 5.5, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60, nameColor: '#aabbcc' },
+  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 2.0, maxSpeed: 6.0, speedRamp: 850,  obstGap: 130, starFreq: 45, countdownSecs: 60, nameColor: '#44cc44' },
+  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 2.1, maxSpeed: 6.5, speedRamp: 800,  obstGap: 120, starFreq: 50, countdownSecs: 60, nameColor: '#ff5500' },
+  { envIndex: 7, name: 'RAINBOW ROAD',   baseSpeed: 1.8, maxSpeed: 6.0, speedRamp: 900,  obstGap: 140, starFreq: 25, countdownSecs: 30, nameColor: 'rainbow' }
 ];
 
 // Power-up configs
@@ -1586,10 +1586,27 @@ function drawLevelCompleteScreen() {
   ctx.strokeText('LEVEL COMPLETE!', W / 2, 100 + bounce);
   ctx.fillText('LEVEL COMPLETE!', W / 2, 100 + bounce);
 
-  // Level name
+  // Level name — styled title card
   const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
-  ctx.fillStyle = '#aaa'; ctx.font = '16px Arial';
-  ctx.fillText(lvl.name, W / 2, 130);
+  ctx.font = 'bold italic 26px "Arial Black", Impact, sans-serif';
+  if (lvl.nameColor === 'rainbow') {
+    // Rainbow gradient text
+    const hue = (Date.now() * 0.1) % 360;
+    const tGrad = ctx.createLinearGradient(W / 2 - 100, 0, W / 2 + 100, 0);
+    tGrad.addColorStop(0, `hsl(${hue}, 80%, 60%)`);
+    tGrad.addColorStop(0.5, `hsl(${(hue + 120) % 360}, 80%, 60%)`);
+    tGrad.addColorStop(1, `hsl(${(hue + 240) % 360}, 80%, 60%)`);
+    ctx.fillStyle = tGrad;
+  } else {
+    ctx.fillStyle = lvl.nameColor || '#aaa';
+  }
+  // Glow shadow in matching color
+  ctx.shadowColor = lvl.nameColor === 'rainbow' ? '#ff44ff' : (lvl.nameColor || '#aaa');
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+  ctx.strokeText(lvl.name, W / 2, 138);
+  ctx.fillText(lvl.name, W / 2, 138);
+  ctx.shadowBlur = 0;
 
   // Stats
   ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
@@ -4091,9 +4108,9 @@ function updatePlayer(p) {
     // Ramp collision
     for (const obs of obstacles) {
       if (obs.type === 'ramp' && !obs.crushed) {
-        const isMega = p.activePowerUp && p.activePowerUp.effect === 'mega';
-        if (isMega) { obs.crushed = true; obs.crushAnim = 0; p.score += 15; playSound('crush'); continue; }
-        const onRamp = tk.x + tk.w > obs.x && tk.x < obs.x + obs.w;
+        // Mega truck can still ride ramps — don't crush them
+        const truckRight = tk.x + tk.w * (p.megaScale || 1);
+        const onRamp = truckRight > obs.x && tk.x < obs.x + obs.w;
         if (onRamp && tk.y + tk.h >= obs.y && tk.vy > 0) {
           tk.vy = JUMP_FORCE * 1.4;
           screenShake = 5; flashTimer = 8; flashColor = '#ff8800';
@@ -4811,17 +4828,21 @@ function drawHUD() {
     ctx.textAlign = 'left';
   }
 
-  // Speed indicator (center-top, only in rally)
-  if (gameMode === 'rally') {
-  const speedPct = (gameSpeed - 1.6) / (maxSpeed - 1.6);
+  // Speed indicator (center-top, below level indicator in campaign)
+  if (gameMode === 'rally' || gameMode === 'endless') {
+  const speedBarY = (gameMode === 'rally') ? 26 : 8; // offset down in campaign to avoid level text
+  const lvlRef = (gameMode === 'rally') ? (CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0]) : null;
+  const spdBase = lvlRef ? lvlRef.baseSpeed : 1.6;
+  const spdMax = lvlRef ? lvlRef.maxSpeed : maxSpeed;
+  const speedPct = Math.max(0, (gameSpeed - spdBase) / (spdMax - spdBase));
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.beginPath(); ctx.roundRect(W / 2 - 45, 8, 90, 14, 7); ctx.fill();
-  const speedColor = speedPct > 0.7 ? '#ff4400' : speedPct > 0.4 ? '#ff8800' : '#22cc66';
+  ctx.beginPath(); ctx.roundRect(W / 2 - 45, speedBarY, 90, 14, 7); ctx.fill();
+  const speedColor = campaignMaxSpeedReached ? '#ffd700' : speedPct > 0.7 ? '#ff4400' : speedPct > 0.4 ? '#ff8800' : '#22cc66';
   ctx.fillStyle = speedColor;
-  ctx.beginPath(); ctx.roundRect(W / 2 - 43, 10, Math.max(4, 86 * speedPct), 10, 5); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(W / 2 - 43, speedBarY + 2, Math.max(4, 86 * Math.min(1, speedPct)), 10, 5); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = '8px Arial'; ctx.textAlign = 'center';
-  ctx.fillText('SPEED', W / 2, 18); ctx.textAlign = 'left';
-  } // end rally speed indicator
+  ctx.fillText('SPEED', W / 2, speedBarY + 10); ctx.textAlign = 'left';
+  } // end speed indicator
 
   // Mute button
   const muteX = W - 20, muteY = 15;
