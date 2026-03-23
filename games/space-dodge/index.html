@@ -3,20 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Space Dodge — Free Space Game for Kids | Simple Kids Games</title>
+<title>Space Dodge — Simple Kids Games</title>
 <link rel="icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="Dodge asteroids and explore space in this free browser game for kids. No ads, no downloads, no accounts needed.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://www.simplekidsgames.com/games/space-dodge/">
-<meta property="og:title" content="Space Dodge — Free Space Game for Kids">
-<meta property="og:description" content="Dodge asteroids and explore space in this free browser game for kids. No ads, no downloads, no accounts.">
-<meta property="og:image" content="https://www.simplekidsgames.com/og-image.png">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Space Dodge — Free Space Game for Kids">
-<meta name="twitter:description" content="Dodge asteroids and explore space in this free browser game for kids.">
-<meta name="twitter:image" content="https://www.simplekidsgames.com/og-image.png">
+<meta name="description" content="Dodge and blast asteroids in space! A free, ad-free browser game for kids.">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
@@ -94,15 +85,36 @@ const WORLDS = [
   { name: 'SUPERNOVA',      bg: '#2e0a0a', starColor: [255,205,210], accent: '#FF8A65', baseSpeed: 2.8, spawnStart: 38, spawnMin: 15, speedInc: 0.001,  spawnDec: 0.016, threshold: 200 },
 ];
 
-// --- SVG SHIP ASSET ---
-const SHIP_SVG_B64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMEUwRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOUU5RTlFIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJibHVlQWNjZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyOTYyRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMEQ0N0ExIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJyZWRBY2NlbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGNTI1MiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNEMzJGMkYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmRvd0dyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjODFENEZBIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAyNzdCRCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwgLTEwKSI+CiAgICA8cGF0aCBkPSJNIDEwMCAyMzAgTCA0MCAzMjAgTCA5MCAzMTAgTCAxMTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSA0MCAzMjAgTCA5MCAzMTAgTCA2NSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAyMDAgMjMwIEwgMjYwIDMyMCBMIDIxMCAzMTAgTCAxOTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAyNjAgMzIwIEwgMjEwIDMxMCBMIDIzNSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAxNTAgNTAgQyA5MCAxMjAgODAgMjIwIDkwIDMwMCBRIDE1MCAzMjAgMjEwIDMwMCBDIDIyMCAyMjAgMjEwIDEyMCAxNTAgNTAgWiIgZmlsbD0idXJsKCNib2R5R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDYwIEMgMTEwIDEzMCAxMDAgMjIwIDExMCAyOTAgUSAxMzAgMjk1IDE1MCAyOTUgWiIgZmlsbD0idXJsKCNibHVlQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAxNTAgNjAgQyAxOTAgMTMwIDIwMCAyMjAgMTkwIDI5MCBRIDE3MCAyOTUgMTUwIDI5NSBaIiBmaWxsPSJ1cmwoI2JsdWVBY2NlbnQpIi8+CiAgICA8cGF0aCBkPSJNIDE0NSA3MCBMIDE1NSA3MCBMIDE2MCAyOTUgTCAxNDAgMjk1IFoiIGZpbGw9IiNFMEUwRTAiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDcwIEwgMTU1IDcwIEwgMTYwIDI5NSBMIDE1MCAyOTUgWiIgZmlsbD0iI0ZGRkZGRiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjM1IiBmaWxsPSIjNDI0MjQyIi8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjMwIiBmaWxsPSIjNzU3NTc1Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjI2IiBmaWxsPSJ1cmwoI3dpbmRvd0dyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDEzNSAxNDUgQSAyMCAyMCAwIDAgMSAxNjUgMTQ1IEEgMTUgMTUgMCAwIDAgMTM1IDE0NSBaIiBmaWxsPSIjRkZGRkZGIiBvcGFjaXR5PSIwLjYiLz4KICAgIDxyZWN0IHg9IjEwMCIgeT0iMjIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYiIGZpbGw9IiNGRkZGRkYiIHJ4PSIzIi8+CiAgICA8cGF0aCBkPSJNIDExNSAzMDAgUSAxNTAgMzE1IDE4NSAzMDAgTCAxNzUgMzE1IFEgMTUwIDMyNSAxMjUgMzE1IFoiIGZpbGw9IiM0MjQyNDIiLz4KICAgIDxyZWN0IHg9IjEzNSIgeT0iMzA1IiB3aWR0aD0iMzAiIGhlaWdodD0iNSIgZmlsbD0iIzIxMjEyMSIvPgogICAgPHBhdGggZD0iTSAxMTUgMTIwIEMgMTI1IDExNSAxNDAgMTEwIDE1MCAxMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY0QjVGNiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMTg1IDEyMCBDIDE3NSAxMTUgMTYwIDExMCAxNTAgMTEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NEI1RjYiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8cGF0aCBkPSJNIDExMCAyNjAgTCAxNDAgMjYwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxNTY1QzAiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPHBhdGggZD0iTSAxOTAgMjYwIEwgMTYwIDI2MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTU2NUMwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDUwIEMgMTQwIDcwIDEzNSA5MCAxMzUgOTAgQyAxNDUgODUgMTU1IDg1IDE2NSA5MCBDIDE2NSA5MCAxNjAgNzAgMTUwIDUwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogIDwvZz4KPC9zdmc+Cg==';
-const shipImg = new Image();
-shipImg.src = SHIP_SVG_B64;
-let shipImgReady = false;
-shipImg.onload = () => { shipImgReady = true; };
-// SVG viewBox: 300x400. Body spans roughly x:40-260 (wings), y:40-325 (nose to nozzle)
-const SVG_VB_W = 300;
-const SVG_VB_H = 400;
+// --- SHIP ROSTER ---
+const SHIPS = [
+  { id: 'star_rider', name: 'Star Rider', type: 'Classic / Explorer', accent: '#42A5F5', flameColors: ['#E65100','#FFB300','#FFFFFF'], drawW: 1.7, drawH: 1.3,
+    svg: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMEUwRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOUU5RTlFIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJibHVlQWNjZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyOTYyRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMEQ0N0ExIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJyZWRBY2NlbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGNTI1MiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNEMzJGMkYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmRvd0dyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjODFENEZBIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAyNzdCRCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwgLTEwKSI+CiAgICA8cGF0aCBkPSJNIDEwMCAyMzAgTCA0MCAzMjAgTCA5MCAzMTAgTCAxMTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSA0MCAzMjAgTCA5MCAzMTAgTCA2NSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAyMDAgMjMwIEwgMjYwIDMyMCBMIDIxMCAzMTAgTCAxOTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAyNjAgMzIwIEwgMjEwIDMxMCBMIDIzNSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAxNTAgNTAgQyA5MCAxMjAgODAgMjIwIDkwIDMwMCBRIDE1MCAzMjAgMjEwIDMwMCBDIDIyMCAyMjAgMjEwIDEyMCAxNTAgNTAgWiIgZmlsbD0idXJsKCNib2R5R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDYwIEMgMTEwIDEzMCAxMDAgMjIwIDExMCAyOTAgUSAxMzAgMjk1IDE1MCAyOTUgWiIgZmlsbD0idXJsKCNibHVlQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAxNTAgNjAgQyAxOTAgMTMwIDIwMCAyMjAgMTkwIDI5MCBRIDE3MCAyOTUgMTUwIDI5NSBaIiBmaWxsPSJ1cmwoI2JsdWVBY2NlbnQpIi8+CiAgICA8cGF0aCBkPSJNIDE0NSA3MCBMIDE1NSA3MCBMIDE2MCAyOTUgTCAxNDAgMjk1IFoiIGZpbGw9IiNFMEUwRTAiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDcwIEwgMTU1IDcwIEwgMTYwIDI5NSBMIDE1MCAyOTUgWiIgZmlsbD0iI0ZGRkZGRiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjM1IiBmaWxsPSIjNDI0MjQyIi8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjMwIiBmaWxsPSIjNzU3NTc1Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjI2IiBmaWxsPSJ1cmwoI3dpbmRvd0dyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDEzNSAxNDUgQSAyMCAyMCAwIDAgMSAxNjUgMTQ1IEEgMTUgMTUgMCAwIDAgMTM1IDE0NSBaIiBmaWxsPSIjRkZGRkZGIiBvcGFjaXR5PSIwLjYiLz4KICAgIDxyZWN0IHg9IjEwMCIgeT0iMjIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYiIGZpbGw9IiNGRkZGRkYiIHJ4PSIzIi8+CiAgICA8cGF0aCBkPSJNIDExNSAzMDAgUSAxNTAgMzE1IDE4NSAzMDAgTCAxNzUgMzE1IFEgMTUwIDMyNSAxMjUgMzE1IFoiIGZpbGw9IiM0MjQyNDIiLz4KICAgIDxyZWN0IHg9IjEzNSIgeT0iMzA1IiB3aWR0aD0iMzAiIGhlaWdodD0iNSIgZmlsbD0iIzIxMjEyMSIvPgogICAgPHBhdGggZD0iTSAxMTUgMTIwIEMgMTI1IDExNSAxNDAgMTEwIDE1MCAxMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY0QjVGNiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMTg1IDEyMCBDIDE3NSAxMTUgMTYwIDExMCAxNTAgMTEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NEI1RjYiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8cGF0aCBkPSJNIDExMCAyNjAgTCAxNDAgMjYwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxNTY1QzAiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPHBhdGggZD0iTSAxOTAgMjYwIEwgMTYwIDI2MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTU2NUMwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDUwIEMgMTQwIDcwIDEzNSA5MCAxMzUgOTAgQyAxNDUgODUgMTU1IDg1IDE2NSA5MCBDIDE2NSA5MCAxNjAgNzAgMTUwIDUwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogIDwvZz4KPC9zdmc+Cg==' },
+  { id: 'interceptor', name: 'Interceptor', type: 'Stealth / Fighter', accent: '#00E676', flameColors: ['#004D40','#00C853','#69F0AE'], drawW: 1.8, drawH: 1.3,
+    svg: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InMxX2JvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM0MjQyNDIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMTExMTExIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzMV93aW5nR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyMTIxMjEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDAwMDAwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzMV9hY2NlbnRHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwMEU2NzYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDBDODUzIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLCAtMTApIj4KICAgIDxwYXRoIGQ9Ik0gMTIwIDE4MCBMIDMwIDIwMCBMIDQwIDI4MCBMIDEwMCAyNDAgWiIgZmlsbD0idXJsKCNzMV93aW5nR3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTgwIDE4MCBMIDI3MCAyMDAgTCAyNjAgMjgwIEwgMjAwIDI0MCBaIiBmaWxsPSJ1cmwoI3MxX3dpbmdHcmFkKSIvPgogICAgPHBhdGggZD0iTSAzNSAyMTAgTCA0MCAyODAgTCA1MCAyNjAgTCA0NSAyMTAgWiIgZmlsbD0idXJsKCNzMV9hY2NlbnRHcmFkKSIvPgogICAgPHBhdGggZD0iTSAyNjUgMjEwIEwgMjYwIDI4MCBMIDI1MCAyNjAgTCAyNTUgMjEwIFoiIGZpbGw9InVybCgjczFfYWNjZW50R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDMwIEwgMjAwIDI1MCBMIDE1MCAyOTAgTCAxMDAgMjUwIFoiIGZpbGw9InVybCgjczFfYm9keUdyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDE1MCAzMCBMIDE2MCAyNTAgTCAxNTAgMjgwIFoiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9IjAuMSIvPgogICAgPHBvbHlnb24gcG9pbnRzPSIxNTAsMTEwIDE3NSwxODAgMTUwLDIwMCAxMjUsMTgwIiBmaWxsPSIjMDBFNjc2IiBvcGFjaXR5PSIwLjgiLz4KICAgIDxwb2x5Z29uIHBvaW50cz0iMTUwLDExMCAxNjAsMTgwIDE1MCwxOTUiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9IjAuNCIvPgogICAgPHBhdGggZD0iTSAxNTAgNTAgTCAxOTAgMjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMEU2NzYiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC44Ii8+CiAgICA8cGF0aCBkPSJNIDE1MCA1MCBMIDExMCAyMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwRTY3NiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjgiLz4KICAgIDxyZWN0IHg9IjEwMCIgeT0iMjcwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjAiIGZpbGw9IiMyMTIxMjEiIHRyYW5zZm9ybT0ic2tld1goLTE1KSIvPgogICAgPHJlY3QgeD0iMTYwIiB5PSIyNzAiIHdpZHRoPSI0MCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzIxMjEyMSIgdHJhbnNmb3JtPSJza2V3WCgxNSkiLz4KICA8L2c+Cjwvc3ZnPgo=' },
+  { id: 'juggernaut', name: 'Juggernaut', type: 'Heavy / Armor', accent: '#FF6D00', flameColors: ['#BF360C','#FF6D00','#FFD54F'], drawW: 1.8, drawH: 1.3,
+    svg: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InMyX2JvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM1NThCMkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMzM2OTFFIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzMl9hcm1vckdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjN0NCMzQyIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzU1OEIyRiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwgLTEwKSI+CiAgICA8cGF0aCBkPSJNIDUwIDE0MCBMIDgwIDE0MCBMIDkwIDI4MCBMIDQwIDI4MCBaIiBmaWxsPSIjNDI0MjQyIi8+CiAgICA8cGF0aCBkPSJNIDI1MCAxNDAgTCAyMjAgMTQwIEwgMjEwIDI4MCBMIDI2MCAyODAgWiIgZmlsbD0iIzQyNDI0MiIvPgogICAgPHJlY3QgeD0iNTUiIHk9IjExMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNzU3NTc1Ii8+CiAgICA8cmVjdCB4PSIyMzUiIHk9IjExMCIgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjNzU3NTc1Ii8+CiAgICA8cGF0aCBkPSJNIDExMCA2MCBMIDE5MCA2MCBMIDIzMCAyNjAgTCAxNTAgMjkwIEwgNzAgMjYwIFoiIGZpbGw9InVybCgjczJfYm9keUdyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDEyMCA3MCBMIDE4MCA3MCBMIDIwMCAxNTAgTCAxMDAgMTUwIFoiIGZpbGw9InVybCgjczJfYXJtb3JHcmFkKSIvPgogICAgPHBhdGggZD0iTSAxMTAgMTYwIEwgMTkwIDE2MCBMIDIxMCAyNDAgTCA5MCAyNDAgWiIgZmlsbD0idXJsKCNzMl9hcm1vckdyYWQpIi8+CiAgICA8cmVjdCB4PSIxMTAiIHk9IjEwMCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjE1IiByeD0iNSIgZmlsbD0iI0ZGM0QwMCIvPgogICAgPHJlY3QgeD0iMTE1IiB5PSIxMDIiIHdpZHRoPSI3MCIgaGVpZ2h0PSI1IiByeD0iMiIgZmlsbD0iI0ZGRDU0RiIvPgogICAgPHBvbHlnb24gcG9pbnRzPSI5MCwyNDAgMTAwLDI0MCAxMTAsMjYwIDEwMCwyNjAiIGZpbGw9IiNGRjZEMDAiLz4KICAgIDxwb2x5Z29uIHBvaW50cz0iMTkwLDI0MCAyMTAsMjQwIDIwMCwyNjAgMTgwLDI2MCIgZmlsbD0iI0ZGNkQwMCIvPgogICAgPHJlY3QgeD0iNzAiIHk9IjI2MCIgd2lkdGg9IjE2MCIgaGVpZ2h0PSIyMCIgZmlsbD0iIzIxMjEyMSIgcng9IjQiLz4KICA8L2c+Cjwvc3ZnPgo=' },
+  { id: 'cruiser', name: 'Star Cruiser', type: 'Speed / Racing', accent: '#FFCA28', flameColors: ['#0D47A1','#00B0FF','#80DEEA'], drawW: 1.6, drawH: 1.3,
+    svg: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InMzX2JvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMEUwRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiNGRkZGRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOUU5RTlFIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJzM19hY2NlbnRHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRkNBMjgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjRkY4RjAwIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLCAtMTApIj4KICAgIDxwYXRoIGQ9Ik0gMTQwIDE1MCBDIDYwIDIwMCA0MCAyODAgNjAgMzIwIFEgOTAgMjgwIDEyMCAyODAgWiIgZmlsbD0idXJsKCNzM19hY2NlbnRHcmFkKSIvPgogICAgPHBhdGggZD0iTSAxNjAgMTUwIEMgMjQwIDIwMCAyNjAgMjgwIDI0MCAzMjAgUSAyMTAgMjgwIDE4MCAyODAgWiIgZmlsbD0idXJsKCNzM19hY2NlbnRHcmFkKSIvPgogICAgPHBhdGggZD0iTSAxNTAgMjAgUSAxODAgMTIwIDE4MCAyODAgTCAxMjAgMjgwIFEgMTIwIDEyMCAxNTAgMjAgWiIgZmlsbD0idXJsKCNzM19ib2R5R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTQ1IDIwIEwgMTQwIDI4MCBMIDE0NSAyODAgWiIgZmlsbD0iI0ZGQ0EyOCIgb3BhY2l0eT0iMC42Ii8+CiAgICA8cGF0aCBkPSJNIDE1NSAyMCBMIDE2MCAyODAgTCAxNTUgMjgwIFoiIGZpbGw9IiNGRkNBMjgiIG9wYWNpdHk9IjAuNiIvPgogICAgPHBhdGggZD0iTSAxNTAgMTIwIFEgMTY1IDE3MCAxNTAgMjIwIFEgMTM1IDE3MCAxNTAgMTIwIFoiIGZpbGw9IiMwMEIwRkYiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDEyNSBRIDE2MCAxNzAgMTUwIDIxMCBRIDE0NSAxNzAgMTUwIDEyNSBaIiBmaWxsPSIjRTBGN0ZBIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMTIwIDI4MCBRIDE1MCAzMDAgMTgwIDI4MCBMIDE3MCAyOTUgUSAxNTAgMzA1IDEzMCAyOTUgWiIgZmlsbD0iIzQyNDI0MiIvPgogIDwvZz4KPC9zdmc+Cg==' },
+  { id: 'alien', name: 'Alien Tech', type: 'Exotic / Energy', accent: '#EA80FC', flameColors: ['#4A148C','#AA00FF','#EA80FC'], drawW: 1.8, drawH: 1.4,
+    svg: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InM0X2JvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2QTFCOUEiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMzExQjkyIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJzNF9jb3JlR2xvdyIgY3g9IjUwJSIgY3k9IjUwJSIgcj0iNTAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjQwJSIgc3RvcC1jb2xvcj0iI0VBODBGQyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjgwJSIgc3RvcC1jb2xvcj0iI0FBMDBGRiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM0QTE0OEMiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwgLTEwKSI+CiAgICA8cGF0aCBkPSJNIDE1MCAzMCBDIDI4MCAzMCAyODAgMjUwIDE1MCAzMjAgQyAyNjAgMjMwIDI0MCA3MCAxNTAgNjAgWiIgZmlsbD0idXJsKCNzNF9ib2R5R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDMwIEMgMjAgMzAgMjAgMjUwIDE1MCAzMjAgQyA0MCAyMzAgNjAgNzAgMTUwIDYwIFoiIGZpbGw9InVybCgjczRfYm9keUdyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDcwIDE1MCBRIDE1MCAxMDAgMjMwIDE1MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRUE4MEZDIiBzdHJva2Utd2lkdGg9IjMiIG9wYWNpdHk9IjAuOCIvPgogICAgPHBhdGggZD0iTSA2MCAyMDAgUSAxNTAgMjUwIDI0MCAyMDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0VBODBGQyIgc3Ryb2tlLXdpZHRoPSIzIiBvcGFjaXR5PSIwLjgiLz4KICAgIDxjaXJjbGUgY3g9IjE1MCIgY3k9IjE4MCIgcj0iMzUiIGZpbGw9InVybCgjczRfYm9keUdyYWQpIi8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxODAiIHI9IjIwIiBmaWxsPSJ1cmwoI3M0X2NvcmVHbG93KSIvPgogICAgPHBhdGggZD0iTSAxNTAgMTEwIEwgMTcwIDEzMCBMIDE1MCAxNDAgTCAxMzAgMTMwIFoiIGZpbGw9IiNENTAwRjkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDI1MCBMIDE3MCAyMzAgTCAxNTAgMjIwIEwgMTMwIDIzMCBaIiBmaWxsPSIjRDUwMEY5Ii8+CiAgICA8Y2lyY2xlIGN4PSI5MCIgY3k9IjEwMCIgcj0iNCIgZmlsbD0iI0VBODBGQyIvPgogICAgPGNpcmNsZSBjeD0iMjEwIiBjeT0iMTAwIiByPSI0IiBmaWxsPSIjRUE4MEZDIi8+CiAgPC9nPgo8L3N2Zz4K' },
+];
+
+// Preload all ship images
+const shipImages = SHIPS.map(s => {
+  const img = new Image();
+  img.src = s.svg;
+  return img;
+});
+let shipsLoaded = 0;
+shipImages.forEach(img => { img.onload = () => { shipsLoaded++; }; });
+
+// Ship selection & unlocks
+let selectedShip = parseInt(localStorage.getItem('sd_ship') || '0');
+let unlockedShips = JSON.parse(localStorage.getItem('sd_unlocked') || '[0]');
+// Ensure ship 0 always unlocked
+if (!unlockedShips.includes(0)) unlockedShips.unshift(0);
+function getShip() { return SHIPS[selectedShip]; }
+function isShipReady() { return shipImages[selectedShip].complete && shipImages[selectedShip].naturalWidth > 0; }
 
 // --- SVG ASTEROID ASSET ---
 const ASTEROID_SVG_B64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InJvY2tHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ExODg3RiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iIzc5NTU0OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzRTI3MjMiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImNyYXRlckdyYWQiIGN4PSIzMCUiIGN5PSIzMCUiIHI9IjcwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM1RDQwMzciIHN0b3Atb3BhY2l0eT0iMC44Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzIxMjEyMSIgc3RvcC1vcGFjaXR5PSIwLjkiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEwMCwgMTAwKSI+CiAgICA8cGF0aCBkPSJNIDAgLTg1IEMgNDAgLTkwIDc1IC02MCA4NSAtMjAgQyA5NSAxNSA4MCA2MCA1MCA4MCBDIDE1IDEwMCAtNDAgODUgLTcwIDU1IEMgLTEwMCAyMCAtOTUgLTQwIC02MCAtNzAgQyAtMzAgLTkwIC0xMCAtODAgMCAtODUgWiIgZmlsbD0idXJsKCNyb2NrR3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMCAtODUgQyA0MCAtOTAgNzUgLTYwIDg1IC0yMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRDdDQ0M4IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC40Ii8+CiAgICA8cGF0aCBkPSJNIC02MCAtNzAgQyAtMzAgLTkwIC0xMCAtODAgMCAtODUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0Q3Q0NDOCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuMyIvPgogICAgPHBhdGggZD0iTSAtNTAgMCBRIC0yMCAtMTAgMCAyMCBUIDQwIDQwIiBmaWxsPSJub25lIiBzdHJva2U9IiM0RTM0MkUiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjYiLz4KICAgIDxwYXRoIGQ9Ik0gMzAgLTQwIFEgNDAgLTEwIDIwIDEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM0RTM0MkUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gLTIwIC01MCBRIDAgLTMwIC0xMCAtMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzNFMjcyMyIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNCIvPgogICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNDUsIC0xNSkiPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIyMiIgcnk9IjE4IiBmaWxsPSJ1cmwoI2NyYXRlckdyYWQpIiB0cmFuc2Zvcm09InJvdGF0ZSgtMjApIi8+CiAgICAgIDxwYXRoIGQ9Ik0gLTE1IDEwIFEgMCAyMCAxNSA1IiBmaWxsPSJub25lIiBzdHJva2U9IiNCQ0FBQTQiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMzUsIDQ1KSI+CiAgICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIxNiIgZmlsbD0idXJsKCNjcmF0ZXJHcmFkKSIvPgogICAgICA8cGF0aCBkPSJNIC0xMCAxMCBRIDAgMTggMTAgNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQkNBQUE0IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC40Ii8+CiAgICA8L2c+CiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDAsIC0zNSkiPgogICAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIxMCIgcnk9IjE0IiBmaWxsPSJ1cmwoI2NyYXRlckdyYWQpIiB0cmFuc2Zvcm09InJvdGF0ZSgzMCkiLz4KICAgIDwvZz4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iNTAiIHI9IjQiIGZpbGw9IiMzRTI3MjMiIG9wYWNpdHk9IjAuOCIvPgogICAgPGNpcmNsZSBjeD0iLTEwIiBjeT0iLTYwIiByPSI1IiBmaWxsPSIjM0UyNzIzIiBvcGFjaXR5PSIwLjciLz4KICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iLTQ1IiByPSIzIiBmaWxsPSIjM0UyNzIzIiBvcGFjaXR5PSIwLjkiLz4KICAgIDxjaXJjbGUgY3g9Ii02MCIgY3k9IjEwIiByPSIzIiBmaWxsPSIjMjEyMTIxIiBvcGFjaXR5PSIwLjYiLz4KICA8L2c+Cjwvc3ZnPgo=';
@@ -113,7 +125,7 @@ asteroidImg.onload = () => { asteroidImgReady = true; };
 
 // --- GAME STATE ---
 let W, H, scale;
-let gameState = 'title'; // title | worldtitle | countdown | playing | levelcomplete | victory | gameover
+let gameState = 'title'; // title | shippicker | worldtitle | countdown | playing | levelcomplete | victory | gameover
 let gameMode = 'campaign'; // campaign | endless
 let ship = {};
 let asteroids = [];
@@ -324,26 +336,25 @@ function drawShip(x, y, w, h, wobble) {
 
   const hw = w / 2;
   const hh = h / 2;
+  const s = getShip();
+  const fc = s.flameColors; // [outer, mid, core]
 
   // Animated Canvas exhaust flames (drawn BEHIND ship)
   const flameH = 14 + Math.random() * 12;
   const flameW = w * 0.35;
-  // Outer flame
-  ctx.fillStyle = '#E65100';
+  ctx.fillStyle = fc[0];
   ctx.beginPath();
   ctx.moveTo(-flameW / 2, hh * 0.75);
   ctx.quadraticCurveTo(-flameW * 0.1, hh + flameH * 0.7, 0, hh + flameH);
   ctx.quadraticCurveTo(flameW * 0.1, hh + flameH * 0.7, flameW / 2, hh * 0.75);
   ctx.fill();
-  // Mid flame
-  ctx.fillStyle = '#FFB300';
+  ctx.fillStyle = fc[1];
   ctx.beginPath();
   ctx.moveTo(-flameW / 3, hh * 0.75);
   ctx.quadraticCurveTo(0, hh + flameH * 0.6, 0, hh + flameH * 0.8);
   ctx.quadraticCurveTo(0, hh + flameH * 0.6, flameW / 3, hh * 0.75);
   ctx.fill();
-  // Core flame
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = fc[2];
   ctx.beginPath();
   ctx.moveTo(-flameW / 6, hh * 0.75);
   ctx.quadraticCurveTo(0, hh + flameH * 0.3, 0, hh + flameH * 0.5);
@@ -351,19 +362,13 @@ function drawShip(x, y, w, h, wobble) {
   ctx.fill();
 
   // SVG ship body
-  if (shipImgReady) {
-    // The SVG has wings extending to edges — draw it sized to include wing span
-    // Ship draw width is wider than hitbox to show wings
-    const drawW = w * 1.7;
-    const drawH = h * 1.3;
-    ctx.drawImage(shipImg, -drawW / 2, -drawH / 2, drawW, drawH);
+  if (isShipReady()) {
+    const drawW = w * s.drawW;
+    const drawH = h * s.drawH;
+    ctx.drawImage(shipImages[selectedShip], -drawW / 2, -drawH / 2, drawW, drawH);
   } else {
-    // Fallback: simple Canvas ship while SVG loads
-    const grad = ctx.createLinearGradient(-hw, 0, hw, 0);
-    grad.addColorStop(0, '#2962FF');
-    grad.addColorStop(0.5, '#42A5F5');
-    grad.addColorStop(1, '#0D47A1');
-    ctx.fillStyle = grad;
+    // Fallback
+    ctx.fillStyle = s.accent;
     ctx.beginPath();
     ctx.moveTo(0, -hh);
     ctx.bezierCurveTo(hw * 0.3, -hh, hw, -hh * 0.4, hw, hh * 0.5);
@@ -372,21 +377,27 @@ function drawShip(x, y, w, h, wobble) {
     ctx.lineTo(-hw, hh * 0.5);
     ctx.bezierCurveTo(-hw, -hh * 0.4, -hw * 0.3, -hh, 0, -hh);
     ctx.fill();
-    // Nose
-    ctx.fillStyle = '#f44336';
-    ctx.beginPath();
-    ctx.moveTo(0, -hh);
-    ctx.bezierCurveTo(hw * 0.15, -hh, hw * 0.35, -hh * 0.55, hw * 0.35, -hh * 0.35);
-    ctx.lineTo(-hw * 0.35, -hh * 0.35);
-    ctx.bezierCurveTo(-hw * 0.35, -hh * 0.55, -hw * 0.15, -hh, 0, -hh);
-    ctx.fill();
-    // Window
-    ctx.fillStyle = '#81D4FA';
-    ctx.beginPath();
-    ctx.arc(0, -hh * 0.1, hw * 0.28, 0, Math.PI * 2);
-    ctx.fill();
   }
 
+  ctx.restore();
+}
+
+// Draw a specific ship by index (for picker/title)
+function drawShipByIndex(idx, x, y, w, h) {
+  ctx.save();
+  ctx.translate(x, y);
+  const s = SHIPS[idx];
+  const img = shipImages[idx];
+  if (img.complete && img.naturalWidth > 0) {
+    const drawW = w * s.drawW;
+    const drawH = h * s.drawH;
+    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+  } else {
+    ctx.fillStyle = s.accent;
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
@@ -638,7 +649,7 @@ function drawHUD() {
 
 // --- TITLE SCREEN ---
 let titleShipBob = 0;
-let titleBtns = { campaign: {}, endless: {} };
+let titleBtns = { campaign: {}, endless: {}, ships: {} };
 
 function drawTitle() {
   ctx.fillStyle = '#0a0a2e';
@@ -718,6 +729,25 @@ function drawTitle() {
   }
   titleBtns.endless = { x: eX, y: btnY, w: btnW, h: btnH };
 
+  // Ships button (top right)
+  const sbW = 80 * scale;
+  const sbH = 32 * scale;
+  const sbX = W - sbW - 14;
+  const sbY = 12;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  ctx.roundRect(sbX, sbY, sbW, sbH, 6);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = `bold ${Math.round(13 * scale)}px Arial, sans-serif`;
+  ctx.fillText('🚀 SHIPS', sbX + sbW / 2, sbY + sbH / 2 + 4 * scale);
+  titleBtns.ships = { x: sbX, y: sbY, w: sbW, h: sbH };
+
+  // Selected ship name under the ship
+  ctx.fillStyle = getShip().accent;
+  ctx.font = `bold ${Math.round(13 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText(getShip().name, W / 2, H * 0.58);
+
   // Best score
   if (bestScore > 0) {
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
@@ -746,6 +776,105 @@ function drawMenuButton() {
   menuBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
 }
 let menuBtn = {};
+let pickerBackBtn = {};
+
+// --- SHIP PICKER ---
+function drawShipPicker() {
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, W, H);
+  drawStars();
+
+  // Title
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.round(32 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('CHOOSE YOUR SHIP', W / 2, H * 0.1);
+
+  // Ship cards
+  const cardW = Math.min(130, (W - 60) / 5) * scale;
+  const cardH = cardW * 1.4;
+  const gap = 12 * scale;
+  const totalW = SHIPS.length * cardW + (SHIPS.length - 1) * gap;
+  const startX = (W - totalW) / 2;
+  const cardY = H * 0.22;
+
+  for (let i = 0; i < SHIPS.length; i++) {
+    const cx = startX + i * (cardW + gap);
+    const s = SHIPS[i];
+    const unlocked = unlockedShips.includes(i);
+    const isSelected = i === selectedShip;
+
+    // Card background
+    if (isSelected) {
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.strokeStyle = s.accent;
+      ctx.lineWidth = 3;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1;
+    }
+    ctx.beginPath();
+    ctx.roundRect(cx, cardY, cardW, cardH, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    if (unlocked) {
+      // Draw ship
+      const shipSize = cardW * 0.65;
+      drawShipByIndex(i, cx + cardW / 2, cardY + cardH * 0.38, shipSize, shipSize * 1.3);
+
+      // Ship name
+      ctx.fillStyle = isSelected ? s.accent : 'rgba(255,255,255,0.7)';
+      ctx.font = `bold ${Math.round(10 * scale)}px Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(s.name, cx + cardW / 2, cardY + cardH * 0.78);
+
+      // Type
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = `${Math.round(8 * scale)}px Arial, sans-serif`;
+      ctx.fillText(s.type, cx + cardW / 2, cardY + cardH * 0.88);
+
+      // Selected indicator
+      if (isSelected) {
+        ctx.fillStyle = s.accent;
+        ctx.font = `bold ${Math.round(9 * scale)}px Arial, sans-serif`;
+        ctx.fillText('▼ ACTIVE ▼', cx + cardW / 2, cardY + cardH + 14 * scale);
+      }
+    } else {
+      // Locked card — ? icon
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = `bold ${Math.round(40 * scale)}px Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('?', cx + cardW / 2, cardY + cardH * 0.5);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = `${Math.round(9 * scale)}px Arial, sans-serif`;
+      ctx.fillText('🔒 LOCKED', cx + cardW / 2, cardY + cardH * 0.75);
+
+      // Unlock hint
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.font = `${Math.round(7 * scale)}px Arial, sans-serif`;
+      ctx.fillText('Beat campaign with', cx + cardW / 2, cardY + cardH * 0.85);
+      ctx.fillText(i > 0 ? SHIPS[i-1].name : '', cx + cardW / 2, cardY + cardH * 0.93);
+    }
+  }
+
+  // Back button
+  const bbW = 100 * scale;
+  const bbH = 36 * scale;
+  const bbX = (W - bbW) / 2;
+  const bbY = H * 0.88;
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath();
+  ctx.roundRect(bbX, bbY, bbW, bbH, 8);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.round(15 * scale)}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('← BACK', bbX + bbW / 2, bbY + bbH / 2 + 5 * scale);
+  pickerBackBtn = { x: bbX, y: bbY, w: bbW, h: bbH };
+}
 
 // --- GAME OVER SCREEN ---
 function drawGameOver() {
@@ -949,15 +1078,23 @@ function drawVictory() {
 
   ctx.fillStyle = '#fff';
   ctx.font = `bold ${Math.round(32 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('ALL WORLDS COMPLETE!', W / 2, H * 0.7);
+  ctx.fillText('ALL WORLDS COMPLETE!', W / 2, H * 0.68);
 
   ctx.fillStyle = '#fff';
   ctx.font = `bold ${Math.round(48 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText(score, W / 2, H * 0.8);
+  ctx.fillText(score, W / 2, H * 0.78);
 
-  ctx.fillStyle = '#69F0AE';
-  ctx.font = `bold ${Math.round(18 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('♾️ ENDLESS MODE UNLOCKED!', W / 2, H * 0.88);
+  // Unlock messages
+  const nextShip = selectedShip + 1;
+  if (nextShip < SHIPS.length && unlockedShips.includes(nextShip)) {
+    ctx.fillStyle = SHIPS[nextShip].accent;
+    ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+    ctx.fillText('🚀 ' + SHIPS[nextShip].name.toUpperCase() + ' UNLOCKED!', W / 2, H * 0.87);
+  } else {
+    ctx.fillStyle = '#69F0AE';
+    ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+    ctx.fillText('♾️ ENDLESS MODE UNLOCKED!', W / 2, H * 0.87);
+  }
 
   const blink = Math.sin(Date.now() / 400) > 0;
   if (blink) {
@@ -1083,6 +1220,12 @@ function update() {
         playSound('victory');
         endlessUnlocked = true;
         localStorage.setItem('sd_endless', 'true');
+        // Unlock next ship
+        const nextShip = selectedShip + 1;
+        if (nextShip < SHIPS.length && !unlockedShips.includes(nextShip)) {
+          unlockedShips.push(nextShip);
+          localStorage.setItem('sd_unlocked', JSON.stringify(unlockedShips));
+        }
         if (score > bestScore) {
           bestScore = score;
           localStorage.setItem('sd_best', bestScore.toString());
@@ -1193,6 +1336,7 @@ function update() {
 // --- DRAW ---
 function draw() {
   if (gameState === 'title') { drawTitle(); return; }
+  if (gameState === 'shippicker') { drawShipPicker(); return; }
   if (gameState === 'worldtitle') { drawWorldTitle(); return; }
   if (gameState === 'countdown') { drawCountdown(); return; }
   if (gameState === 'gameover') { drawGameOver(); return; }
@@ -1272,6 +1416,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && gameState === 'playing') {
     paused = !paused;
   }
+  if (e.key === 'Escape' && gameState === 'shippicker') {
+    gameState = 'title';
+  }
 });
 
 document.addEventListener('keyup', e => {
@@ -1280,6 +1427,7 @@ document.addEventListener('keyup', e => {
 
 function handleAction() {
   if (gameState === 'title') { startCampaign(); return; }
+  if (gameState === 'shippicker') { gameState = 'title'; return; }
   if (gameState === 'gameover') { gameState = 'title'; return; }
   if (gameState === 'victory') { gameState = 'title'; return; }
   if (gameState === 'playing' && paused) { paused = false; }
@@ -1292,11 +1440,35 @@ function hitTest(x, y, btn) {
 
 function handleTitleClick(tx, ty) {
   initAudio();
+  if (hitTest(tx, ty, titleBtns.ships)) { gameState = 'shippicker'; return true; }
   if (hitTest(tx, ty, titleBtns.campaign)) { startCampaign(); return true; }
   if (hitTest(tx, ty, titleBtns.endless) && endlessUnlocked) { startEndless(); return true; }
-  // Tap anywhere else = campaign
-  startCampaign();
-  return true;
+  return false;
+}
+
+function handlePickerClick(tx, ty) {
+  // Back button
+  if (hitTest(tx, ty, pickerBackBtn)) { gameState = 'title'; return; }
+
+  // Ship card clicks
+  const cardW = Math.min(130, (W - 60) / 5) * scale;
+  const cardH = cardW * 1.4;
+  const gap = 12 * scale;
+  const totalW = SHIPS.length * cardW + (SHIPS.length - 1) * gap;
+  const startX = (W - totalW) / 2;
+  const cardY = H * 0.22;
+
+  for (let i = 0; i < SHIPS.length; i++) {
+    const cx = startX + i * (cardW + gap);
+    if (tx >= cx && tx <= cx + cardW && ty >= cardY && ty <= cardY + cardH) {
+      if (unlockedShips.includes(i)) {
+        selectedShip = i;
+        localStorage.setItem('sd_ship', selectedShip.toString());
+        playSound('start');
+      }
+      return;
+    }
+  }
 }
 
 // Touch
@@ -1313,6 +1485,7 @@ canvas.addEventListener('touchstart', e => {
   if (gameState === 'playing' && hitTest(tx, ty, pauseBtn)) { paused = !paused; return; }
 
   if (gameState === 'title') { handleTitleClick(tx, ty); return; }
+  if (gameState === 'shippicker') { initAudio(); handlePickerClick(tx, ty); return; }
   if (gameState === 'gameover' || gameState === 'victory') { gameState = 'title'; return; }
   if (paused) { paused = false; return; }
 
@@ -1342,6 +1515,7 @@ canvas.addEventListener('click', e => {
   if (hitTest(mx, my, menuBtn)) { window.location.href = '/'; return; }
   if (gameState === 'playing' && hitTest(mx, my, pauseBtn)) { paused = !paused; return; }
   if (gameState === 'title') { handleTitleClick(mx, my); return; }
+  if (gameState === 'shippicker') { initAudio(); handlePickerClick(mx, my); return; }
 
   handleAction();
 });
