@@ -854,7 +854,7 @@ function drawMenuButton() {
   const btnW = 70 * scale;
   const btnH = 30 * scale;
   const btnX = 10;
-  const btnY = H - btnH - 10;
+  const btnY = 10;
   ctx.fillStyle = 'rgba(255,255,255,0.1)';
   ctx.beginPath();
   ctx.roundRect(btnX, btnY, btnW, btnH, 6);
@@ -863,7 +863,6 @@ function drawMenuButton() {
   ctx.font = `bold ${Math.round(13 * scale)}px Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.fillText('🏠 MENU', btnX + btnW / 2, btnY + btnH / 2 + 4 * scale);
-  // store for click detection
   menuBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
 }
 let menuBtn = {};
