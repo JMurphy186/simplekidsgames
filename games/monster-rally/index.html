@@ -155,6 +155,12 @@ const ENVIRONMENTS = [
     features: 'neon'
   },
   {
+    name: 'STORMY HIGHWAY', skyTop: '#1a1a2e', skyMid: '#2d3436', skyBot: '#1a1a2e',
+    ground: '#3a3a3a', groundAccent: '#2a2a2a', road: '#333333',
+    mountainColor: '#151520', cloudAlpha: 0.0, starBright: 0.0, gravityMult: 1.0,
+    features: 'storm'
+  },
+  {
     name: 'MOON SURFACE', skyTop: '#000011', skyMid: '#000018', skyBot: '#000022',
     ground: '#888888', groundAccent: '#777777', road: '#666666',
     mountainColor: '#333344', cloudAlpha: 0.0, starBright: 1.0, gravityMult: 0.7,
@@ -166,6 +172,15 @@ const ENVIRONMENTS = [
     mountainColor: '#220000', cloudAlpha: 0.0, starBright: 0.2, gravityMult: 1.0,
     features: 'lava'
   }
+];
+
+// Campaign level configs (Phase 1: Levels 1-5)
+const CAMPAIGN_LEVELS = [
+  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.4, maxSpeed: 4.0, speedRamp: 1200, obstGap: 170, starFreq: 40 },
+  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 1.5, maxSpeed: 4.5, speedRamp: 1100, obstGap: 160, starFreq: 40 },
+  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45 },
+  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 1.7, maxSpeed: 5.5, speedRamp: 900,  obstGap: 140, starFreq: 45 },
+  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45 }
 ];
 
 // Power-up configs
@@ -268,9 +283,21 @@ for (let i = 0; i < TRUCK_ROSTER.length; i++) {
 // ============================================================
 let gameSpeed = 1.6;
 let maxSpeed = 6;
-let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'playerselect' | 'countdown' | 'playing' | 'paused' | 'gameover'
+let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'playerselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition'
 let gameMode = 'rally'; // 'rally' | 'frenzy' | 'battle'
 let roundTimer = 0; // countdown timer for frenzy/battle (frames)
+
+// Campaign state
+let campaignLevel = 0; // index into CAMPAIGN_LEVELS (0-based)
+let campaignMaxSpeedReached = false;
+let campaignCountdown = 0; // 60s countdown at max speed (in frames)
+let campaignMaxSpeedFlash = 0; // for "MAX SPEED!" pulsing text
+let levelCompleteTimer = 0; // hold time on level complete screen
+let levelTransitionTimer = 0; // hold time on level transition screen
+let levelStats = { stars: 0, crushes: 0, flips: 0, score: 0 }; // stats for current level
+let raindrops = []; // for stormy highway
+let lightningTimer = 0; // frames until next lightning flash
+let lightningFlash = 0; // current flash intensity
 let screenShake = 0;
 let wheelAngle = 0;
 let flashTimer = 0;
@@ -740,6 +767,17 @@ function handleDown(e) {
   if (gameState === 'playerselect') { handlePlayerSelectClick(vc.x, vc.y); return; }
   if (gameState === 'paused') { handlePauseClick(vc.x, vc.y); return; }
   if (gameState === 'gameover') { gameState = 'modeselect'; return; }
+  if (gameState === 'levelcomplete') {
+    // Advance to next level or go to mode select if campaign done
+    if (campaignLevel < CAMPAIGN_LEVELS.length - 1) {
+      campaignLevel++;
+      startLevelTransition();
+    } else {
+      gameState = 'modeselect'; // Phase 2 will add win screen here
+    }
+    return;
+  }
+  if (gameState === 'leveltransition') return;
   if (gameState === 'countdown') return;
 
   // Playing state — pause button (50px hit area for mobile)
@@ -778,6 +816,11 @@ document.addEventListener('keydown', (e) => {
     if (gameState === 'modeselect') return;
     if (gameState === 'playerselect') return;
     if (gameState === 'gameover') { gameState = 'modeselect'; return; }
+    if (gameState === 'levelcomplete') {
+      if (campaignLevel < CAMPAIGN_LEVELS.length - 1) { campaignLevel++; startLevelTransition(); }
+      else gameState = 'modeselect';
+      return;
+    }
   }
 
   // Mode select keyboard shortcuts
@@ -938,9 +981,10 @@ function handleModeSelectClick(vx, vy) {
 function selectMode(mode) {
   gameMode = mode;
   if (mode === 'rally') {
-    // Rally: always 1 player, skip straight to countdown
+    // Rally: campaign mode, always 1 player
     numPlayers = 1;
-    startCountdown();
+    campaignLevel = 0;
+    startLevelTransition();
   } else if (mode === 'frenzy') {
     // Frenzy: always 1P
     numPlayers = 1;
@@ -975,10 +1019,15 @@ function startRallyWithPlayers(n) {
   }
 }
 
+function startLevelTransition() {
+  gameState = 'leveltransition';
+  levelTransitionTimer = 120; // 2 seconds to show level name
+  initGame();
+}
+
 function startCountdown() {
   gameState = 'countdown';
   countdownTimer = 180; // 3 seconds at 60fps
-  initGame();
 }
 
 function initGame() {
@@ -1007,6 +1056,29 @@ function initGame() {
     starTimer = 9999;
     powerUpSpawnTimer = 150; // power-ups enabled in frenzy!
     roundTimer = 1800; // 30 seconds
+  } else if (gameMode === 'rally') {
+    // Campaign mode: use level configs
+    const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
+    gameSpeed = lvl.baseSpeed;
+    maxSpeed = lvl.maxSpeed;
+    currentEnvIndex = lvl.envIndex;
+    obstacleTimer = lvl.obstGap;
+    starTimer = lvl.starFreq;
+    powerUpSpawnTimer = 150;
+    roundTimer = 0;
+    campaignMaxSpeedReached = false;
+    campaignCountdown = 0;
+    campaignMaxSpeedFlash = 0;
+    levelStats = { stars: 0, crushes: 0, flips: 0, score: 0 };
+    // Init rain for stormy highway
+    raindrops = [];
+    if (ENVIRONMENTS[lvl.envIndex].features === 'storm') {
+      for (let i = 0; i < 50; i++) {
+        raindrops.push({ x: Math.random() * W, y: Math.random() * H, speed: 6 + Math.random() * 4, len: 8 + Math.random() * 7 });
+      }
+      lightningTimer = 360 + Math.random() * 240; // 6-10s
+      lightningFlash = 0;
+    }
   } else {
     gameSpeed = 1.6;
     obstacleTimer = 80;
@@ -1332,7 +1404,7 @@ function drawModeSelectScreen() {
   const btnW = 220, btnH = 65, gap = 15;
   const by = 160;
   const modes = [
-    { label: 'RALLY', desc: 'Classic driving fun!', color: 'rgba(34,204,68,', key: '1' },
+    { label: 'RALLY', desc: '5-level campaign!', color: 'rgba(34,204,68,', key: '1' },
     { label: 'CRUSH FRENZY', desc: '30 sec smash attack!', color: 'rgba(255,68,0,', key: '2' },
     { label: 'BATTLE', desc: '2 players, most crushes wins!', color: 'rgba(136,51,204,', key: '3' }
   ];
@@ -1411,6 +1483,102 @@ function drawPlayerSelectScreen() {
   ctx.fillStyle = '#888'; ctx.font = '14px Arial';
   ctx.fillText('Press 1 or 2, or tap a button', W / 2, by + btnH + 35);
   ctx.textAlign = 'left';
+}
+
+// ============================================================
+// CAMPAIGN SCREENS
+// ============================================================
+function drawLevelTransitionScreen() {
+  ctx.fillStyle = '#0B0E18';
+  ctx.fillRect(0, 0, W, H);
+
+  const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+
+  // Level number
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = 'bold 44px "Arial Black", Impact, sans-serif';
+  const lvlText = 'LEVEL ' + (campaignLevel + 1);
+  ctx.strokeText(lvlText, W / 2, H / 2 - 20);
+  ctx.fillText(lvlText, W / 2, H / 2 - 20);
+
+  // Level name
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px Arial';
+  ctx.fillText(lvl.name, W / 2, H / 2 + 20);
+
+  ctx.textAlign = 'left';
+}
+
+function drawLevelCompleteScreen() {
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+
+  // "LEVEL COMPLETE!"
+  const bounce = Math.sin(Date.now() * 0.005) * 5;
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 40px "Arial Black", Impact, sans-serif';
+  ctx.strokeText('LEVEL COMPLETE!', W / 2, 100 + bounce);
+  ctx.fillText('LEVEL COMPLETE!', W / 2, 100 + bounce);
+
+  // Level name
+  const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
+  ctx.fillStyle = '#aaa'; ctx.font = '16px Arial';
+  ctx.fillText(lvl.name, W / 2, 130);
+
+  // Stats
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
+  const sx = W / 2, sy = 175;
+  ctx.fillText('\u2B50 Stars: ' + levelStats.stars, sx, sy);
+  ctx.fillText('\uD83D\uDCA5 Crushes: ' + levelStats.crushes, sx, sy + 32);
+  ctx.fillText('\uD83D\uDD04 Flips: ' + levelStats.flips, sx, sy + 64);
+  ctx.fillStyle = '#ffcc00'; ctx.font = 'bold 24px "Arial Black", Impact, sans-serif';
+  ctx.strokeText('Score: ' + levelStats.score, sx, sy + 105);
+  ctx.fillText('Score: ' + levelStats.score, sx, sy + 105);
+
+  // Tap to continue
+  const blink = Math.sin(Date.now() * 0.004) > 0;
+  if (blink) {
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial';
+    if (campaignLevel < CAMPAIGN_LEVELS.length - 1) {
+      ctx.fillText('TAP FOR NEXT LEVEL!', W / 2, H - 45);
+    } else {
+      ctx.fillText('TAP TO CONTINUE!', W / 2, H - 45);
+    }
+  }
+
+  ctx.textAlign = 'left';
+}
+
+function drawStormEffects() {
+  // Rain
+  ctx.strokeStyle = 'rgba(200,210,220,0.3)';
+  ctx.lineWidth = 1;
+  for (const rd of raindrops) {
+    ctx.beginPath();
+    ctx.moveTo(rd.x, rd.y);
+    ctx.lineTo(rd.x - 3, rd.y + rd.len);
+    ctx.stroke();
+  }
+
+  // Lightning flash
+  if (lightningFlash > 0) {
+    const intensity = lightningFlash > 4 ? 0.3 : lightningFlash > 2 ? 0.15 : 0.05;
+    ctx.fillStyle = `rgba(255,255,255,${intensity})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Wet road reflections
+  ctx.strokeStyle = 'rgba(150,160,170,0.08)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    const ry = GROUND_Y + 5 + i * 12;
+    ctx.beginPath(); ctx.moveTo(0, ry); ctx.lineTo(W, ry); ctx.stroke();
+  }
 }
 
 function drawGameOverScreen() {
@@ -3699,7 +3867,7 @@ function updatePlayer(p) {
         p.flipsCompleted++;
         p.flipAngle = 0; // snap upright
         p.flipInProgress = false;
-        p.score += FLIP_BONUS_POINTS;
+        p.score += FLIP_BONUS_POINTS; if (gameMode === 'rally') levelStats.flips++;
         screenShake = 10; flashTimer = 8; flashColor = truckColors.accent;
         spawnFlipParticles(tk.x + tk.w / 2, tk.y + tk.h / 2, p.truckIdx, p.flipsCompleted);
         playSound('flip');
@@ -3777,7 +3945,8 @@ function updatePlayer(p) {
 
     if (overlap && truckBottom > obs.y && truckBottom < obs.y + obs.h + 15 && (tk.vy > 0 || isMega)) {
       obs.crushed = true;
-      p.combo++; p.totalCrushes++; p.comboTimer = (gameMode === 'frenzy' || gameMode === 'battle') ? 120 : 90;
+      p.combo++; p.totalCrushes++; if (gameMode === 'rally') levelStats.crushes++;
+      p.comboTimer = (gameMode === 'frenzy' || gameMode === 'battle') ? 120 : 90;
       const basePoints = obs.points || 10;
       const points = basePoints * p.combo * pointsMult;
       p.score += points;
@@ -3822,6 +3991,7 @@ function updatePlayer(p) {
       s.collected = true;
       const starVal = 15;
       p.score += starVal;
+      if (gameMode === 'rally') levelStats.stars++;
       spawnStarParticles(s.x, s.y);
       flashTimer = 4; flashColor = '#ffd700';
       playSound('star');
@@ -4103,9 +4273,17 @@ function update() {
   if (screenShake < 0.1) screenShake = 0;
   if (flashTimer > 0) flashTimer--;
 
-  // Skip all updates when paused
+  // Skip all updates when paused or on results screens
   if (gameState === 'paused') return;
   if (gameState === 'gameover') return;
+  if (gameState === 'levelcomplete') return;
+
+  // Level transition timer
+  if (gameState === 'leveltransition') {
+    levelTransitionTimer--;
+    if (levelTransitionTimer <= 0) startCountdown();
+    return;
+  }
 
   // Countdown
   if (gameState === 'countdown') {
@@ -4130,14 +4308,67 @@ function update() {
   score = maxScore; // compat alias
 
   const effSpeed = getEffectiveSpeed();
-  // Only accelerate in rally mode
+  // Speed progression
   if (gameMode === 'rally') {
-    gameSpeed = Math.min(maxSpeed, 1.6 + maxScore / 1000);
+    const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
+    gameSpeed = Math.min(lvl.maxSpeed, lvl.baseSpeed + maxScore / lvl.speedRamp);
+
+    // Campaign max speed detection
+    if (!campaignMaxSpeedReached && gameSpeed >= lvl.maxSpeed) {
+      campaignMaxSpeedReached = true;
+      campaignCountdown = 3600; // 60 seconds at 60fps
+      campaignMaxSpeedFlash = 1;
+    }
+
+    // Campaign 60s countdown at max speed
+    if (campaignMaxSpeedReached && campaignCountdown > 0) {
+      campaignCountdown--;
+      campaignMaxSpeedFlash += 0.05;
+      if (campaignCountdown <= 0) {
+        // LEVEL COMPLETE!
+        levelStats.score = maxScore;
+        gameState = 'levelcomplete';
+        stopEngine();
+        stopBigAir();
+        return;
+      }
+    }
+
+    // Storm effects update
+    if (ENVIRONMENTS[currentEnvIndex].features === 'storm') {
+      // Rain
+      for (const rd of raindrops) {
+        rd.x -= effSpeed * 0.3;
+        rd.y += rd.speed;
+        if (rd.y > H) { rd.y = -10; rd.x = Math.random() * W; }
+        if (rd.x < -10) rd.x = W + Math.random() * 50;
+      }
+      // Lightning
+      if (lightningTimer > 0) lightningTimer--;
+      if (lightningTimer <= 0) {
+        lightningFlash = 6; // 6 frames of flash
+        lightningTimer = 360 + Math.random() * 240;
+        // Thunder rumble sound
+        if (audioCtx && !audioMuted) {
+          const t = audioCtx.currentTime;
+          const bufSize = audioCtx.sampleRate * 0.2;
+          const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+          const n = audioCtx.createBufferSource(); n.buffer = buf;
+          const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 150;
+          const g = audioCtx.createGain(); g.gain.value = 0.15;
+          n.connect(lp); lp.connect(g); g.connect(audioCtx.destination);
+          n.start(t + 0.5); n.stop(t + 0.8);
+        }
+      }
+      if (lightningFlash > 0) lightningFlash--;
+    }
   }
   wheelAngle += effSpeed * 0.08;
   updateEngineSound();
 
-  // Round timer for frenzy/battle
+  // Round timer for frenzy
   if (roundTimer > 0) {
     roundTimer--;
     if (roundTimer <= 0) {
@@ -4148,7 +4379,8 @@ function update() {
     }
   }
 
-  // Environment progression
+  // Environment progression (only in non-campaign modes)
+  if (gameMode !== 'rally') {
   const newEnv = Math.floor(maxScore / 500) % ENVIRONMENTS.length;
   if (newEnv !== currentEnvIndex) {
     currentEnvIndex = newEnv;
@@ -4159,6 +4391,7 @@ function update() {
   }
   if (envTransitionTimer > 0) envTransitionTimer--;
   if (envAnnouncementTimer > 0) envAnnouncementTimer--;
+  } // end non-campaign env progression
 
   // Update each player
   for (const p of players) updatePlayer(p);
@@ -4174,7 +4407,12 @@ function update() {
     if (gameMode === 'frenzy' || gameMode === 'battle') {
       obstacleTimer = 20 + Math.random() * 20; // wall-to-wall cars!
     } else {
-      obstacleTimer = 80 + Math.random() * 70 - Math.min(maxScore / 50, 30);
+      if (gameMode === 'rally') {
+        const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
+        obstacleTimer = lvl.obstGap * 0.5 + Math.random() * lvl.obstGap * 0.5 - Math.min(maxScore / 50, 30);
+      } else {
+        obstacleTimer = 80 + Math.random() * 70 - Math.min(maxScore / 50, 30);
+      }
     }
   }
 
@@ -4591,7 +4829,7 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
-  if (gameState === 'playing' || gameState === 'countdown' || gameState === 'gameover' || gameState === 'paused') {
+  if (gameState === 'playing' || gameState === 'countdown' || gameState === 'gameover' || gameState === 'paused' || gameState === 'levelcomplete') {
     // Battle mode: draw arena instead of scrolling level
     if (gameMode === 'battle') {
       // Arena is drawn instead of normal environment (override bg)
@@ -4675,10 +4913,48 @@ function draw() {
       }
     }
 
+    // Storm effects (rain + lightning) — drawn on top of everything
+    if (ENVIRONMENTS[currentEnvIndex].features === 'storm' && gameMode === 'rally') {
+      drawStormEffects();
+    }
+
     if (gameState === 'playing' || gameState === 'paused') {
       if (gameMode === 'battle') drawBattleHUD();
       else drawHUD();
       drawPauseButton();
+
+      // Campaign HUD: level indicator + max speed text + countdown
+      if (gameMode === 'rally') {
+        const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
+        ctx.textAlign = 'center';
+        // Level indicator (top center)
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial';
+        ctx.fillText('LEVEL ' + (campaignLevel + 1) + ': ' + lvl.name, W / 2, 12);
+
+        // MAX SPEED! text when max reached
+        if (campaignMaxSpeedReached) {
+          const pulse = 0.8 + Math.sin(campaignMaxSpeedFlash) * 0.2;
+          ctx.save();
+          ctx.translate(W / 2, 75);
+          ctx.scale(pulse, pulse);
+          ctx.fillStyle = '#ffd700'; ctx.font = 'bold 28px "Arial Black", Impact, sans-serif';
+          ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+          ctx.strokeText('MAX SPEED!', 0, 0);
+          ctx.fillText('MAX SPEED!', 0, 0);
+          ctx.restore();
+
+          // 60s countdown below
+          const secs = Math.ceil(campaignCountdown / 60);
+          const urgent = secs <= 10;
+          ctx.fillStyle = urgent ? '#ff4400' : '#ffd700';
+          ctx.font = 'bold ' + (urgent ? '22' : '18') + 'px "Arial Black", Impact, sans-serif';
+          const timerY = urgent ? 100 + Math.sin(Date.now() * 0.01) * 2 : 100;
+          ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+          ctx.strokeText('0:' + (secs < 10 ? '0' : '') + secs, W / 2, timerY);
+          ctx.fillText('0:' + (secs < 10 ? '0' : '') + secs, W / 2, timerY);
+        }
+        ctx.textAlign = 'left';
+      }
     }
     if (gameState === 'paused') drawPauseOverlay();
     if (gameState === 'countdown') drawCountdown();
@@ -4689,6 +4965,8 @@ function draw() {
   if (gameState === 'modeselect') drawModeSelectScreen();
   if (gameState === 'playerselect') drawPlayerSelectScreen();
   if (gameState === 'gameover') drawGameOverScreen();
+  if (gameState === 'levelcomplete') drawLevelCompleteScreen();
+  if (gameState === 'leveltransition') drawLevelTransitionScreen();
 
   ctx.restore();
 }
