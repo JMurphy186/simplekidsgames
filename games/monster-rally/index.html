@@ -425,8 +425,8 @@ let lavaBubbles = [];
 let neonSpotlights = [{ x: 200, angle: 0, speed: 0.02, color: '#ff00ff' }, { x: 500, angle: Math.PI, speed: -0.015, color: '#00ffff' }, { x: 650, angle: 1, speed: 0.025, color: '#ffff00' }];
 
 // Truck picker state
-let selectedTruck = parseInt(localStorage.getItem('monsterRallyTruck') || '0');
-if (selectedTruck < 0 || selectedTruck >= ROSTER_COUNT) selectedTruck = 0;
+let selectedTruck = parseInt(localStorage.getItem('monsterRallyTruck') || '4'); // Default to first Pro Stadium truck
+if (selectedTruck < 0 || selectedTruck >= ROSTER_COUNT) selectedTruck = 4;
 let selectedTruck2 = 1;
 let pickerPlayer = 1; // which player is picking
 let pickerConfirmed = false;
@@ -864,7 +864,7 @@ function handleDown(e) {
   if (gameState === 'title') {
     // Back to games button (top-left, 130x50 orange button)
     if (vc.x < 150 && vc.y < 60) { window.location.href = '/'; return; }
-    gameState = 'picker'; pickerPlayer = 1; return;
+    gameState = 'picker'; pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); return;
   }
   if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
   if (gameState === 'modeselect') { handleModeSelectClick(vc.x, vc.y); return; }
@@ -922,7 +922,7 @@ document.addEventListener('keydown', (e) => {
   // Menu navigation
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
-    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; return; }
+    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); return; }
     if (gameState === 'picker') { confirmPicker(); return; }
     if (gameState === 'modeselect') return;
     if (gameState === 'gameover') { gameState = 'modeselect'; return; }
@@ -951,16 +951,20 @@ document.addEventListener('keydown', (e) => {
 
   // Picker navigation
   if (gameState === 'picker') {
-    const rc = ROSTER_COUNT;
+    const currentTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
+    const displayIdx = PICKER_ORDER.indexOf(currentTruck);
+    const pos = displayIdx >= 0 ? displayIdx : 0;
     if (e.code === 'ArrowLeft') {
-      if (pickerPlayer === 1) selectedTruck = (selectedTruck + rc - 1) % rc;
-      else selectedTruck2 = (selectedTruck2 + rc - 1) % rc;
-      pickerPage = Math.floor((pickerPlayer === 1 ? selectedTruck : selectedTruck2) / PICKER_PER_PAGE);
+      const newPos = (pos + PICKER_ORDER.length - 1) % PICKER_ORDER.length;
+      if (pickerPlayer === 1) selectedTruck = PICKER_ORDER[newPos];
+      else selectedTruck2 = PICKER_ORDER[newPos];
+      pickerPage = Math.floor(newPos / PICKER_PER_PAGE);
     }
     if (e.code === 'ArrowRight') {
-      if (pickerPlayer === 1) selectedTruck = (selectedTruck + 1) % rc;
-      else selectedTruck2 = (selectedTruck2 + 1) % rc;
-      pickerPage = Math.floor((pickerPlayer === 1 ? selectedTruck : selectedTruck2) / PICKER_PER_PAGE);
+      const newPos = (pos + 1) % PICKER_ORDER.length;
+      if (pickerPlayer === 1) selectedTruck = PICKER_ORDER[newPos];
+      else selectedTruck2 = PICKER_ORDER[newPos];
+      pickerPage = Math.floor(newPos / PICKER_PER_PAGE);
     }
     return;
   }
@@ -1009,18 +1013,29 @@ document.addEventListener('keyup', (e) => {
 // ============================================================
 let pickerPage = 0;
 const PICKER_PER_PAGE = 4;
-const PICKER_PAGES = Math.ceil(ROSTER_COUNT / PICKER_PER_PAGE);
+// Display order: Pro Stadium (4-7) first, then Classic HD (0-3), then cars (8+)
+const PICKER_ORDER = [];
+for (let i = 4; i < 8 && i < ROSTER_COUNT; i++) PICKER_ORDER.push(i); // Pro Stadium
+for (let i = 0; i < 4 && i < ROSTER_COUNT; i++) PICKER_ORDER.push(i); // Classic HD
+for (let i = 8; i < ROSTER_COUNT; i++) PICKER_ORDER.push(i);          // Cars
+const PICKER_PAGES = Math.ceil(PICKER_ORDER.length / PICKER_PER_PAGE);
 
 function getPickerTruckRects() {
   const rects = [];
   const startX = 80, gap = 170, y = 170;
   const pageStart = pickerPage * PICKER_PER_PAGE;
-  const pageEnd = Math.min(pageStart + PICKER_PER_PAGE, ROSTER_COUNT);
+  const pageEnd = Math.min(pageStart + PICKER_PER_PAGE, PICKER_ORDER.length);
   for (let i = pageStart; i < pageEnd; i++) {
     const col = i - pageStart;
-    rects.push({ x: startX + col * gap, y, w: 140, h: 120, idx: i });
+    rects.push({ x: startX + col * gap, y, w: 140, h: 120, idx: PICKER_ORDER[i] });
   }
   return rects;
+}
+
+// Helper: find which picker page a roster index appears on
+function pickerPageForTruck(truckIdx) {
+  const displayIdx = PICKER_ORDER.indexOf(truckIdx);
+  return displayIdx >= 0 ? Math.floor(displayIdx / PICKER_PER_PAGE) : 0;
 }
 
 function handlePickerClick(vx, vy) {
@@ -1062,7 +1077,7 @@ function handleModeSelectClick(vx, vy) {
   // Back to games (top-left)
   if (vx < 145 && vy < 55) { window.location.href = '/'; return; }
   // Change truck (top-right, 130x44 button at W-145, 5)
-  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; gameState = 'picker'; return; }
+  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); gameState = 'picker'; return; }
 
   const btnW = 220, btnH = 52, gap = 10;
   const by = 195;
