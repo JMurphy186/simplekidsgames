@@ -167,20 +167,35 @@ const ENVIRONMENTS = [
     features: 'moon'
   },
   {
+    name: 'JUNGLE RUINS', skyTop: '#0a2a0a', skyMid: '#1a4a1a', skyBot: '#0a2a0a',
+    ground: '#4a5a3a', groundAccent: '#3a4a2a', road: '#3a4030',
+    mountainColor: '#0a1a0a', cloudAlpha: 0.0, starBright: 0.1, gravityMult: 1.0,
+    features: 'jungle'
+  },
+  {
     name: 'LAVA WORLD', skyTop: '#1a0000', skyMid: '#330000', skyBot: '#1a0000',
     ground: '#aa2200', groundAccent: '#882200', road: '#661100',
     mountainColor: '#220000', cloudAlpha: 0.0, starBright: 0.2, gravityMult: 1.0,
     features: 'lava'
+  },
+  {
+    name: 'RAINBOW ROAD', skyTop: '#330033', skyMid: '#003366', skyBot: '#003300',
+    ground: '#dddddd', groundAccent: '#cccccc', road: '#bbbbbb',
+    mountainColor: '#222244', cloudAlpha: 0.0, starBright: 0.8, gravityMult: 0.85,
+    features: 'rainbow'
   }
 ];
 
-// Campaign level configs (Phase 1: Levels 1-5)
+// Campaign level configs (8 levels)
 const CAMPAIGN_LEVELS = [
-  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.4, maxSpeed: 4.0, speedRamp: 1200, obstGap: 170, starFreq: 40 },
-  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 1.5, maxSpeed: 4.5, speedRamp: 1100, obstGap: 160, starFreq: 40 },
-  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45 },
-  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 1.7, maxSpeed: 5.5, speedRamp: 900,  obstGap: 140, starFreq: 45 },
-  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45 }
+  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.4, maxSpeed: 4.0, speedRamp: 1200, obstGap: 170, starFreq: 40, countdownSecs: 60 },
+  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 1.5, maxSpeed: 4.5, speedRamp: 1100, obstGap: 160, starFreq: 40, countdownSecs: 60 },
+  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60 },
+  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 1.7, maxSpeed: 5.5, speedRamp: 900,  obstGap: 140, starFreq: 45, countdownSecs: 60 },
+  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 1.6, maxSpeed: 5.0, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60 },
+  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 1.8, maxSpeed: 5.5, speedRamp: 850,  obstGap: 130, starFreq: 45, countdownSecs: 60 },
+  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 1.9, maxSpeed: 6.0, speedRamp: 800,  obstGap: 120, starFreq: 50, countdownSecs: 60 },
+  { envIndex: 7, name: 'RAINBOW ROAD',   baseSpeed: 1.6, maxSpeed: 5.5, speedRamp: 900,  obstGap: 140, starFreq: 25, countdownSecs: 30 }
 ];
 
 // Power-up configs
@@ -283,7 +298,7 @@ for (let i = 0; i < TRUCK_ROSTER.length; i++) {
 // ============================================================
 let gameSpeed = 1.6;
 let maxSpeed = 6;
-let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'playerselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition'
+let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'playerselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition' | 'campaignwin'
 let gameMode = 'rally'; // 'rally' | 'frenzy' | 'battle'
 let roundTimer = 0; // countdown timer for frenzy/battle (frames)
 
@@ -295,6 +310,8 @@ let campaignMaxSpeedFlash = 0; // for "MAX SPEED!" pulsing text
 let levelCompleteTimer = 0; // hold time on level complete screen
 let levelTransitionTimer = 0; // hold time on level transition screen
 let levelStats = { stars: 0, crushes: 0, flips: 0, score: 0 }; // stats for current level
+let campaignTotals = { stars: 0, crushes: 0, flips: 0, score: 0 }; // cumulative across all levels
+let campaignWinTimer = 0; // animation timer for win screen
 let raindrops = []; // for stormy highway
 let lightningTimer = 0; // frames until next lightning flash
 let lightningFlash = 0; // current flash intensity
@@ -768,15 +785,22 @@ function handleDown(e) {
   if (gameState === 'paused') { handlePauseClick(vc.x, vc.y); return; }
   if (gameState === 'gameover') { gameState = 'modeselect'; return; }
   if (gameState === 'levelcomplete') {
-    // Advance to next level or go to mode select if campaign done
     if (campaignLevel < CAMPAIGN_LEVELS.length - 1) {
       campaignLevel++;
       startLevelTransition();
     } else {
-      gameState = 'modeselect'; // Phase 2 will add win screen here
+      // Campaign complete! Show win screen
+      campaignWinTimer = 0;
+      // Award coin + unlock endless
+      localStorage.setItem('mr_coins', String(parseInt(localStorage.getItem('mr_coins') || '0') + 1));
+      localStorage.setItem('mr_endless_unlocked', 'true');
+      localStorage.setItem('mr_campaign_beaten', 'true');
+      localStorage.removeItem('mr_campaign_level');
+      gameState = 'campaignwin';
     }
     return;
   }
+  if (gameState === 'campaignwin') { gameState = 'modeselect'; return; }
   if (gameState === 'leveltransition') return;
   if (gameState === 'countdown') return;
 
@@ -818,9 +842,17 @@ document.addEventListener('keydown', (e) => {
     if (gameState === 'gameover') { gameState = 'modeselect'; return; }
     if (gameState === 'levelcomplete') {
       if (campaignLevel < CAMPAIGN_LEVELS.length - 1) { campaignLevel++; startLevelTransition(); }
-      else gameState = 'modeselect';
+      else {
+        campaignWinTimer = 0;
+        localStorage.setItem('mr_coins', String(parseInt(localStorage.getItem('mr_coins') || '0') + 1));
+        localStorage.setItem('mr_endless_unlocked', 'true');
+        localStorage.setItem('mr_campaign_beaten', 'true');
+        localStorage.removeItem('mr_campaign_level');
+        gameState = 'campaignwin';
+      }
       return;
     }
+    if (gameState === 'campaignwin') { gameState = 'modeselect'; return; }
   }
 
   // Mode select keyboard shortcuts
@@ -828,6 +860,7 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'Digit1') selectMode('rally');
     if (e.code === 'Digit2') selectMode('frenzy');
     if (e.code === 'Digit3') selectMode('battle');
+    if (e.code === 'Digit4' && localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
     return;
   }
   if (gameState === 'playerselect') {
@@ -964,15 +997,18 @@ function handleModeSelectClick(vx, vy) {
   // Change truck (top-right, 130x44 button at W-145, 5)
   if (vx > W - 150 && vy < 55) { pickerPlayer = 1; gameState = 'picker'; return; }
 
-  const btnW = 200, btnH = 65, gap = 20;
+  const btnW = 220, btnH = 52, gap = 10;
   const by = 160;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 4; i++) {
     const bx = W / 2 - btnW / 2;
     const btnY = by + i * (btnH + gap);
     if (vx >= bx && vx <= bx + btnW && vy >= btnY && vy <= btnY + btnH) {
       if (i === 0) selectMode('rally');
       else if (i === 1) selectMode('frenzy');
       else if (i === 2) selectMode('battle');
+      else if (i === 3) {
+        if (localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
+      }
       return;
     }
   }
@@ -984,7 +1020,13 @@ function selectMode(mode) {
     // Rally: campaign mode, always 1 player
     numPlayers = 1;
     campaignLevel = 0;
+    campaignTotals = { stars: 0, crushes: 0, flips: 0, score: 0 };
     startLevelTransition();
+  } else if (mode === 'endless') {
+    // Endless: like old rally, no campaign, 1 player
+    numPlayers = 1;
+    initGame();
+    startCountdown();
   } else if (mode === 'frenzy') {
     // Frenzy: always 1P
     numPlayers = 1;
@@ -1056,6 +1098,15 @@ function initGame() {
     starTimer = 9999;
     powerUpSpawnTimer = 150; // power-ups enabled in frenzy!
     roundTimer = 1800; // 30 seconds
+  } else if (gameMode === 'endless') {
+    // Endless: old rally behavior, cycling environments, no campaign
+    gameSpeed = 1.6;
+    maxSpeed = 6;
+    obstacleTimer = 80;
+    starTimer = 30;
+    powerUpSpawnTimer = 150;
+    roundTimer = 0;
+    currentEnvIndex = 0;
   } else if (gameMode === 'rally') {
     // Campaign mode: use level configs
     const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
@@ -1401,15 +1452,25 @@ function drawModeSelectScreen() {
   drawVehiclePreview(-45, -25, TRUCK_ROSTER[selectedTruck], true, 0, selectedTruck);
   ctx.restore();
 
-  const btnW = 220, btnH = 65, gap = 15;
+  const btnW = 220, btnH = 52, gap = 10;
   const by = 160;
+  const endlessUnlocked = localStorage.getItem('mr_endless_unlocked') === 'true';
   const modes = [
-    { label: 'RALLY', desc: '5-level campaign!', color: 'rgba(34,204,68,', key: '1' },
+    { label: 'RALLY', desc: '8-level campaign!', color: 'rgba(34,204,68,', key: '1' },
     { label: 'CRUSH FRENZY', desc: '30 sec smash attack!', color: 'rgba(255,68,0,', key: '2' },
-    { label: 'BATTLE', desc: '2 players, most crushes wins!', color: 'rgba(136,51,204,', key: '3' }
+    { label: 'BATTLE', desc: '2 players, most crushes wins!', color: 'rgba(136,51,204,', key: '3' },
+    { label: endlessUnlocked ? 'ENDLESS' : '\uD83D\uDD12 ENDLESS', desc: endlessUnlocked ? 'Drive forever!' : 'Beat campaign to unlock!', color: endlessUnlocked ? 'rgba(0,200,200,' : 'rgba(80,80,80,', key: '4' }
   ];
 
-  for (let i = 0; i < 3; i++) {
+  // Coin count display
+  const coins = parseInt(localStorage.getItem('mr_coins') || '0');
+  if (coins > 0) {
+    ctx.save(); ctx.translate(W / 2 + 80, 90); drawStarCoin(8); ctx.restore();
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial';
+    ctx.fillText('x ' + coins, W / 2 + 92, 94);
+  }
+
+  for (let i = 0; i < modes.length; i++) {
     const m = modes[i];
     const btnY = by + i * (btnH + gap);
     const bx = W / 2 - btnW / 2;
@@ -1423,12 +1484,12 @@ function drawModeSelectScreen() {
     ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 15); ctx.stroke();
 
     // Label
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Arial Black", Impact, sans-serif';
-    ctx.fillText(m.label, W / 2, btnY + 30);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Arial Black", Impact, sans-serif';
+    ctx.fillText(m.label, W / 2, btnY + 24);
 
     // Description
-    ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '12px Arial';
-    ctx.fillText(m.desc, W / 2, btnY + 50);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '11px Arial';
+    ctx.fillText(m.desc, W / 2, btnY + 42);
 
     // Key hint
     ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '11px Arial';
@@ -1579,6 +1640,78 @@ function drawStormEffects() {
     const ry = GROUND_Y + 5 + i * 12;
     ctx.beginPath(); ctx.moveTo(0, ry); ctx.lineTo(W, ry); ctx.stroke();
   }
+}
+
+function drawCampaignWinScreen() {
+  campaignWinTimer++;
+  // Rainbow cycling background
+  const hue = (campaignWinTimer * 0.8) % 360;
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  bgGrad.addColorStop(0, `hsl(${hue}, 60%, 15%)`);
+  bgGrad.addColorStop(0.5, `hsl(${(hue + 120) % 360}, 60%, 12%)`);
+  bgGrad.addColorStop(1, `hsl(${(hue + 240) % 360}, 60%, 15%)`);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Confetti
+  for (let i = 0; i < 40; i++) {
+    const cx = (i * 113 + campaignWinTimer * 0.4) % W;
+    const cy = (i * 89 + campaignWinTimer * (0.5 + (i % 3) * 0.3)) % (H + 20) - 10;
+    const colors = ['#ff4444','#4488ff','#44cc44','#ffcc00','#ff44cc','#44ffff'];
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(campaignWinTimer * 0.03 + i);
+    ctx.fillRect(-3, -3, 6, 6); ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+
+  // Trophy text
+  const bounce = Math.sin(Date.now() * 0.005) * 6;
+  ctx.fillStyle = '#ffd700';
+  ctx.font = 'bold 42px "Arial Black", Impact, sans-serif';
+  ctx.strokeText('YOU WIN!', W / 2, 80 + bounce);
+  ctx.fillText('YOU WIN!', W / 2, 80 + bounce);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 18px Arial';
+  ctx.fillText('CAMPAIGN COMPLETE!', W / 2, 110);
+
+  // Total stats
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+  ctx.fillText('Total Stars: ' + campaignTotals.stars, W / 2, 155);
+  ctx.fillText('Total Crushes: ' + campaignTotals.crushes, W / 2, 178);
+  ctx.fillText('Total Flips: ' + campaignTotals.flips, W / 2, 201);
+  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 22px "Arial Black", Impact, sans-serif';
+  ctx.strokeText('Total Score: ' + campaignTotals.score, W / 2, 235);
+  ctx.fillText('Total Score: ' + campaignTotals.score, W / 2, 235);
+
+  // Coin earned animation
+  const coinY = Math.min(280, 350 - campaignWinTimer * 1.5);
+  ctx.save(); ctx.translate(W / 2, coinY);
+  drawStarCoin(20);
+  ctx.restore();
+  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 20px "Arial Black", Impact, sans-serif';
+  ctx.strokeText('COIN EARNED!', W / 2, coinY + 35);
+  ctx.fillText('COIN EARNED!', W / 2, coinY + 35);
+
+  // Endless unlocked
+  if (campaignWinTimer > 60) {
+    const unlockAlpha = Math.min(1, (campaignWinTimer - 60) / 30);
+    ctx.globalAlpha = unlockAlpha;
+    ctx.fillStyle = '#44ffcc'; ctx.font = 'bold 16px Arial';
+    ctx.fillText('ENDLESS MODE UNLOCKED!', W / 2, coinY + 60);
+    ctx.globalAlpha = 1;
+  }
+
+  // Tap to continue
+  const blink = Math.sin(Date.now() * 0.004) > 0;
+  if (blink && campaignWinTimer > 90) {
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+    ctx.fillText('TAP TO CONTINUE', W / 2, H - 30);
+  }
+  ctx.textAlign = 'left';
 }
 
 function drawGameOverScreen() {
@@ -1984,6 +2117,8 @@ function drawEnvironmentBg(env) {
   else if (env.features === 'neon') drawNeonBg();
   else if (env.features === 'moon') drawMoonBg();
   else if (env.features === 'lava') drawLavaBg();
+  else if (env.features === 'jungle') drawJungleBg();
+  else if (env.features === 'rainbow') drawRainbowBg();
 
   // Mountains
   ctx.fillStyle = env.mountainColor;
@@ -2114,6 +2249,85 @@ function drawLavaBg() {
   if (Math.random() > 0.95) {
     lavaBubbles.push({ x: Math.random() * W, y: GROUND_Y + 15, r: 2, life: 1 });
   }
+}
+
+function drawJungleBg() {
+  // Stone columns in background
+  ctx.fillStyle = '#555';
+  const cols = [80, 200, 350, 520, 680];
+  for (let i = 0; i < cols.length; i++) {
+    const ch = 50 + (i * 17) % 40;
+    ctx.fillRect(cols[i], GROUND_Y - ch, 18, ch);
+    // Mossy top
+    ctx.fillStyle = '#4a6a2a';
+    ctx.fillRect(cols[i] - 2, GROUND_Y - ch - 3, 22, 6);
+    // Vine streaks
+    ctx.strokeStyle = '#3a5a1a'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cols[i] + 5, GROUND_Y - ch);
+    ctx.lineTo(cols[i] + 3, GROUND_Y - ch + 20); ctx.stroke();
+    ctx.fillStyle = '#555';
+  }
+  // Dense tree canopy silhouettes at top
+  ctx.fillStyle = '#0a1a0a';
+  for (let i = 0; i < 12; i++) {
+    const tx = i * 75 - 20;
+    ctx.beginPath();
+    ctx.arc(tx + 35, 15 + (i % 3) * 8, 40 + (i % 2) * 15, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Fireflies
+  for (let i = 0; i < 18; i++) {
+    const fx = (i * 137 + Date.now() * 0.008) % W;
+    const fy = 40 + (i * 73 + Math.sin(Date.now() * 0.002 + i) * 20) % (GROUND_Y - 80);
+    const pulse = 0.3 + Math.sin(Date.now() * 0.003 + i * 1.2) * 0.4;
+    ctx.globalAlpha = Math.max(0, pulse);
+    ctx.fillStyle = '#ccff44';
+    ctx.beginPath(); ctx.arc(fx, fy, 2 + Math.sin(i) * 0.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+let rainbowFrame = 0;
+function drawRainbowBg() {
+  rainbowFrame++;
+  // Cycling rainbow sky (override the gradient already drawn)
+  const hue = (rainbowFrame * 0.5) % 360;
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+  skyGrad.addColorStop(0, `hsl(${hue}, 70%, 30%)`);
+  skyGrad.addColorStop(0.5, `hsl(${(hue + 40) % 360}, 60%, 25%)`);
+  skyGrad.addColorStop(1, `hsl(${(hue + 80) % 360}, 70%, 20%)`);
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, GROUND_Y);
+  // Extra twinkling stars
+  for (let i = 0; i < 40; i++) {
+    const sx = (i * 97 + rainbowFrame * 0.1) % W;
+    const sy = (i * 61) % (GROUND_Y - 30) + 10;
+    const twinkle = 0.3 + Math.sin(rainbowFrame * 0.05 + i * 2) * 0.5;
+    ctx.globalAlpha = Math.max(0, twinkle);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+  // Rainbow ground shimmer
+  const groundGrad = ctx.createLinearGradient(0, GROUND_Y, W, GROUND_Y + 10);
+  groundGrad.addColorStop(0, `hsla(${hue}, 80%, 70%, 0.15)`);
+  groundGrad.addColorStop(0.5, `hsla(${(hue + 120) % 360}, 80%, 70%, 0.15)`);
+  groundGrad.addColorStop(1, `hsla(${(hue + 240) % 360}, 80%, 70%, 0.15)`);
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+  // Confetti
+  for (let i = 0; i < 35; i++) {
+    const cx = (i * 113 + rainbowFrame * 0.3) % W;
+    const cy = (i * 89 + rainbowFrame * (0.5 + (i % 3) * 0.3)) % (H + 20) - 10;
+    const confettiColors = ['#ff4444','#4488ff','#44cc44','#ffcc00','#ff44cc','#44ffff'];
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = confettiColors[i % confettiColors.length];
+    ctx.save();
+    ctx.translate(cx, cy); ctx.rotate(rainbowFrame * 0.02 + i);
+    ctx.fillRect(-2, -2, 4, 4);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawEnvironmentGround(env) {
@@ -4309,14 +4523,16 @@ function update() {
 
   const effSpeed = getEffectiveSpeed();
   // Speed progression
-  if (gameMode === 'rally') {
+  if (gameMode === 'endless') {
+    gameSpeed = Math.min(maxSpeed, 1.6 + maxScore / 1000);
+  } else if (gameMode === 'rally') {
     const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
     gameSpeed = Math.min(lvl.maxSpeed, lvl.baseSpeed + maxScore / lvl.speedRamp);
 
     // Campaign max speed detection
     if (!campaignMaxSpeedReached && gameSpeed >= lvl.maxSpeed) {
       campaignMaxSpeedReached = true;
-      campaignCountdown = 3600; // 60 seconds at 60fps
+      campaignCountdown = (lvl.countdownSecs || 60) * 60; // per-level countdown
       campaignMaxSpeedFlash = 1;
     }
 
@@ -4327,6 +4543,12 @@ function update() {
       if (campaignCountdown <= 0) {
         // LEVEL COMPLETE!
         levelStats.score = maxScore;
+        campaignTotals.stars += levelStats.stars;
+        campaignTotals.crushes += levelStats.crushes;
+        campaignTotals.flips += levelStats.flips;
+        campaignTotals.score += levelStats.score;
+        // Save progress
+        localStorage.setItem('mr_campaign_level', String(campaignLevel + 1));
         gameState = 'levelcomplete';
         stopEngine();
         stopBigAir();
@@ -4966,6 +5188,7 @@ function draw() {
   if (gameState === 'playerselect') drawPlayerSelectScreen();
   if (gameState === 'gameover') drawGameOverScreen();
   if (gameState === 'levelcomplete') drawLevelCompleteScreen();
+  if (gameState === 'campaignwin') drawCampaignWinScreen();
   if (gameState === 'leveltransition') drawLevelTransitionScreen();
 
   ctx.restore();
