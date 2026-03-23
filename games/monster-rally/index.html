@@ -84,7 +84,7 @@
 <canvas id="game"></canvas>
 <script>
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
 // ============================================================
 // RESPONSIVE SIZING
@@ -99,7 +99,17 @@ function resize() {
 }
 resize();
 window.addEventListener('resize', resize);
+window.addEventListener('load', resize); // Safari sometimes needs this
 if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+
+// Force Safari to repaint canvas on load
+window.addEventListener('load', function() {
+  canvas.style.display = 'none';
+  canvas.offsetHeight; // Force reflow
+  canvas.style.display = '';
+  canvas.style.opacity = '0.99';
+  requestAnimationFrame(function() { canvas.style.opacity = '1'; });
+});
 
 // Try to hide Safari URL bar
 window.scrollTo(0, 1);
@@ -3566,15 +3576,15 @@ function updatePlayer(p) {
 
     if (p.airborneFrames === 90) startBigAir();
 
-    // Backflip
-    if (p.airborneFrames >= AIRBORNE_FLIP_THRESHOLD && !p.flipInProgress) {
+    // Backflip — max 1 per jump
+    if (p.airborneFrames >= AIRBORNE_FLIP_THRESHOLD && !p.flipInProgress && p.flipsCompleted < 1) {
       p.flipInProgress = true; p.flipStarted = true;
     }
     if (p.flipInProgress) {
       p.flipAngle += (Math.PI * 2) / FLIP_DURATION;
       if (p.flipAngle >= Math.PI * 2) {
         p.flipsCompleted++;
-        p.flipAngle = 0;
+        p.flipAngle = 0; // snap upright
         p.flipInProgress = false;
         p.score += FLIP_BONUS_POINTS;
         screenShake = 10; flashTimer = 8; flashColor = truckColors.accent;
@@ -4601,6 +4611,7 @@ if (!ctx.roundRect) {
   };
 }
 
+draw(); // Force first frame to paint immediately (Safari fix)
 gameLoop();
 </script>
 </body>
