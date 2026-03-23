@@ -1079,11 +1079,11 @@ function initGame() {
 
   // Mode-specific settings
   if (gameMode === 'frenzy') {
-    gameSpeed = 2.7;
+    gameSpeed = 3.2;
     obstacleTimer = 10;
     starTimer = 9999;
     powerUpSpawnTimer = 150; // power-ups enabled in frenzy!
-    roundTimer = 1800; // 30 seconds
+    roundTimer = 3600; // 60 seconds
   } else if (gameMode === 'endless') {
     // Endless: old rally behavior, cycling environments, no campaign
     gameSpeed = 1.9;
