@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Not Found — Simple Kids Games</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #fff;
+    font-family: 'Arial Black', 'Impact', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+  .scanlines {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none; z-index: 10;
+  }
+  .container { position: relative; z-index: 5; }
+  .code {
+    font-size: 120px;
+    font-weight: 900;
+    background: linear-gradient(90deg, #ff0040, #ff8800, #ffcc00, #44ff44, #00ccff, #8844ff, #ff0040);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: rainbow 3s linear infinite;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  @keyframes rainbow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+  h1 {
+    font-size: 36px;
+    color: #ffcc00;
+    margin-bottom: 15px;
+    text-shadow: 0 0 20px rgba(255,204,0,0.3);
+  }
+  .sub {
+    font-size: 18px;
+    color: #888;
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    margin-bottom: 40px;
+  }
+  .btn {
+    display: inline-block;
+    padding: 16px 40px;
+    background: linear-gradient(180deg, #ff6600 0%, #cc4400 100%);
+    color: #fff;
+    font-size: 20px;
+    font-family: 'Arial Black', Impact, sans-serif;
+    text-decoration: none;
+    border-radius: 12px;
+    border: 3px solid #ff8833;
+    box-shadow: 0 4px 15px rgba(255,100,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,100,0,0.5); }
+  .btn:active { transform: translateY(1px); }
+  .emoji { font-size: 60px; margin-bottom: 20px; display: block; }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="container">
+  <span class="emoji">🕹️</span>
+  <div class="code">404</div>
+  <h1>GAME NOT FOUND</h1>
+  <p class="sub">Looks like this level doesn't exist... yet!</p>
+  <a href="/" class="btn">← BACK TO ARCADE</a>
+</div>
+</body>
+</html>

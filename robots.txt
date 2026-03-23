@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /*.md$
+Disallow: /reference/
+Disallow: /ideas/
+
+Sitemap: https://www.simplekidsgames.com/sitemap.xml

@@ -16,5 +16,24 @@
         { "key": "Expires", "value": "0" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/CLAUDE.md", "destination": "/404.html" },
+    { "source": "/CAMPAIGN-MODE.md", "destination": "/404.html" },
+    { "source": "/FULL-SVG-ROSTER.md", "destination": "/404.html" },
+    { "source": "/OBJECTS-REDESIGN.md", "destination": "/404.html" },
+    { "source": "/STAR-COIN.md", "destination": "/404.html" },
+    { "source": "/PATCH-3.md", "destination": "/404.html" },
+    { "source": "/MOBILE-FIXES.md", "destination": "/404.html" },
+    { "source": "/POWERUP-ICONS.md", "destination": "/404.html" },
+    { "source": "/FLAME-CRUSHER-HD.md", "destination": "/404.html" },
+    { "source": "/HD-TRUCKS-10-12.md", "destination": "/404.html" },
+    { "source": "/pro_stadium_trucks_final.html", "destination": "/404.html" },
+    { "source": "/objects-redesign.html", "destination": "/404.html" },
+    { "source": "/trash-concepts.html", "destination": "/404.html" },
+    { "source": "/ramp-concepts.html", "destination": "/404.html" },
+    { "source": "/star-concepts.html", "destination": "/404.html" },
+    { "source": "/unified_monster_trucks.html", "destination": "/404.html" },
+    { "source": "/powerup-concepts.html", "destination": "/404.html" }
   ]
 }
