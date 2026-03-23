@@ -392,8 +392,22 @@ a { text-decoration: none; color: inherit; }
 .abtn-y { background: radial-gradient(circle at 40% 35%, #ffee44, #ccaa00); }
 .abtn-g { background: radial-gradient(circle at 40% 35%, #44ff66, #00aa22); }
 
-/* Center: coin slot */
-.center-panel { text-align: center; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+/* Center: coin slot — interactive! */
+.center-panel {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.center-panel:hover .insert-coin { color: #fff; }
+.center-panel:hover .coin-slot { border-color: #888; background: #222; }
+.center-panel:active .coin-slot { background: #333; }
+
 .coin-slot {
   display: inline-block;
   width: 36px; height: 5px;
@@ -401,16 +415,94 @@ a { text-decoration: none; color: inherit; }
   border-radius: 3px;
   border: 1px solid #444;
   margin-bottom: 4px;
+  transition: background 0.2s, border-color 0.2s;
+  position: relative;
 }
 .insert-coin {
   font-family: 'Press Start 2P', monospace;
   font-size: 6px;
   color: var(--neon-yellow);
   animation: coinBlink 1.5s step-end infinite;
+  transition: color 0.2s;
 }
 @keyframes coinBlink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
+}
+
+/* The falling coin */
+.coin-drop {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffe44d, #ffc800, #cc9900);
+  border: 2px solid #b8860b;
+  box-shadow: 0 0 8px rgba(255,200,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.2);
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.coin-drop::after {
+  content: '★';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px;
+  color: rgba(255,255,255,0.5);
+}
+.coin-drop.dropping {
+  animation: coinFall 0.6s cubic-bezier(0.4, 0, 0.7, 1) forwards;
+}
+@keyframes coinFall {
+  0% { top: -40px; opacity: 1; transform: translateX(-50%) rotateY(0deg); }
+  60% { top: -2px; opacity: 1; transform: translateX(-50%) rotateY(360deg); }
+  75% { top: -8px; opacity: 1; transform: translateX(-50%) rotateY(540deg) scale(0.8); }
+  90% { top: 0px; opacity: 0.8; transform: translateX(-50%) rotateY(720deg) scale(0.3); }
+  100% { top: 2px; opacity: 0; transform: translateX(-50%) rotateY(720deg) scale(0); }
+}
+
+/* Screen flash overlay */
+.screen-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+.screen-flash.active {
+  animation: screenFlash 0.8s ease-out forwards;
+}
+@keyframes screenFlash {
+  0% { opacity: 0; }
+  15% { opacity: 0.7; }
+  30% { opacity: 0.1; }
+  45% { opacity: 0.5; }
+  60% { opacity: 0.05; }
+  100% { opacity: 0; }
+}
+
+/* Credit text that appears after coin insert */
+.credit-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: var(--neon-green);
+  opacity: 0;
+  margin-top: 2px;
+  pointer-events: none;
+}
+.credit-text.show {
+  animation: creditAppear 0.3s ease-out forwards;
+}
+@keyframes creditAppear {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 /* ============================================================
@@ -559,6 +651,7 @@ a { text-decoration: none; color: inherit; }
 
   <!-- SCREEN -->
   <div class="screen">
+    <div class="screen-flash" id="screenFlash"></div>
     <div class="trust-row">
       <span class="trust-pill">🚫 No Ads</span>
       <span class="trust-pill">📱 Any Device</span>
@@ -607,9 +700,11 @@ a { text-decoration: none; color: inherit; }
       <div class="joy-label">Player 1</div>
     </div>
 
-    <div class="center-panel">
+    <div class="center-panel" id="coinPanel">
+      <div class="coin-drop" id="coin"></div>
       <div class="coin-slot"></div>
-      <div class="insert-coin">INSERT COIN</div>
+      <div class="insert-coin" id="insertText">INSERT COIN</div>
+      <div class="credit-text" id="creditText">CREDIT 1</div>
     </div>
 
     <div class="btn-grid">
@@ -745,6 +840,109 @@ a { text-decoration: none; color: inherit; }
     requestAnimationFrame(draw);
   }
   draw();
+})();
+
+// ============================================================
+// INSERT COIN interaction
+// ============================================================
+(function() {
+  const panel = document.getElementById('coinPanel');
+  const coin = document.getElementById('coin');
+  const insertText = document.getElementById('insertText');
+  const creditText = document.getElementById('creditText');
+  const screenFlash = document.getElementById('screenFlash');
+  let inserting = false;
+
+  // Available games (add more as they go live)
+  const games = [
+    { name: 'Monster Rally', url: 'games/monster-rally/' }
+  ];
+
+  function insertCoin() {
+    if (inserting) return;
+    inserting = true;
+
+    // Play coin drop sound (Web Audio)
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      // Coin clink sound — short metallic ping
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1800, ac.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(3200, ac.currentTime + 0.05);
+      osc.frequency.exponentialRampToValueAtTime(1200, ac.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.15, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.2);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start(ac.currentTime);
+      osc.stop(ac.currentTime + 0.2);
+
+      // Second clink (coin landing)
+      setTimeout(function() {
+        const osc2 = ac.createOscillator();
+        const gain2 = ac.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(2400, ac.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(800, ac.currentTime + 0.1);
+        gain2.gain.setValueAtTime(0.12, ac.currentTime);
+        gain2.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.15);
+        osc2.connect(gain2);
+        gain2.connect(ac.destination);
+        osc2.start(ac.currentTime);
+        osc2.stop(ac.currentTime + 0.15);
+      }, 350);
+    } catch(e) {}
+
+    // Stop blinking, show "dropping"
+    insertText.style.animation = 'none';
+    insertText.textContent = '';
+
+    // Coin falls
+    coin.classList.add('dropping');
+
+    // After coin enters slot
+    setTimeout(function() {
+      // Screen flash
+      screenFlash.classList.add('active');
+
+      // Show CREDIT text
+      creditText.classList.add('show');
+
+      // Change insert text to "LOADING..."
+      setTimeout(function() {
+        insertText.textContent = 'LOADING...';
+        insertText.style.color = '#39ff14';
+        insertText.style.animation = 'coinBlink 0.5s step-end infinite';
+      }, 300);
+
+      // Pick a random game (just Monster Rally for now)
+      const game = games[Math.floor(Math.random() * games.length)];
+
+      // Navigate after the flash
+      setTimeout(function() {
+        window.location.href = game.url;
+      }, 1200);
+    }, 600);
+
+    // Reset if somehow they stay on the page (shouldn't happen)
+    setTimeout(function() {
+      inserting = false;
+      coin.classList.remove('dropping');
+      screenFlash.classList.remove('active');
+      creditText.classList.remove('show');
+      insertText.textContent = 'INSERT COIN';
+      insertText.style.color = '';
+      insertText.style.animation = '';
+    }, 4000);
+  }
+
+  panel.addEventListener('click', insertCoin);
+  panel.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    insertCoin();
+  }, { passive: false });
 })();
 </script>
 </body>
