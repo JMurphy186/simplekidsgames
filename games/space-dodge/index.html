@@ -686,17 +686,39 @@ function drawPowerups() {
       ctx.closePath();
       ctx.fill();
     } else if (p.type === 'shield') {
-      // Shield shape
-      const s = p.r * 0.5;
+      // Proper shield shape
+      const s = p.r * 0.55;
       ctx.beginPath();
       ctx.moveTo(0, -s);
-      ctx.lineTo(s * 0.8, -s * 0.4);
-      ctx.lineTo(s * 0.8, s * 0.3);
-      ctx.quadraticCurveTo(0, s * 1.1, 0, s * 1.1);
-      ctx.quadraticCurveTo(0, s * 1.1, -s * 0.8, s * 0.3);
-      ctx.lineTo(-s * 0.8, -s * 0.4);
+      ctx.lineTo(s * 0.85, -s * 0.55);
+      ctx.lineTo(s * 0.85, s * 0.15);
+      ctx.quadraticCurveTo(s * 0.7, s * 0.8, 0, s * 1.1);
+      ctx.quadraticCurveTo(-s * 0.7, s * 0.8, -s * 0.85, s * 0.15);
+      ctx.lineTo(-s * 0.85, -s * 0.55);
       ctx.closePath();
       ctx.fill();
+      // Inner border
+      ctx.strokeStyle = '#16162C';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -s * 0.7);
+      ctx.lineTo(s * 0.55, -s * 0.35);
+      ctx.lineTo(s * 0.55, s * 0.1);
+      ctx.quadraticCurveTo(s * 0.45, s * 0.55, 0, s * 0.75);
+      ctx.quadraticCurveTo(-s * 0.45, s * 0.55, -s * 0.55, s * 0.1);
+      ctx.lineTo(-s * 0.55, -s * 0.35);
+      ctx.closePath();
+      ctx.stroke();
+      // Checkmark
+      ctx.strokeStyle = '#16162C';
+      ctx.lineWidth = 2.5 * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.25, s * 0.05);
+      ctx.lineTo(-s * 0.05, s * 0.3);
+      ctx.lineTo(s * 0.3, -s * 0.2);
+      ctx.stroke();
     }
 
     ctx.restore();
@@ -777,7 +799,7 @@ function drawLives() {
   const shipH = 22 * scale;
   const gap = 6 * scale;
   const startX = 14 + shipW / 2;
-  const startY = 8;
+  const startY = 14;
 
   // "LIVES" label
   ctx.fillStyle = 'rgba(100,200,255,0.6)';
@@ -787,7 +809,7 @@ function drawLives() {
 
   for (let i = 0; i < MAX_LIVES; i++) {
     const x = startX + i * (shipW + gap);
-    const y = startY + 6 * scale + shipH / 2;
+    const y = startY + 8 * scale + shipH / 2;
     const alive = i < lives;
     drawMiniShip(x, y, shipW, shipH, alive);
   }
@@ -898,60 +920,73 @@ function drawMiniShip(x, y, w, h, alive) {
 function drawHUD() {
   drawLives();
 
-  // Score
+  // Score (left of pause button)
   ctx.fillStyle = '#fff';
   ctx.font = `bold ${Math.round(22 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'right';
-  ctx.fillText(score, W - 14, 32 * scale);
+  ctx.fillText(score, W - 56 * scale, 30 * scale);
 
   // Best (endless only)
   if (gameMode === 'endless' && bestScore > 0) {
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `${Math.round(13 * scale)}px Arial, sans-serif`;
+    ctx.font = `${Math.round(11 * scale)}px Arial, sans-serif`;
     ctx.textAlign = 'right';
-    ctx.fillText('BEST ' + bestScore, W - 14, 50 * scale);
+    ctx.fillText('BEST ' + bestScore, W - 56 * scale, 44 * scale);
   }
 
-  // Campaign: world name + progress bar
+  // Campaign: world name + progress bar (Monster Rally style)
   if (gameMode === 'campaign') {
     const w = WORLDS[currentWorld];
-    const barW = Math.min(220, W * 0.3) * scale;
-    const barH = 12 * scale;
+    const barW = Math.min(260, W * 0.35) * scale;
+    const barH = 10 * scale;
     const barX = (W - barW) / 2;
-    const barY = 12;
+    const barY = 10;
     const progress = Math.min(worldProgress / w.threshold, 1);
 
-    // World label
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = `bold ${Math.round(11 * scale)}px Arial, sans-serif`;
+    // World label — accent colored, bold, like Monster Rally level titles
+    ctx.fillStyle = w.accent;
+    ctx.font = `bold ${Math.round(13 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(`WORLD ${currentWorld + 1}: ${w.name}`, W / 2, barY + barH + 14 * scale);
+    ctx.fillText(`WORLD ${currentWorld + 1}: ${w.name}`, W / 2, barY + barH + 18 * scale);
+
+    // Bar container with subtle border
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(barX - 2, barY - 2, barW + 4, barH + 4, barH / 2 + 2);
+    ctx.fill();
 
     // Bar background
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
     ctx.beginPath();
     ctx.roundRect(barX, barY, barW, barH, barH / 2);
     ctx.fill();
 
-    // Bar fill
+    // Bar fill with gradient
     if (progress > 0) {
-      const grad = ctx.createLinearGradient(barX, 0, barX + barW * progress, 0);
+      const fillW = Math.max(barH, barW * progress); // minimum pill shape
+      const grad = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
       grad.addColorStop(0, w.accent);
       grad.addColorStop(1, '#fff');
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, barW * progress, barH, barH / 2);
+      ctx.roundRect(barX, barY, fillW, barH, barH / 2);
       ctx.fill();
     }
 
-    // Bar glow when nearly full
+    // Percentage text inside bar
+    ctx.fillStyle = progress > 0.15 ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.4)';
+    ctx.font = `bold ${Math.round(7 * scale)}px Arial, sans-serif`;
+    ctx.fillText(Math.round(progress * 100) + '%', W / 2, barY + barH - 2);
+
+    // Bar glow pulse when nearly full
     if (progress > 0.8) {
       ctx.shadowColor = w.accent;
-      ctx.shadowBlur = 8 + Math.sin(Date.now() / 200) * 4;
-      ctx.fillStyle = 'transparent';
+      ctx.shadowBlur = 10 + Math.sin(Date.now() / 150) * 6;
+      ctx.strokeStyle = w.accent;
+      ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.roundRect(barX, barY, barW * progress, barH, barH / 2);
-      ctx.fill();
+      ctx.stroke();
       ctx.shadowBlur = 0;
     }
   }
