@@ -4152,10 +4152,10 @@ function drawPlayerTruck(p) {
   }
 
   // Shadow — drawn BEFORE rotation so it stays flat on the ground
-  // For SVG trucks, wheels extend well below the collision box — shadow must be lower
   if (Math.abs(p.flipAngle) < 0.5) {
     const isSvg = colors.renderMode === 'svg';
-    const shadowY = GROUND_Y + 8;
+    // SVG trucks: wheel bottoms are at ty+th-2 (from drawTruckHD groundOffset)
+    const shadowY = isSvg ? (p.groundY + tk.h - 2) : (GROUND_Y + 8);
     const shadowW = isSvg ? tk.w / 2 + 12 : tk.w / 2 + 5;
     const shadowAlpha = tk.grounded ? 0.25 : Math.max(0.05, 0.25 - (GROUND_Y - tk.y) * 0.003);
     ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
