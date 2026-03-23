@@ -412,8 +412,13 @@ function createPlayer(truckIdx, groundOffset) {
     truck: { x: 140, y: gndY, w: 90, h: 50, vy: 0, grounded: true, jumping: false, slamming: false, squish: 0, tilt: 0 },
     jumpPressed: false, jumpHeld: false,
     airborneFrames: 0, flipAngle: 0, flipInProgress: false, flipsCompleted: 0, flipStarted: false,
-    // Power-up state
-    activePowerUp: null, powerUpTimer: 0, megaScale: 1.0,
+    // Power-up state (stackable — each has independent timer)
+    turboActive: false, turboTimer: 0,
+    megaActive: false, megaTimer: 0, megaScale: 1.0,
+    magnetActive: false, magnetTimer: 0,
+    superJumpActive: false, superJumpTimer: 0,
+    // Legacy compat (kept for any remaining references)
+    activePowerUp: null, powerUpTimer: 0,
     // Tire tracks
     tireTracks: []
   };
@@ -1107,6 +1112,13 @@ function initGame() {
     campaignMaxSpeedReached = false;
     campaignCountdown = 0;
     campaignMaxSpeedFlash = 0;
+    // Clear all power-up timers on level transition
+    for (const p of players) {
+      p.turboActive = false; p.turboTimer = 0;
+      p.megaActive = false; p.megaTimer = 0; p.megaScale = 1.0;
+      p.magnetActive = false; p.magnetTimer = 0;
+      p.superJumpActive = false; p.superJumpTimer = 0;
+    }
     levelStats = { stars: 0, crushes: 0, flips: 0, score: 0 };
     // Init rain for stormy highway
     raindrops = [];
@@ -1883,6 +1895,11 @@ function spawnPowerUp() {
   let pool = POWERUP_TYPES;
   if (gameMode === 'frenzy') {
     pool = POWERUP_TYPES.filter(p => p.effect === 'mega' || p.effect === 'turbo');
+  }
+  // During MAX SPEED countdown, suppress Turbo Boost spawns (auto-turbo is active)
+  if (campaignMaxSpeedReached && campaignCountdown > 0) {
+    pool = pool.filter(p => p.effect !== 'turbo');
+    if (pool.length === 0) return; // all filtered out, skip this spawn
   }
   const type = pool[Math.floor(Math.random() * pool.length)];
   powerUps.push({
@@ -3504,7 +3521,7 @@ function getGravity() {
 function getEffectiveSpeed() {
   // Turbo boost: increase speed by 40%
   for (const p of players) {
-    if (p.activePowerUp && p.activePowerUp.effect === 'turbo') return gameSpeed * 1.4;
+    if (p.turboActive) return gameSpeed * 1.4;
   }
   return gameSpeed;
 }
@@ -3516,7 +3533,7 @@ function updatePlayer(p) {
 
   // Jump (Super Jump = 1.8x force)
   if (p.jumpPressed && tk.grounded) {
-    const jumpMult = (p.activePowerUp && p.activePowerUp.effect === 'superjump') ? 1.8 : 1.0;
+    const jumpMult = (p.superJumpActive) ? 1.8 : 1.0;
     tk.vy = JUMP_FORCE * jumpMult;
     tk.grounded = false;
     tk.jumping = true;
@@ -3531,7 +3548,7 @@ function updatePlayer(p) {
   }
 
   // Mega truck scale
-  if (p.activePowerUp && p.activePowerUp.effect === 'mega') {
+  if (p.megaActive) {
     p.megaScale = Math.min(2.0, p.megaScale + 0.05);
   } else {
     p.megaScale = Math.max(1.0, p.megaScale - 0.05);
@@ -3599,11 +3616,11 @@ function updatePlayer(p) {
   // Combo timer
   if (p.comboTimer > 0) { p.comboTimer--; if (p.comboTimer <= 0) p.combo = 0; }
 
-  // Power-up timer
-  if (p.activePowerUp) {
-    p.powerUpTimer--;
-    if (p.powerUpTimer <= 0) { p.activePowerUp = null; }
-  }
+  // Power-up timers (stackable — each counts down independently)
+  if (p.turboActive) { p.turboTimer--; if (p.turboTimer <= 0) p.turboActive = false; }
+  if (p.megaActive) { p.megaTimer--; if (p.megaTimer <= 0) p.megaActive = false; }
+  if (p.magnetActive) { p.magnetTimer--; if (p.magnetTimer <= 0) p.magnetActive = false; }
+  if (p.superJumpActive) { p.superJumpTimer--; if (p.superJumpTimer <= 0) p.superJumpActive = false; }
 
   // Tire tracks
   if (tk.grounded && Math.random() > 0.6) {
@@ -3620,7 +3637,7 @@ function updatePlayer(p) {
 
   // Obstacle collision — sync global combo for particle text display
   combo = p.combo;
-  const isMega = p.activePowerUp && p.activePowerUp.effect === 'mega';
+  const isMega = p.megaActive;
   const pointsMult = isMega ? 2 : 1;
 
   for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -3660,8 +3677,8 @@ function updatePlayer(p) {
   }
 
   // Star collision + magnet
-  const hasMagnet = p.activePowerUp && p.activePowerUp.effect === 'magnet';
-  const hasSuperJump = p.activePowerUp && p.activePowerUp.effect === 'superjump';
+  const hasMagnet = p.magnetActive;
+  const hasSuperJump = p.superJumpActive;
   for (let i = stars.length - 1; i >= 0; i--) {
     const s = stars[i];
     if (s.collected) continue;
@@ -3694,8 +3711,12 @@ function updatePlayer(p) {
     const dy = (tk.y + tk.h / 2) - pu.y;
     if (Math.sqrt(dx * dx + dy * dy) < 40) {
       pu.collected = true;
-      p.activePowerUp = pu.type;
-      p.powerUpTimer = pu.type.duration;
+      // Stackable: activate the specific power-up timer
+      const eff = pu.type.effect;
+      if (eff === 'turbo') { p.turboActive = true; p.turboTimer = pu.type.duration; }
+      else if (eff === 'mega') { p.megaActive = true; p.megaTimer = pu.type.duration; }
+      else if (eff === 'magnet') { p.magnetActive = true; p.magnetTimer = pu.type.duration; }
+      else if (eff === 'superjump') { p.superJumpActive = true; p.superJumpTimer = pu.type.duration; }
       playSound('powerup');
       flashTimer = 8; flashColor = pu.type.color;
       screenShake = 5;
@@ -3754,6 +3775,11 @@ function update() {
       campaignMaxSpeedReached = true;
       campaignCountdown = (lvl.countdownSecs || 60) * 60; // per-level countdown
       campaignMaxSpeedFlash = 1;
+      // Auto-turbo for all players during MAX SPEED countdown
+      for (const p of players) {
+        p.turboActive = true;
+        p.turboTimer = campaignCountdown; // full countdown duration
+      }
     }
 
     // Campaign 60s countdown at max speed
@@ -3970,25 +3996,29 @@ function drawPlayerHUD(p, side) {
     ctx.globalAlpha = 1;
   }
 
-  // Power-up timer bar + icon
-  if (p.activePowerUp) {
-    const iconR = 12;
+  // Power-up timer bars (stackable — show all active)
+  const puList = [];
+  if (p.turboActive) puList.push({ effect: 'turbo', timer: p.turboTimer, dur: 240, color: '#ff4400', name: 'TURBO' });
+  if (p.megaActive) puList.push({ effect: 'mega', timer: p.megaTimer, dur: 300, color: '#ff8800', name: 'MEGA' });
+  if (p.magnetActive) puList.push({ effect: 'magnet', timer: p.magnetTimer, dur: 480, color: '#4488ff', name: 'MAGNET' });
+  if (p.superJumpActive) puList.push({ effect: 'superjump', timer: p.superJumpTimer, dur: 480, color: '#8855ff', name: 'JUMP' });
+  for (let pi = 0; pi < puList.length; pi++) {
+    const pu = puList[pi];
+    const rowY = 69 + pi * 16;
+    const iconR = 8;
     const iconX = isLeft ? x + iconR : x + 150 - iconR;
-    const barX = isLeft ? x + iconR * 2 + 4 : x + 60;
-    const barW = 70;
-    const pct = p.powerUpTimer / p.activePowerUp.duration;
-    // Mini icon
-    ctx.save(); ctx.translate(iconX, 74);
-    drawPowerUpIcon(p.activePowerUp.effect, iconR);
+    const barX = isLeft ? x + iconR * 2 + 4 : x + 50;
+    const barW = 60;
+    const pct = Math.max(0, pu.timer / pu.dur);
+    ctx.save(); ctx.translate(iconX, rowY + 5);
+    drawPowerUpIcon(pu.effect, iconR);
     ctx.restore();
-    // Timer bar
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.beginPath(); ctx.roundRect(barX, 69, barW, 10, 5); ctx.fill();
-    ctx.fillStyle = p.activePowerUp.color;
-    ctx.beginPath(); ctx.roundRect(barX, 69, barW * pct, 10, 5); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = '8px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(p.activePowerUp.name, barX + barW / 2, 77);
+    ctx.beginPath(); ctx.roundRect(barX, rowY, barW, 10, 5); ctx.fill();
+    ctx.fillStyle = pu.color;
+    ctx.beginPath(); ctx.roundRect(barX, rowY, barW * pct, 10, 5); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = '7px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(pu.name, barX + barW / 2, rowY + 8);
   }
 
   ctx.textAlign = 'left';
@@ -4310,7 +4340,7 @@ function draw() {
     // Turbo Boost speed lines + Super Jump trail
     if (gameState === 'playing') {
       for (const p of players) {
-        if (p.activePowerUp && p.activePowerUp.effect === 'turbo') {
+        if (p.turboActive) {
           ctx.globalAlpha = 0.15 + Math.random() * 0.1;
           ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
           for (let sl = 0; sl < 4; sl++) {
@@ -4319,7 +4349,7 @@ function draw() {
           }
           ctx.globalAlpha = 1;
         }
-        if (p.activePowerUp && p.activePowerUp.effect === 'superjump') {
+        if (p.superJumpActive) {
           // Purple glow trail behind truck
           const tk = p.truck;
           for (let t = 1; t <= 4; t++) {
