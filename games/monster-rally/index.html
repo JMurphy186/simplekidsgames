@@ -1308,7 +1308,8 @@ function drawPickerScreen() {
 
     // Draw vehicle preview using unified function
     ctx.save();
-    ctx.translate(r.x + r.w / 2, r.y + 50);
+    const previewY = t.renderMode === 'svg' ? r.y + 65 : r.y + 50;
+    ctx.translate(r.x + r.w / 2, previewY);
     ctx.scale(1.2, 1.2);
     drawVehiclePreview(-45, -25, t, false, 0, r.idx);
     ctx.restore();
