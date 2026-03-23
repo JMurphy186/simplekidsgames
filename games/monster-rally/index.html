@@ -2866,10 +2866,11 @@ function drawTruckHD(tx, ty, tw, th, showExhaust, squishY, assets, flameOuter, f
   const fullW = m.viewBoxW * scale;
   const fullH = m.viewBoxH * scale;
   const drawX = tx - m.bodyMinX * scale;
-  // Position SVG so wheel bottoms align with visual ground (GROUND_Y + 8)
-  // When grounded: ty = GROUND_Y, so we want wheelBottom at GROUND_Y + 8
+  // Position SVG so wheel bottoms align with visual ground line
+  // When grounded: ty = GROUND_Y, wheel bottoms should touch GROUND_Y
   const wheelBottomInSvg = m.wheelCY + m.wheelR; // e.g. 310 for Pro, 207 for Classic
-  const drawY = (ty + th + 8) - wheelBottomInSvg * scale + squishY;
+  const groundOffset = ty + th - 2; // visual ground contact point
+  const drawY = groundOffset - wheelBottomInSvg * scale + squishY;
 
   // Exhaust pipe position (from svgMeta, or estimated)
   const exSvgX = m.exhaustX || (m.bodyMinX + 10);
