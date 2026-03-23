@@ -155,6 +155,21 @@ let countdownNum = 3;
 let levelScore = 0; // score earned in current world
 let levelBlasted = 0; // asteroids blasted in current world
 
+// Power-up state
+let powerups = []; // floating pickups on screen
+let powerupSpawnTimer = 0;
+const POWERUP_SPAWN_INTERVAL = 600; // ~10 seconds
+const POWERUP_RADIUS = 18;
+// Plasma Laser
+let plasmaActive = false;
+let plasmaTimer = 0;
+const PLASMA_DURATION = 480; // 8 seconds at 60fps
+const PLASMA_FIRE_RATE = 12; // much faster than normal 28
+const PLASMA_WIDTH = 8;
+const PLASMA_HEIGHT = 22;
+// Energy Shield
+let shieldActive = false;
+
 // --- INPUT ---
 let keys = {};
 let touchX = null;
@@ -264,6 +279,23 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.2, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
       osc.start(t); osc.stop(t + 0.25);
+      break;
+    case 'powerup':
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.setValueAtTime(900, t + 0.08);
+      osc.frequency.setValueAtTime(1200, t + 0.16);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
+      break;
+    case 'shieldbreak':
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(500, t);
+      osc.frequency.exponentialRampToValueAtTime(150, t + 0.25);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
       break;
   }
 }
@@ -481,11 +513,13 @@ function drawParticles() {
 
 // --- BLASTERS ---
 function spawnBlaster() {
+  const isPlasma = plasmaActive;
   blasters.push({
     x: ship.x,
     y: ship.y - ship.h / 2,
-    w: BLASTER_WIDTH * scale,
-    h: BLASTER_HEIGHT * scale
+    w: (isPlasma ? PLASMA_WIDTH : BLASTER_WIDTH) * scale,
+    h: (isPlasma ? PLASMA_HEIGHT : BLASTER_HEIGHT) * scale,
+    plasma: isPlasma
   });
   playSound('blaster');
 }
@@ -493,7 +527,7 @@ function spawnBlaster() {
 function updateBlasters() {
   for (let i = blasters.length - 1; i >= 0; i--) {
     const b = blasters[i];
-    b.y -= BLASTER_SPEED * scale;
+    b.y -= (b.plasma ? BLASTER_SPEED * 1.3 : BLASTER_SPEED) * scale;
     if (b.y + b.h < 0) { blasters.splice(i, 1); continue; }
 
     // Check collision with asteroids
@@ -511,8 +545,11 @@ function updateBlasters() {
         if (gameMode === 'campaign') worldProgress += BLAST_PROGRESS;
         if (score % 50 === 0) playSound('score');
         asteroids.splice(j, 1);
-        blasters.splice(i, 1);
-        break;
+        // Plasma pierces — don't destroy the bolt
+        if (!b.plasma) {
+          blasters.splice(i, 1);
+          break;
+        }
       }
     }
   }
@@ -520,18 +557,221 @@ function updateBlasters() {
 
 function drawBlasters() {
   for (const b of blasters) {
-    // Glowing pellet
-    ctx.shadowColor = '#42A5F5';
-    ctx.shadowBlur = 8;
-    const grad = ctx.createLinearGradient(b.x, b.y - b.h / 2, b.x, b.y + b.h / 2);
-    grad.addColorStop(0, '#90caf9');
-    grad.addColorStop(0.5, '#42A5F5');
-    grad.addColorStop(1, '#1565C0');
-    ctx.fillStyle = grad;
+    if (b.plasma) {
+      // Plasma beam — wider, cyan glow, energy rings
+      ctx.shadowColor = '#00E5FF';
+      ctx.shadowBlur = 12;
+      // Outer aura
+      ctx.fillStyle = 'rgba(0,176,255,0.3)';
+      ctx.beginPath();
+      ctx.roundRect(b.x - b.w * 0.8, b.y - b.h / 2, b.w * 1.6, b.h, b.w);
+      ctx.fill();
+      // Core
+      const grad = ctx.createLinearGradient(b.x, b.y - b.h / 2, b.x, b.y + b.h / 2);
+      grad.addColorStop(0, '#FFFFFF');
+      grad.addColorStop(0.5, '#E0F7FA');
+      grad.addColorStop(1, '#00E5FF');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, b.w / 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    } else {
+      // Standard blaster
+      ctx.shadowColor = '#42A5F5';
+      ctx.shadowBlur = 8;
+      const grad = ctx.createLinearGradient(b.x, b.y - b.h / 2, b.x, b.y + b.h / 2);
+      grad.addColorStop(0, '#90caf9');
+      grad.addColorStop(0.5, '#42A5F5');
+      grad.addColorStop(1, '#1565C0');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, b.w / 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+// --- POWER-UPS ---
+const POWERUP_TYPES = [
+  { id: 'plasma', label: 'PLASMA', color: '#00E5FF', icon: 'bolt' },
+  { id: 'shield', label: 'SHIELD', color: '#69F0AE', icon: 'shield' },
+];
+
+function spawnPowerup() {
+  const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+  const r = POWERUP_RADIUS * scale;
+  powerups.push({
+    x: r + Math.random() * (W - r * 2),
+    y: -r * 2,
+    r: r,
+    speed: 1.5 + Math.random() * 0.5,
+    type: type.id,
+    color: type.color,
+    bob: Math.random() * Math.PI * 2
+  });
+}
+
+function updatePowerups() {
+  // Spawn timer
+  powerupSpawnTimer++;
+  if (powerupSpawnTimer >= POWERUP_SPAWN_INTERVAL) {
+    spawnPowerup();
+    powerupSpawnTimer = 0;
+  }
+
+  // Plasma timer
+  if (plasmaActive) {
+    plasmaTimer--;
+    if (plasmaTimer <= 0) { plasmaActive = false; }
+  }
+
+  // Move and collect
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    p.y += p.speed;
+    p.bob += 0.05;
+
+    // Off screen
+    if (p.y > H + p.r * 2) { powerups.splice(i, 1); continue; }
+
+    // Collection — circle vs ship ellipse
+    const dx = p.x - ship.x;
+    const dy = p.y - ship.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < p.r + ship.w * 0.4) {
+      // Collected!
+      playSound('powerup');
+      if (p.type === 'plasma') {
+        plasmaActive = true;
+        plasmaTimer = PLASMA_DURATION;
+      } else if (p.type === 'shield') {
+        shieldActive = true;
+      }
+      // Collect particles
+      for (let j = 0; j < 8; j++) {
+        const a = Math.random() * Math.PI * 2;
+        particles.push({
+          x: p.x, y: p.y,
+          vx: Math.cos(a) * 3, vy: Math.sin(a) * 3,
+          life: 20, maxLife: 20,
+          size: 2 + Math.random() * 2,
+          color: p.color
+        });
+      }
+      powerups.splice(i, 1);
+    }
+  }
+}
+
+function drawPowerups() {
+  for (const p of powerups) {
+    ctx.save();
+    const bobY = Math.sin(p.bob) * 3;
+    ctx.translate(p.x, p.y + bobY);
+
+    // Outer glow circle
+    ctx.globalAlpha = 0.2 + Math.sin(p.bob * 2) * 0.1;
+    ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.roundRect(b.x - b.w / 2, b.y - b.h / 2, b.w, b.h, b.w / 2);
+    ctx.arc(0, 0, p.r * 1.4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+
+    // Inner circle
+    ctx.fillStyle = '#16162C';
+    ctx.beginPath();
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Border
+    ctx.strokeStyle = p.color;
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Icon
+    ctx.fillStyle = p.color;
+    if (p.type === 'plasma') {
+      // Lightning bolt
+      const s = p.r * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(s * 0.3, -s);
+      ctx.lineTo(-s * 0.4, s * 0.1);
+      ctx.lineTo(s * 0.05, s * 0.1);
+      ctx.lineTo(-s * 0.3, s);
+      ctx.lineTo(s * 0.4, -s * 0.1);
+      ctx.lineTo(-s * 0.05, -s * 0.1);
+      ctx.closePath();
+      ctx.fill();
+    } else if (p.type === 'shield') {
+      // Shield shape
+      const s = p.r * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s * 0.8, -s * 0.4);
+      ctx.lineTo(s * 0.8, s * 0.3);
+      ctx.quadraticCurveTo(0, s * 1.1, 0, s * 1.1);
+      ctx.quadraticCurveTo(0, s * 1.1, -s * 0.8, s * 0.3);
+      ctx.lineTo(-s * 0.8, -s * 0.4);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawShieldEffect() {
+  if (!shieldActive) return;
+  ctx.save();
+  ctx.translate(ship.x, ship.y);
+  const r = ship.w * 0.8;
+  const pulse = Math.sin(frameCount * 0.1) * 0.15;
+  // Bubble
+  ctx.globalAlpha = 0.15 + pulse;
+  ctx.fillStyle = '#69F0AE';
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Ring
+  ctx.globalAlpha = 0.5 + pulse;
+  ctx.strokeStyle = '#69F0AE';
+  ctx.lineWidth = 2 * scale;
+  ctx.setLineDash([8, 4]);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawPowerupHUD() {
+  let hudY = H - 16 * scale;
+  const hudX = 14;
+  ctx.textAlign = 'left';
+
+  if (plasmaActive) {
+    const pct = plasmaTimer / PLASMA_DURATION;
+    const barW = 60 * scale;
+    const barH = 6 * scale;
+    ctx.fillStyle = '#00E5FF';
+    ctx.font = `bold ${Math.round(10 * scale)}px Arial, sans-serif`;
+    ctx.fillText('⚡ PLASMA', hudX, hudY - barH - 4);
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(hudX, hudY - barH, barW, barH);
+    ctx.fillStyle = '#00E5FF';
+    ctx.fillRect(hudX, hudY - barH, barW * pct, barH);
+    hudY -= 24 * scale;
+  }
+
+  if (shieldActive) {
+    ctx.fillStyle = '#69F0AE';
+    ctx.font = `bold ${Math.round(10 * scale)}px Arial, sans-serif`;
+    ctx.fillText('🛡️ SHIELD', hudX, hudY);
   }
 }
 
@@ -1241,6 +1481,11 @@ function resetPlayState() {
   blasters = [];
   blasterTimer = 0;
   particles = [];
+  powerups = [];
+  powerupSpawnTimer = 0;
+  plasmaActive = false;
+  plasmaTimer = 0;
+  shieldActive = false;
   invincibleTimer = 0;
   wobbleTimer = 0;
   spawnTimer = 0;
@@ -1595,7 +1840,8 @@ function update() {
 
   // Auto-fire blasters
   blasterTimer++;
-  if (blasterTimer >= BLASTER_FIRE_RATE) {
+  const fireRate = plasmaActive ? PLASMA_FIRE_RATE : BLASTER_FIRE_RATE;
+  if (blasterTimer >= fireRate) {
     spawnBlaster();
     blasterTimer = 0;
   }
@@ -1639,21 +1885,35 @@ function update() {
 
     // Collision
     if (invincibleTimer <= 0 && checkCollision(a)) {
-      lives--;
-      spawnHitParticles(a.x, a.y);
-      playSound('hit');
-      asteroids.splice(i, 1);
-
-      if (lives <= 0) {
-        gameState = 'gameover';
-        playSound('lose');
-        if (score > bestScore) {
-          bestScore = score;
-          localStorage.setItem('sd_best', bestScore.toString());
+      if (shieldActive) {
+        // Shield absorbs the hit!
+        shieldActive = false;
+        spawnHitParticles(a.x, a.y);
+        playSound('shieldbreak');
+        asteroids.splice(i, 1);
+        invincibleTimer = 30; // brief invincibility after shield break
+        // Green shield break particles
+        for (let p = 0; p < 10; p++) {
+          const ang = Math.random() * Math.PI * 2;
+          particles.push({ x: ship.x, y: ship.y, vx: Math.cos(ang) * 4, vy: Math.sin(ang) * 4, life: 25, maxLife: 25, size: 3, color: '#69F0AE' });
         }
       } else {
-        invincibleTimer = INVINCIBLE_DURATION;
-        wobbleTimer = WOBBLE_DURATION;
+        lives--;
+        spawnHitParticles(a.x, a.y);
+        playSound('hit');
+        asteroids.splice(i, 1);
+
+        if (lives <= 0) {
+          gameState = 'gameover';
+          playSound('lose');
+          if (score > bestScore) {
+            bestScore = score;
+            localStorage.setItem('sd_best', bestScore.toString());
+          }
+        } else {
+          invincibleTimer = INVINCIBLE_DURATION;
+          wobbleTimer = WOBBLE_DURATION;
+        }
       }
     }
   }
@@ -1665,6 +1925,7 @@ function update() {
     playSound('levelup');
   }
 
+  updatePowerups();
   updateBlasters();
   updateParticles();
 }
@@ -1682,10 +1943,13 @@ function draw() {
   // Playing
   drawWorldBackground();
   for (const a of asteroids) drawAsteroid(a);
+  drawPowerups();
   drawBlasters();
   drawShip(ship.x, ship.y, ship.w, ship.h, wobbleTimer);
+  drawShieldEffect();
   drawParticles();
   drawHUD();
+  drawPowerupHUD();
   drawPauseButton();
 }
 
