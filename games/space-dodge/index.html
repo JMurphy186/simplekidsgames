@@ -67,11 +67,6 @@ const TARGET_FPS = 60;
 const FRAME_TIME = 1000 / TARGET_FPS;
 const SHIP_WIDTH = 52;
 const SHIP_HEIGHT = 64;
-const BASE_ASTEROID_SPEED = 2.0;
-const SPEED_INCREMENT = 0.0008; // per frame
-const SPAWN_INTERVAL_START = 55; // frames between spawns
-const SPAWN_INTERVAL_MIN = 18;
-const SPAWN_INTERVAL_DECREMENT = 0.015;
 const INVINCIBLE_DURATION = 120; // frames (~2s)
 const WOBBLE_DURATION = 30; // frames
 const MAX_LIVES = 3;
@@ -80,6 +75,17 @@ const BLASTER_FIRE_RATE = 28; // frames between shots (~0.47s)
 const BLASTER_SPEED = 7;
 const BLASTER_WIDTH = 4;
 const BLASTER_HEIGHT = 14;
+const BLAST_PROGRESS = 3; // progress per blasted asteroid
+const DODGE_PROGRESS = 1; // progress per dodged asteroid
+
+// --- WORLDS ---
+const WORLDS = [
+  { name: 'DEEP SPACE',     bg: '#0a0a2e', starColor: [255,255,255], accent: '#42A5F5', baseSpeed: 2.0, spawnStart: 55, spawnMin: 28, speedInc: 0.0006, spawnDec: 0.012, threshold: 50 },
+  { name: 'NEBULA',         bg: '#1a0a2e', starColor: [224,176,255], accent: '#CE93D8', baseSpeed: 2.2, spawnStart: 50, spawnMin: 24, speedInc: 0.0007, spawnDec: 0.013, threshold: 80 },
+  { name: 'ASTEROID BELT',  bg: '#1a1008', starColor: [255,204,128], accent: '#FFB74D', baseSpeed: 2.4, spawnStart: 45, spawnMin: 20, speedInc: 0.0008, spawnDec: 0.014, threshold: 120 },
+  { name: 'ICE FIELD',      bg: '#0a1a2e', starColor: [179,229,252], accent: '#4FC3F7', baseSpeed: 2.6, spawnStart: 42, spawnMin: 18, speedInc: 0.0009, spawnDec: 0.015, threshold: 160 },
+  { name: 'SUPERNOVA',      bg: '#2e0a0a', starColor: [255,205,210], accent: '#FF8A65', baseSpeed: 2.8, spawnStart: 38, spawnMin: 15, speedInc: 0.001,  spawnDec: 0.016, threshold: 200 },
+];
 
 // --- SVG SHIP ASSET ---
 const SHIP_SVG_B64 = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDAgNDAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJvZHlHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMEUwRTAiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjOUU5RTlFIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJibHVlQWNjZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyOTYyRkYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMEQ0N0ExIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJyZWRBY2NlbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGNTI1MiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNEMzJGMkYiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndpbmRvd0dyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjODFENEZBIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAyNzdCRCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCwgLTEwKSI+CiAgICA8cGF0aCBkPSJNIDEwMCAyMzAgTCA0MCAzMjAgTCA5MCAzMTAgTCAxMTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSA0MCAzMjAgTCA5MCAzMTAgTCA2NSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAyMDAgMjMwIEwgMjYwIDMyMCBMIDIxMCAzMTAgTCAxOTAgMjYwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAyNjAgMzIwIEwgMjEwIDMxMCBMIDIzNSAzMDAgWiIgZmlsbD0iI0I3MUMxQyIvPgogICAgPHBhdGggZD0iTSAxNTAgNTAgQyA5MCAxMjAgODAgMjIwIDkwIDMwMCBRIDE1MCAzMjAgMjEwIDMwMCBDIDIyMCAyMjAgMjEwIDEyMCAxNTAgNTAgWiIgZmlsbD0idXJsKCNib2R5R3JhZCkiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDYwIEMgMTEwIDEzMCAxMDAgMjIwIDExMCAyOTAgUSAxMzAgMjk1IDE1MCAyOTUgWiIgZmlsbD0idXJsKCNibHVlQWNjZW50KSIvPgogICAgPHBhdGggZD0iTSAxNTAgNjAgQyAxOTAgMTMwIDIwMCAyMjAgMTkwIDI5MCBRIDE3MCAyOTUgMTUwIDI5NSBaIiBmaWxsPSJ1cmwoI2JsdWVBY2NlbnQpIi8+CiAgICA8cGF0aCBkPSJNIDE0NSA3MCBMIDE1NSA3MCBMIDE2MCAyOTUgTCAxNDAgMjk1IFoiIGZpbGw9IiNFMEUwRTAiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDcwIEwgMTU1IDcwIEwgMTYwIDI5NSBMIDE1MCAyOTUgWiIgZmlsbD0iI0ZGRkZGRiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjM1IiBmaWxsPSIjNDI0MjQyIi8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjMwIiBmaWxsPSIjNzU3NTc1Ii8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxNjAiIHI9IjI2IiBmaWxsPSJ1cmwoI3dpbmRvd0dyYWQpIi8+CiAgICA8cGF0aCBkPSJNIDEzNSAxNDUgQSAyMCAyMCAwIDAgMSAxNjUgMTQ1IEEgMTUgMTUgMCAwIDAgMTM1IDE0NSBaIiBmaWxsPSIjRkZGRkZGIiBvcGFjaXR5PSIwLjYiLz4KICAgIDxyZWN0IHg9IjEwMCIgeT0iMjIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYiIGZpbGw9IiNGRkZGRkYiIHJ4PSIzIi8+CiAgICA8cGF0aCBkPSJNIDExNSAzMDAgUSAxNTAgMzE1IDE4NSAzMDAgTCAxNzUgMzE1IFEgMTUwIDMyNSAxMjUgMzE1IFoiIGZpbGw9IiM0MjQyNDIiLz4KICAgIDxyZWN0IHg9IjEzNSIgeT0iMzA1IiB3aWR0aD0iMzAiIGhlaWdodD0iNSIgZmlsbD0iIzIxMjEyMSIvPgogICAgPHBhdGggZD0iTSAxMTUgMTIwIEMgMTI1IDExNSAxNDAgMTEwIDE1MCAxMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY0QjVGNiIgc3Ryb2tlLXdpZHRoPSIyIiBvcGFjaXR5PSIwLjUiLz4KICAgIDxwYXRoIGQ9Ik0gMTg1IDEyMCBDIDE3NSAxMTUgMTYwIDExMCAxNTAgMTEwIiBmaWxsPSJub25lIiBzdHJva2U9IiM2NEI1RjYiIHN0cm9rZS13aWR0aD0iMiIgb3BhY2l0eT0iMC41Ii8+CiAgICA8cGF0aCBkPSJNIDExMCAyNjAgTCAxNDAgMjYwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxNTY1QzAiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPHBhdGggZD0iTSAxOTAgMjYwIEwgMTYwIDI2MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTU2NUMwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik0gMTUwIDUwIEMgMTQwIDcwIDEzNSA5MCAxMzUgOTAgQyAxNDUgODUgMTU1IDg1IDE2NSA5MCBDIDE2NSA5MCAxNjAgNzAgMTUwIDUwIFoiIGZpbGw9InVybCgjcmVkQWNjZW50KSIvPgogIDwvZz4KPC9zdmc+Cg==';
@@ -100,7 +106,8 @@ asteroidImg.onload = () => { asteroidImgReady = true; };
 
 // --- GAME STATE ---
 let W, H, scale;
-let gameState = 'title'; // title | playing | gameover
+let gameState = 'title'; // title | worldtitle | countdown | playing | levelcomplete | victory | gameover
+let gameMode = 'campaign'; // campaign | endless
 let ship = {};
 let asteroids = [];
 let blasters = [];
@@ -112,12 +119,22 @@ let lives = MAX_LIVES;
 let invincibleTimer = 0;
 let wobbleTimer = 0;
 let spawnTimer = 0;
-let spawnInterval = SPAWN_INTERVAL_START;
-let currentSpeed = BASE_ASTEROID_SPEED;
+let spawnInterval = 55;
+let currentSpeed = 2.0;
 let frameCount = 0;
 let bestScore = parseInt(localStorage.getItem('sd_best') || '0');
+let endlessUnlocked = localStorage.getItem('sd_endless') === 'true';
 let lastTime = 0;
 let accumulator = 0;
+
+// Campaign state
+let currentWorld = 0;
+let worldProgress = 0;
+let worldFrameCount = 0; // resets per world for speed ramp
+let transitionTimer = 0;
+let countdownNum = 3;
+let levelScore = 0; // score earned in current world
+let levelBlasted = 0; // asteroids blasted in current world
 
 // --- INPUT ---
 let keys = {};
@@ -194,6 +211,41 @@ function playSound(type) {
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
       osc.start(t); osc.stop(t + 0.25);
       break;
+    case 'levelup':
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523, t);
+      osc.frequency.setValueAtTime(659, t + 0.1);
+      osc.frequency.setValueAtTime(784, t + 0.2);
+      osc.frequency.setValueAtTime(1047, t + 0.3);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      osc.start(t); osc.stop(t + 0.5);
+      break;
+    case 'victory':
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523, t);
+      osc.frequency.setValueAtTime(659, t + 0.12);
+      osc.frequency.setValueAtTime(784, t + 0.24);
+      osc.frequency.setValueAtTime(1047, t + 0.36);
+      osc.frequency.setValueAtTime(1319, t + 0.48);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+      osc.start(t); osc.stop(t + 0.7);
+      break;
+    case 'beep':
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, t);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      osc.start(t); osc.stop(t + 0.15);
+      break;
+    case 'beepgo':
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, t);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+      break;
   }
 }
 
@@ -235,7 +287,12 @@ function updateStars() {
 function drawStars() {
   for (const s of stars) {
     const alpha = 0.4 + 0.3 * Math.sin(s.twinkle);
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    let sc = [255,255,255];
+    if (gameState === 'playing' || gameState === 'countdown' || gameState === 'levelcomplete') {
+      const w = gameMode === 'campaign' ? WORLDS[currentWorld] : null;
+      if (w) sc = w.starColor;
+    }
+    ctx.fillStyle = `rgba(${sc[0]},${sc[1]},${sc[2]},${alpha})`;
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
@@ -431,6 +488,9 @@ function updateBlasters() {
         spawnExplosionParticles(a.x, a.y, a.r);
         playSound('explode');
         score++;
+        levelScore++;
+        levelBlasted++;
+        if (gameMode === 'campaign') worldProgress += BLAST_PROGRESS;
         if (score % 50 === 0) playSound('score');
         asteroids.splice(j, 1);
         blasters.splice(i, 1);
@@ -516,19 +576,64 @@ function drawHUD() {
   ctx.textAlign = 'right';
   ctx.fillText(score, W - 14, 32 * scale);
 
-  // Best
-  if (bestScore > 0) {
+  // Best (endless only)
+  if (gameMode === 'endless' && bestScore > 0) {
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = `${Math.round(13 * scale)}px Arial, sans-serif`;
+    ctx.textAlign = 'right';
     ctx.fillText('BEST ' + bestScore, W - 14, 50 * scale);
+  }
+
+  // Campaign: world name + progress bar
+  if (gameMode === 'campaign') {
+    const w = WORLDS[currentWorld];
+    const barW = Math.min(220, W * 0.3) * scale;
+    const barH = 12 * scale;
+    const barX = (W - barW) / 2;
+    const barY = 12;
+    const progress = Math.min(worldProgress / w.threshold, 1);
+
+    // World label
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `bold ${Math.round(11 * scale)}px Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`WORLD ${currentWorld + 1}: ${w.name}`, W / 2, barY + barH + 14 * scale);
+
+    // Bar background
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, barH / 2);
+    ctx.fill();
+
+    // Bar fill
+    if (progress > 0) {
+      const grad = ctx.createLinearGradient(barX, 0, barX + barW * progress, 0);
+      grad.addColorStop(0, w.accent);
+      grad.addColorStop(1, '#fff');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW * progress, barH, barH / 2);
+      ctx.fill();
+    }
+
+    // Bar glow when nearly full
+    if (progress > 0.8) {
+      ctx.shadowColor = w.accent;
+      ctx.shadowBlur = 8 + Math.sin(Date.now() / 200) * 4;
+      ctx.fillStyle = 'transparent';
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW * progress, barH, barH / 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
   }
 }
 
 // --- TITLE SCREEN ---
 let titleShipBob = 0;
+let titleBtns = { campaign: {}, endless: {} };
 
 function drawTitle() {
-  // Background
   ctx.fillStyle = '#0a0a2e';
   ctx.fillRect(0, 0, W, H);
   drawStars();
@@ -536,25 +641,25 @@ function drawTitle() {
   titleShipBob += 0.03;
 
   // Ship
-  const shipY = H * 0.42 + Math.sin(titleShipBob) * 8;
+  const shipY = H * 0.38 + Math.sin(titleShipBob) * 8;
   drawShip(W / 2, shipY, SHIP_WIDTH * 1.8 * scale, SHIP_HEIGHT * 1.8 * scale, 0);
 
   // Title
   ctx.fillStyle = '#fff';
   ctx.font = `bold ${Math.round(42 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('SPACE DODGE', W / 2, H * 0.13);
+  ctx.fillText('SPACE DODGE', W / 2, H * 0.1);
 
   // Subtitle
   ctx.fillStyle = '#42A5F5';
   ctx.font = `${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('Dodge and blast the asteroids!', W / 2, H * 0.2);
+  ctx.fillText('Dodge and blast the asteroids!', W / 2, H * 0.17);
 
   // Floating asteroids (decorative)
   const decT = Date.now() / 1000;
   for (let i = 0; i < 3; i++) {
     const ax = W * (0.15 + i * 0.35) + Math.sin(decT + i * 2) * 20;
-    const ay = H * 0.7 + Math.cos(decT * 0.7 + i) * 15;
+    const ay = H * 0.65 + Math.cos(decT * 0.7 + i) * 15;
     const aSize = (36 + i * 10) * scale;
     ctx.save();
     ctx.translate(ax, ay);
@@ -570,22 +675,49 @@ function drawTitle() {
     ctx.restore();
   }
 
-  // Prompt
-  const blink = Math.sin(Date.now() / 400) > 0;
-  if (blink) {
-    ctx.fillStyle = '#ffcc00';
-    ctx.font = `bold ${Math.round(20 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.fillText('TAP OR PRESS SPACE TO START', W / 2, H * 0.88);
+  // Mode buttons
+  const btnW = 180 * scale;
+  const btnH = 42 * scale;
+  const gap = 16 * scale;
+  const btnY = H * 0.78;
+
+  // Campaign button (always active)
+  const cX = W / 2 - btnW - gap / 2;
+  ctx.fillStyle = '#2E7D32';
+  ctx.beginPath();
+  ctx.roundRect(cX, btnY, btnW, btnH, 8);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText('🚀 CAMPAIGN', cX + btnW / 2, btnY + btnH / 2 + 5 * scale);
+  titleBtns.campaign = { x: cX, y: btnY, w: btnW, h: btnH };
+
+  // Endless button (locked/unlocked)
+  const eX = W / 2 + gap / 2;
+  if (endlessUnlocked) {
+    ctx.fillStyle = '#1565C0';
+    ctx.beginPath();
+    ctx.roundRect(eX, btnY, btnW, btnH, 8);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText('♾️ ENDLESS', eX + btnW / 2, btnY + btnH / 2 + 5 * scale);
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(eX, btnY, btnW, btnH, 8);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText('🔒 ENDLESS', eX + btnW / 2, btnY + btnH / 2 + 5 * scale);
   }
+  titleBtns.endless = { x: eX, y: btnY, w: btnW, h: btnH };
 
   // Best score
   if (bestScore > 0) {
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
-    ctx.fillText('BEST: ' + bestScore, W / 2, H * 0.95);
+    ctx.fillText('BEST: ' + bestScore, W / 2, H * 0.94);
   }
 
-  // Menu button
   drawMenuButton();
 }
 
@@ -610,44 +742,49 @@ let menuBtn = {};
 
 // --- GAME OVER SCREEN ---
 function drawGameOver() {
-  ctx.fillStyle = '#0a0a2e';
+  const bg = gameMode === 'campaign' ? WORLDS[currentWorld].bg : '#0a0a2e';
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
   drawStars();
   drawParticles();
 
-  // Title
   ctx.fillStyle = '#ffcc00';
   ctx.font = `bold ${Math.round(38 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('GREAT RUN!', W / 2, H * 0.22);
+  ctx.fillText('GREAT RUN!', W / 2, H * 0.2);
 
   // Stars decoration
-  const starY = H * 0.3;
+  const starY = H * 0.28;
   for (let i = 0; i < 3; i++) {
-    const sx = W / 2 + (i - 1) * 50 * scale;
-    drawStar5(sx, starY, 16 * scale, '#ffcc00');
+    drawStar5(W / 2 + (i - 1) * 50 * scale, starY, 16 * scale, '#ffcc00');
+  }
+
+  // World reached (campaign)
+  if (gameMode === 'campaign') {
+    ctx.fillStyle = WORLDS[currentWorld].accent;
+    ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+    ctx.fillText(`World ${currentWorld + 1}: ${WORLDS[currentWorld].name}`, W / 2, H * 0.37);
   }
 
   // Score
   ctx.fillStyle = '#fff';
   ctx.font = `bold ${Math.round(52 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText(score, W / 2, H * 0.48);
+  ctx.fillText(score, W / 2, H * 0.5);
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.font = `${Math.round(16 * scale)}px Arial, sans-serif`;
-  ctx.fillText('ASTEROIDS CLEARED', W / 2, H * 0.55);
+  ctx.fillText('ASTEROIDS CLEARED', W / 2, H * 0.57);
 
   // New best
   if (score >= bestScore && score > 0) {
     ctx.fillStyle = '#ffcc00';
     ctx.font = `bold ${Math.round(18 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.fillText('⭐ NEW BEST! ⭐', W / 2, H * 0.64);
+    ctx.fillText('⭐ NEW BEST! ⭐', W / 2, H * 0.66);
   } else if (bestScore > 0) {
     ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
-    ctx.fillText('BEST: ' + bestScore, W / 2, H * 0.64);
+    ctx.fillText('BEST: ' + bestScore, W / 2, H * 0.66);
   }
 
-  // Prompt
   const blink = Math.sin(Date.now() / 400) > 0;
   if (blink) {
     ctx.fillStyle = '#42A5F5';
@@ -670,24 +807,219 @@ function drawStar5(cx, cy, r, color) {
   ctx.fill();
 }
 
+// --- WORLD TITLE CARD ---
+function drawWorldTitle() {
+  const w = WORLDS[currentWorld];
+  ctx.fillStyle = w.bg;
+  ctx.fillRect(0, 0, W, H);
+  drawStars();
+
+  // World number
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `bold ${Math.round(20 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(`WORLD ${currentWorld + 1} of ${WORLDS.length}`, W / 2, H * 0.32);
+
+  // World name with accent color
+  ctx.fillStyle = w.accent;
+  ctx.font = `bold ${Math.round(48 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText(w.name, W / 2, H * 0.46);
+
+  // Decorative line
+  const lineW = 120 * scale;
+  ctx.strokeStyle = w.accent;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - lineW, H * 0.52);
+  ctx.lineTo(W / 2 + lineW, H * 0.52);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Lives display
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+  ctx.fillText(`❤️ ${lives}  |  Score: ${score}`, W / 2, H * 0.62);
+
+  drawMenuButton();
+}
+
+// --- COUNTDOWN ---
+function drawCountdown() {
+  const w = gameMode === 'campaign' ? WORLDS[currentWorld] : WORLDS[0];
+  ctx.fillStyle = w.bg;
+  ctx.fillRect(0, 0, W, H);
+  drawStars();
+
+  // Ship is visible during countdown
+  if (ship.x) drawShip(ship.x, ship.y, ship.w, ship.h, 0);
+
+  // Number or GO
+  const label = countdownNum > 0 ? countdownNum.toString() : 'GO!';
+  const numScale = countdownNum > 0 ? 80 : 60;
+  ctx.fillStyle = countdownNum > 0 ? '#fff' : w.accent;
+  ctx.font = `bold ${Math.round(numScale * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(label, W / 2, H * 0.45);
+}
+
+// --- LEVEL COMPLETE ---
+function drawLevelComplete() {
+  const w = WORLDS[currentWorld];
+  ctx.fillStyle = w.bg;
+  ctx.fillRect(0, 0, W, H);
+  drawStars();
+  drawParticles();
+
+  // Ship celebration (bobbing)
+  if (ship.x) {
+    titleShipBob += 0.05;
+    const bobY = ship.y + Math.sin(titleShipBob) * 6;
+    drawShip(ship.x, bobY, ship.w, ship.h, 0);
+  }
+
+  ctx.fillStyle = w.accent;
+  ctx.font = `bold ${Math.round(36 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('WORLD COMPLETE!', W / 2, H * 0.25);
+
+  // Stats
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.round(28 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText(w.name, W / 2, H * 0.38);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = `${Math.round(16 * scale)}px Arial, sans-serif`;
+  ctx.fillText(`Blasted: ${levelBlasted}  |  Score: +${levelScore}`, W / 2, H * 0.5);
+
+  // Next world preview
+  if (currentWorld + 1 < WORLDS.length) {
+    const next = WORLDS[currentWorld + 1];
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+    ctx.fillText(`Next: ${next.name}`, W / 2, H * 0.62);
+  }
+}
+
+// --- VICTORY SCREEN ---
+function drawVictory() {
+  // Rainbow-ish cycling background
+  const hue = (Date.now() / 50) % 360;
+  ctx.fillStyle = `hsl(${hue}, 30%, 8%)`;
+  ctx.fillRect(0, 0, W, H);
+  drawStars();
+
+  // Confetti particles
+  if (Math.random() < 0.3) {
+    particles.push({
+      x: Math.random() * W, y: -5,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 1 + Math.random() * 2,
+      life: 80 + Math.random() * 40,
+      maxLife: 120,
+      size: 3 + Math.random() * 3,
+      color: ['#FF5252','#FFD740','#69F0AE','#40C4FF','#E040FB','#FF6E40'][Math.floor(Math.random() * 6)]
+    });
+  }
+  drawParticles();
+  updateParticles();
+
+  // Ship celebration
+  titleShipBob += 0.04;
+  const shipY = H * 0.42 + Math.sin(titleShipBob) * 10;
+  drawShip(W / 2, shipY, SHIP_WIDTH * 2 * scale, SHIP_HEIGHT * 2 * scale, 0);
+
+  ctx.fillStyle = '#ffcc00';
+  ctx.font = `bold ${Math.round(44 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('GREAT PILOT!', W / 2, H * 0.12);
+
+  // Stars
+  const starY = H * 0.19;
+  for (let i = 0; i < 5; i++) {
+    drawStar5(W / 2 + (i - 2) * 36 * scale, starY, 14 * scale, '#ffcc00');
+  }
+
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.round(32 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText('ALL WORLDS COMPLETE!', W / 2, H * 0.7);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.round(48 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText(score, W / 2, H * 0.8);
+
+  ctx.fillStyle = '#69F0AE';
+  ctx.font = `bold ${Math.round(18 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText('♾️ ENDLESS MODE UNLOCKED!', W / 2, H * 0.88);
+
+  const blink = Math.sin(Date.now() / 400) > 0;
+  if (blink) {
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+    ctx.fillText('TAP OR PRESS SPACE', W / 2, H * 0.95);
+  }
+
+  drawMenuButton();
+}
+
 // --- GAME INIT ---
-function startGame() {
+function startCampaign() {
   initAudio();
+  gameMode = 'campaign';
+  currentWorld = 0;
+  score = 0;
+  lives = MAX_LIVES;
+  showWorldTitle();
+}
+
+function startEndless() {
+  initAudio();
+  gameMode = 'endless';
+  currentWorld = 0;
   playSound('start');
   gameState = 'playing';
+  resetPlayState();
+}
+
+function showWorldTitle() {
+  gameState = 'worldtitle';
+  transitionTimer = 120; // 2 seconds
+  asteroids = [];
+  blasters = [];
+  particles = [];
+}
+
+function startCountdown() {
+  gameState = 'countdown';
+  countdownNum = 3;
+  transitionTimer = 60; // 1 second per number
+  resetPlayState();
+}
+
+function resetPlayState() {
   ship = { x: W / 2, y: H * 0.8, w: SHIP_WIDTH * scale, h: SHIP_HEIGHT * scale, speed: 6 };
   asteroids = [];
   blasters = [];
   blasterTimer = 0;
   particles = [];
-  score = 0;
-  lives = MAX_LIVES;
   invincibleTimer = 0;
   wobbleTimer = 0;
   spawnTimer = 0;
-  spawnInterval = SPAWN_INTERVAL_START;
-  currentSpeed = BASE_ASTEROID_SPEED;
+  worldFrameCount = 0;
+  worldProgress = 0;
+  levelScore = 0;
+  levelBlasted = 0;
   frameCount = 0;
+  const w = gameMode === 'campaign' ? WORLDS[currentWorld] : WORLDS[0];
+  currentSpeed = w.baseSpeed;
+  spawnInterval = w.spawnStart;
+}
+
+function getWorldBg() {
+  if (gameMode === 'campaign') return WORLDS[currentWorld].bg;
+  // Endless: cycle through world backgrounds
+  const worldIdx = Math.min(Math.floor(frameCount / 3600), WORLDS.length - 1);
+  return WORLDS[worldIdx].bg;
 }
 
 // --- COLLISION ---
@@ -707,7 +1039,57 @@ function update() {
   frameCount++;
   updateStars();
 
+  // World title timer
+  if (gameState === 'worldtitle') {
+    transitionTimer--;
+    if (transitionTimer <= 0) startCountdown();
+    return;
+  }
+
+  // Countdown timer
+  if (gameState === 'countdown') {
+    transitionTimer--;
+    if (transitionTimer <= 0) {
+      countdownNum--;
+      if (countdownNum > 0) {
+        transitionTimer = 60;
+        playSound('beep');
+      } else if (countdownNum === 0) {
+        transitionTimer = 40;
+        playSound('beepgo');
+      } else {
+        gameState = 'playing';
+        playSound('start');
+      }
+    }
+    return;
+  }
+
+  // Level complete screen (auto-advance)
+  if (gameState === 'levelcomplete') {
+    transitionTimer--;
+    if (transitionTimer <= 0) {
+      currentWorld++;
+      if (currentWorld >= WORLDS.length) {
+        // Beat all worlds!
+        gameState = 'victory';
+        playSound('victory');
+        endlessUnlocked = true;
+        localStorage.setItem('sd_endless', 'true');
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem('sd_best', bestScore.toString());
+        }
+      } else {
+        showWorldTitle();
+      }
+    }
+    return;
+  }
+
   if (gameState !== 'playing') return;
+
+  worldFrameCount++;
 
   // Ship movement
   const moveSpeed = ship.speed * scale;
@@ -736,9 +1118,10 @@ function update() {
   if (invincibleTimer > 0) invincibleTimer--;
   if (wobbleTimer > 0) wobbleTimer--;
 
-  // Speed ramp
-  currentSpeed = BASE_ASTEROID_SPEED + frameCount * SPEED_INCREMENT;
-  spawnInterval = Math.max(SPAWN_INTERVAL_MIN, SPAWN_INTERVAL_START - frameCount * SPAWN_INTERVAL_DECREMENT);
+  // Speed ramp (per-world values for campaign, escalating for endless)
+  const w = gameMode === 'campaign' ? WORLDS[currentWorld] : WORLDS[Math.min(Math.floor(frameCount / 3600), WORLDS.length - 1)];
+  currentSpeed = w.baseSpeed + worldFrameCount * w.speedInc;
+  spawnInterval = Math.max(w.spawnMin, w.spawnStart - worldFrameCount * w.spawnDec);
 
   // Spawn
   spawnTimer++;
@@ -757,6 +1140,8 @@ function update() {
     if (a.y > ship.y + ship.h && !a.scored) {
       a.scored = true;
       score++;
+      levelScore++;
+      if (gameMode === 'campaign') worldProgress += DODGE_PROGRESS;
       if (score % 50 === 0) playSound('score');
     }
 
@@ -787,44 +1172,36 @@ function update() {
     }
   }
 
+  // Check world completion (campaign only)
+  if (gameMode === 'campaign' && worldProgress >= WORLDS[currentWorld].threshold) {
+    gameState = 'levelcomplete';
+    transitionTimer = 180; // 3 seconds
+    playSound('levelup');
+  }
+
   updateBlasters();
   updateParticles();
 }
 
 // --- DRAW ---
 function draw() {
-  ctx.fillStyle = '#0a0a2e';
-  ctx.fillRect(0, 0, W, H);
-
-  if (gameState === 'title') {
-    drawTitle();
-    return;
-  }
-
-  if (gameState === 'gameover') {
-    drawGameOver();
-    return;
-  }
+  if (gameState === 'title') { drawTitle(); return; }
+  if (gameState === 'worldtitle') { drawWorldTitle(); return; }
+  if (gameState === 'countdown') { drawCountdown(); return; }
+  if (gameState === 'gameover') { drawGameOver(); return; }
+  if (gameState === 'levelcomplete') { drawLevelComplete(); return; }
+  if (gameState === 'victory') { drawVictory(); return; }
 
   // Playing
+  ctx.fillStyle = getWorldBg();
+  ctx.fillRect(0, 0, W, H);
+
   drawStars();
-
-  // Asteroids
   for (const a of asteroids) drawAsteroid(a);
-
-  // Blasters
   drawBlasters();
-
-  // Ship
   drawShip(ship.x, ship.y, ship.w, ship.h, wobbleTimer);
-
-  // Particles
   drawParticles();
-
-  // HUD
   drawHUD();
-
-  // Pause button
   drawPauseButton();
 }
 
@@ -895,9 +1272,24 @@ document.addEventListener('keyup', e => {
 });
 
 function handleAction() {
-  if (gameState === 'title') { startGame(); return; }
+  if (gameState === 'title') { startCampaign(); return; }
   if (gameState === 'gameover') { gameState = 'title'; return; }
+  if (gameState === 'victory') { gameState = 'title'; return; }
   if (gameState === 'playing' && paused) { paused = false; }
+}
+
+// Helpers
+function hitTest(x, y, btn) {
+  return btn.w && x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h;
+}
+
+function handleTitleClick(tx, ty) {
+  initAudio();
+  if (hitTest(tx, ty, titleBtns.campaign)) { startCampaign(); return true; }
+  if (hitTest(tx, ty, titleBtns.endless) && endlessUnlocked) { startEndless(); return true; }
+  // Tap anywhere else = campaign
+  startCampaign();
+  return true;
 }
 
 // Touch
@@ -908,21 +1300,13 @@ canvas.addEventListener('touchstart', e => {
   const ty = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
 
   // Check menu button
-  if (menuBtn.w && tx >= menuBtn.x && tx <= menuBtn.x + menuBtn.w && ty >= menuBtn.y && ty <= menuBtn.y + menuBtn.h) {
-    window.location.href = '/';
-    return;
-  }
+  if (hitTest(tx, ty, menuBtn)) { window.location.href = '/'; return; }
 
   // Check pause button
-  if (gameState === 'playing' && pauseBtn.w) {
-    if (tx >= pauseBtn.x && tx <= pauseBtn.x + pauseBtn.w && ty >= pauseBtn.y && ty <= pauseBtn.y + pauseBtn.h) {
-      paused = !paused;
-      return;
-    }
-  }
+  if (gameState === 'playing' && hitTest(tx, ty, pauseBtn)) { paused = !paused; return; }
 
-  if (gameState === 'title') { initAudio(); startGame(); return; }
-  if (gameState === 'gameover') { gameState = 'title'; return; }
+  if (gameState === 'title') { handleTitleClick(tx, ty); return; }
+  if (gameState === 'gameover' || gameState === 'victory') { gameState = 'title'; return; }
   if (paused) { paused = false; return; }
 
   touchActive = true;
@@ -948,19 +1332,9 @@ canvas.addEventListener('click', e => {
   const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
   const my = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-  // Menu button
-  if (menuBtn.w && mx >= menuBtn.x && mx <= menuBtn.x + menuBtn.w && my >= menuBtn.y && my <= menuBtn.y + menuBtn.h) {
-    window.location.href = '/';
-    return;
-  }
-
-  // Pause button
-  if (gameState === 'playing' && pauseBtn.w) {
-    if (mx >= pauseBtn.x && mx <= pauseBtn.x + pauseBtn.w && my >= pauseBtn.y && my <= pauseBtn.y + pauseBtn.h) {
-      paused = !paused;
-      return;
-    }
-  }
+  if (hitTest(mx, my, menuBtn)) { window.location.href = '/'; return; }
+  if (gameState === 'playing' && hitTest(mx, my, pauseBtn)) { paused = !paused; return; }
+  if (gameState === 'title') { handleTitleClick(mx, my); return; }
 
   handleAction();
 });
