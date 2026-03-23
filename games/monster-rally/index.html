@@ -2542,26 +2542,26 @@ function drawTruckHD(tx, ty, tw, th, showExhaust, squishY) {
   const drawX = tx - 55 * scale;
   const drawY = ty - 45 * scale + squishY;
 
-  // Animated exhaust flames (Canvas-drawn, only when airborne)
-  if (showExhaust) {
+  // Animated exhaust flames (Canvas-drawn, always visible)
+  {
     // Exhaust pipe position: SVG pipe is at ~x=65, y=120 in the 400x250 viewBox
     const exX = drawX + 72 * scale;
     const exY = drawY + 125 * scale;
-    const exW = 8 + Math.random() * 12;
+    const exW = (8 + Math.random() * 12) * 1.5;
     ctx.globalAlpha = 0.7 + Math.random() * 0.3;
     // Orange outer flame
     ctx.fillStyle = '#ff4400';
     ctx.beginPath();
-    ctx.moveTo(exX, exY - 4 * scale);
+    ctx.moveTo(exX, exY - 6 * scale);
     ctx.lineTo(exX - exW * scale, exY);
-    ctx.lineTo(exX, exY + 4 * scale);
+    ctx.lineTo(exX, exY + 6 * scale);
     ctx.closePath(); ctx.fill();
     // Yellow inner flame
     ctx.fillStyle = '#ffcc00';
     ctx.beginPath();
-    ctx.moveTo(exX, exY - 2.5 * scale);
+    ctx.moveTo(exX, exY - 3.75 * scale);
     ctx.lineTo(exX - (exW - 3) * scale, exY);
-    ctx.lineTo(exX, exY + 2.5 * scale);
+    ctx.lineTo(exX, exY + 3.75 * scale);
     ctx.closePath(); ctx.fill();
     ctx.globalAlpha = 1;
   }
