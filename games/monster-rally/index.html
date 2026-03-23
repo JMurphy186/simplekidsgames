@@ -188,14 +188,14 @@ const ENVIRONMENTS = [
 
 // Campaign level configs (8 levels)
 const CAMPAIGN_LEVELS = [
-  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.6, maxSpeed: 4.5, speedRamp: 1200, obstGap: 170, starFreq: 40, countdownSecs: 60, nameColor: '#cc9966' },
-  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 1.7, maxSpeed: 5.0, speedRamp: 1100, obstGap: 160, starFreq: 40, countdownSecs: 60, nameColor: '#ff8844' },
-  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 1.8, maxSpeed: 5.5, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60, nameColor: '#cc44ff' },
-  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 1.9, maxSpeed: 6.0, speedRamp: 900,  obstGap: 140, starFreq: 45, countdownSecs: 60, nameColor: '#6688aa' },
-  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 1.8, maxSpeed: 5.5, speedRamp: 1000, obstGap: 150, starFreq: 45, countdownSecs: 60, nameColor: '#aabbcc' },
-  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 2.0, maxSpeed: 6.0, speedRamp: 850,  obstGap: 130, starFreq: 45, countdownSecs: 60, nameColor: '#44cc44' },
-  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 2.1, maxSpeed: 6.5, speedRamp: 800,  obstGap: 120, starFreq: 50, countdownSecs: 60, nameColor: '#ff5500' },
-  { envIndex: 7, name: 'RAINBOW ROAD',   baseSpeed: 1.8, maxSpeed: 6.0, speedRamp: 900,  obstGap: 140, starFreq: 25, countdownSecs: 30, nameColor: 'rainbow' }
+  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 1.9, maxSpeed: 5.0, speedRamp: 1140, obstGap: 170, starFreq: 40, countdownSecs: 30, nameColor: '#cc9966' },
+  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 2.0, maxSpeed: 5.5, speedRamp: 1045, obstGap: 160, starFreq: 40, countdownSecs: 30, nameColor: '#ff8844' },
+  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 2.1, maxSpeed: 6.0, speedRamp: 950,  obstGap: 150, starFreq: 45, countdownSecs: 30, nameColor: '#cc44ff' },
+  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 2.2, maxSpeed: 6.5, speedRamp: 855,  obstGap: 140, starFreq: 45, countdownSecs: 30, nameColor: '#6688aa' },
+  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 2.1, maxSpeed: 6.0, speedRamp: 950,  obstGap: 150, starFreq: 45, countdownSecs: 30, nameColor: '#aabbcc' },
+  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 2.3, maxSpeed: 6.5, speedRamp: 808,  obstGap: 130, starFreq: 45, countdownSecs: 30, nameColor: '#44cc44' },
+  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 2.4, maxSpeed: 7.0, speedRamp: 760,  obstGap: 120, starFreq: 50, countdownSecs: 30, nameColor: '#ff5500' },
+  { envIndex: 7, name: 'RAINBOW ROAD',   baseSpeed: 2.1, maxSpeed: 6.5, speedRamp: 855,  obstGap: 140, starFreq: 25, countdownSecs: 30, nameColor: 'rainbow' }
 ];
 
 // Power-up configs
@@ -320,11 +320,11 @@ for (let i = 0; i < TRUCK_ROSTER.length; i++) {
 // ============================================================
 // GAME STATE
 // ============================================================
-let gameSpeed = 1.6;
-let maxSpeed = 6;
-let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'playerselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition' | 'campaignwin'
-let gameMode = 'rally'; // 'rally' | 'frenzy' | 'battle'
-let roundTimer = 0; // countdown timer for frenzy/battle (frames)
+let gameSpeed = 1.9;
+let maxSpeed = 6.5;
+let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition' | 'campaignwin'
+let gameMode = 'rally'; // 'rally' | 'frenzy' | 'endless'
+let roundTimer = 0; // countdown timer for frenzy (frames)
 
 // Campaign state
 let campaignLevel = 0; // index into CAMPAIGN_LEVELS (0-based)
@@ -352,11 +352,6 @@ let transitionTarget = '';
 let countdownTimer = 0;
 let countdownText = '';
 
-// Battle sumo state
-let battleScores = [0, 0]; // P1, P2 points
-let battleWinScore = 5;
-let battleResetTimer = 0; // timer for resetting positions after a point
-let battleAutoCharge = 2; // auto-charge speed on mobile
 
 // Environment state
 let currentEnvIndex = 0;
@@ -390,7 +385,7 @@ function createPlayer(truckIdx, groundOffset) {
     truckIdx: truckIdx,
     groundY: gndY,
     truck: { x: 140, y: gndY, w: 90, h: 50, vy: 0, grounded: true, jumping: false, slamming: false, squish: 0, tilt: 0 },
-    jumpPressed: false, jumpHeld: false, battleMoveDir: 0, battleFacing: 1,
+    jumpPressed: false, jumpHeld: false,
     airborneFrames: 0, flipAngle: 0, flipInProgress: false, flipsCompleted: 0, flipStarted: false,
     // Power-up state
     activePowerUp: null, powerUpTimer: 0, megaScale: 1.0,
@@ -505,7 +500,7 @@ function stopEngine() {
 function updateEngineSound() {
   if (!audioCtx || audioMuted || !engineBeatInterval) return;
   // Adjust beat interval based on speed — faster game = faster heartbeat
-  const speedFactor = Math.max(0, (gameSpeed - 1.5) / (maxSpeed - 1.5));
+  const speedFactor = Math.max(0, (gameSpeed - 1.8) / (maxSpeed - 1.8));
   const interval = Math.max(200, 600 - speedFactor * 350); // 600ms slow → 250ms fast
   clearInterval(engineBeatInterval);
   engineBeatInterval = setInterval(() => {
@@ -805,7 +800,6 @@ function handleDown(e) {
   }
   if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
   if (gameState === 'modeselect') { handleModeSelectClick(vc.x, vc.y); return; }
-  if (gameState === 'playerselect') { handlePlayerSelectClick(vc.x, vc.y); return; }
   if (gameState === 'paused') { handlePauseClick(vc.x, vc.y); return; }
   if (gameState === 'gameover') { gameState = 'modeselect'; return; }
   if (gameState === 'levelcomplete') {
@@ -862,7 +856,6 @@ document.addEventListener('keydown', (e) => {
     if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; return; }
     if (gameState === 'picker') { confirmPicker(); return; }
     if (gameState === 'modeselect') return;
-    if (gameState === 'playerselect') return;
     if (gameState === 'gameover') { gameState = 'modeselect'; return; }
     if (gameState === 'levelcomplete') {
       if (campaignLevel < CAMPAIGN_LEVELS.length - 1) { campaignLevel++; startLevelTransition(); }
@@ -883,13 +876,7 @@ document.addEventListener('keydown', (e) => {
   if (gameState === 'modeselect') {
     if (e.code === 'Digit1') selectMode('rally');
     if (e.code === 'Digit2') selectMode('frenzy');
-    if (e.code === 'Digit3') selectMode('battle');
-    if (e.code === 'Digit4' && localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
-    return;
-  }
-  if (gameState === 'playerselect') {
-    if (e.code === 'Digit1') startRallyWithPlayers(1);
-    if (e.code === 'Digit2') startRallyWithPlayers(2);
+    if (e.code === 'Digit3' && localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
     return;
   }
 
@@ -938,14 +925,6 @@ document.addEventListener('keydown', (e) => {
     if (player1 && !player1.truck.grounded) player1.truck.slamming = true;
   }
 
-  // Battle mode: horizontal movement
-  if (gameMode === 'battle') {
-    if (e.code === 'KeyA' && player1) player1.battleMoveDir = -1;
-    if (e.code === 'KeyD' && player1) player1.battleMoveDir = 1;
-    if (e.code === 'ArrowLeft' && player2) player2.battleMoveDir = -1;
-    if (e.code === 'ArrowRight' && player2) player2.battleMoveDir = 1;
-  }
-
   if (e.code === 'KeyH') playSound('horn');
   if (e.code === 'KeyM') toggleMute();
 
@@ -954,11 +933,6 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => {
   if (e.code === 'Space' || e.code === 'KeyW') { if (player1) player1.jumpHeld = false; }
   if (e.code === 'ArrowUp') { if (player2) player2.jumpHeld = false; else if (player1) player1.jumpHeld = false; }
-  // Battle movement stop
-  if (gameMode === 'battle') {
-    if (e.code === 'KeyA' || e.code === 'KeyD') { if (player1) player1.battleMoveDir = 0; }
-    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { if (player2) player2.battleMoveDir = 0; }
-  }
 });
 
 // ============================================================
@@ -1023,14 +997,13 @@ function handleModeSelectClick(vx, vy) {
 
   const btnW = 220, btnH = 52, gap = 10;
   const by = 160;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     const bx = W / 2 - btnW / 2;
     const btnY = by + i * (btnH + gap);
     if (vx >= bx && vx <= bx + btnW && vy >= btnY && vy <= btnY + btnH) {
       if (i === 0) selectMode('rally');
       else if (i === 1) selectMode('frenzy');
-      else if (i === 2) selectMode('battle');
-      else if (i === 3) {
+      else if (i === 2) {
         if (localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
       }
       return;
@@ -1040,47 +1013,18 @@ function handleModeSelectClick(vx, vy) {
 
 function selectMode(mode) {
   gameMode = mode;
+  numPlayers = 1;
   if (mode === 'rally') {
     // Rally: campaign mode, always 1 player
-    numPlayers = 1;
     campaignLevel = 0;
     campaignTotals = { stars: 0, crushes: 0, flips: 0, score: 0 };
     startLevelTransition();
   } else if (mode === 'endless') {
     // Endless: like old rally, no campaign, 1 player
-    numPlayers = 1;
     initGame();
     startCountdown();
   } else if (mode === 'frenzy') {
     // Frenzy: always 1P
-    numPlayers = 1;
-    startCountdown();
-  } else if (mode === 'battle') {
-    // Battle: always 2P, need P2 to pick truck
-    numPlayers = 2;
-    pickerPlayer = 2;
-    selectedTruck2 = (selectedTruck + 1) % ROSTER_COUNT;
-    gameState = 'picker';
-  }
-}
-
-function handlePlayerSelectClick(vx, vy) {
-  const btnW = 180, btnH = 70, gap = 40;
-  const bx1 = W / 2 - btnW - gap / 2, by = 220;
-  const bx2 = W / 2 + gap / 2;
-  if (vy >= by && vy <= by + btnH) {
-    if (vx >= bx1 && vx <= bx1 + btnW) startRallyWithPlayers(1);
-    else if (vx >= bx2 && vx <= bx2 + btnW) startRallyWithPlayers(2);
-  }
-}
-
-function startRallyWithPlayers(n) {
-  numPlayers = n;
-  if (n === 2) {
-    pickerPlayer = 2;
-    selectedTruck2 = (selectedTruck + 1) % ROSTER_COUNT;
-    gameState = 'picker';
-  } else {
     startCountdown();
   }
 }
@@ -1108,24 +1052,16 @@ function initGame() {
   lavaBubbles = [];
 
   // Mode-specific settings
-  if (gameMode === 'battle') {
-    gameSpeed = 0; // no scrolling in battle
-    obstacleTimer = 9999;
-    starTimer = 9999;
-    powerUpSpawnTimer = 9999;
-    roundTimer = 0; // no timer, first to 5 wins
-    battleScores = [0, 0];
-    battleResetTimer = 0;
-  } else if (gameMode === 'frenzy') {
-    gameSpeed = 2.4;
+  if (gameMode === 'frenzy') {
+    gameSpeed = 2.7;
     obstacleTimer = 10;
     starTimer = 9999;
     powerUpSpawnTimer = 150; // power-ups enabled in frenzy!
     roundTimer = 1800; // 30 seconds
   } else if (gameMode === 'endless') {
     // Endless: old rally behavior, cycling environments, no campaign
-    gameSpeed = 1.6;
-    maxSpeed = 6;
+    gameSpeed = 1.9;
+    maxSpeed = 6.5;
     obstacleTimer = 80;
     starTimer = 30;
     powerUpSpawnTimer = 150;
@@ -1155,7 +1091,7 @@ function initGame() {
       lightningFlash = 0;
     }
   } else {
-    gameSpeed = 1.6;
+    gameSpeed = 1.9;
     obstacleTimer = 80;
     starTimer = 30;
     powerUpSpawnTimer = 150;
@@ -1163,26 +1099,9 @@ function initGame() {
   }
 
   players = [];
-  if (gameMode === 'battle') {
-    // Battle: face-to-face arena
-    player1 = createPlayer(selectedTruck, 0);
-    player1.truck.x = 150; // left side facing right
-    player1.battleFacing = 1; // 1 = facing right
-    players.push(player1);
-    player2 = createPlayer(selectedTruck2, 0);
-    player2.truck.x = 620; // right side facing left
-    player2.battleFacing = -1; // -1 = facing left
-    players.push(player2);
-  } else if (numPlayers === 2) {
-    player1 = createPlayer(selectedTruck, -10);
-    players.push(player1);
-    player2 = createPlayer(selectedTruck2, 10);
-    players.push(player2);
-  } else {
-    player1 = createPlayer(selectedTruck, 0);
-    players.push(player1);
-    player2 = null;
-  }
+  player1 = createPlayer(selectedTruck, 0);
+  players.push(player1);
+  player2 = null;
 
   // Compat aliases
   score = 0; combo = 0; comboTimer = 0;
@@ -1193,11 +1112,9 @@ function startPlaying() {
   if (!audioMuted) startEngine();
   // Immediate engagement — spawn first obstacle and star right away
   obstacleTimer = 15;
-  if (gameMode !== 'battle') {
-    spawnStar(450, GROUND_Y - 80);
-    spawnObstacle();
-    if (obstacles.length > 0) obstacles[obstacles.length - 1].x = 550;
-  }
+  spawnStar(450, GROUND_Y - 80);
+  spawnObstacle();
+  if (obstacles.length > 0) obstacles[obstacles.length - 1].x = 550;
 }
 
 // ============================================================
@@ -1324,7 +1241,7 @@ function drawGamesButton(x, y) {
   // Text
   ctx.fillStyle = '#fff'; ctx.font = 'bold 18px "Arial Black", Impact, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('\uD83C\uDFE0 GAMES', x + 65, y + 30);
+  ctx.fillText('\uD83C\uDFE0 MAIN MENU', x + 65, y + 30);
   ctx.restore();
 }
 
@@ -1338,7 +1255,7 @@ function drawChangeTruckButton(x, y) {
   ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.stroke();
   ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Arial Black", Impact, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('\uD83D\uDE9B TRUCK', x + 65, y + 30);
+  ctx.fillText('\uD83D\uDE9B PICK TRUCK', x + 65, y + 30);
   ctx.restore();
 }
 
@@ -1483,8 +1400,7 @@ function drawModeSelectScreen() {
   const modes = [
     { label: 'RALLY', desc: '8-level campaign!', color: 'rgba(34,204,68,', key: '1' },
     { label: 'CRUSH FRENZY', desc: '30 sec smash attack!', color: 'rgba(255,68,0,', key: '2' },
-    { label: 'BATTLE', desc: '2 players, most crushes wins!', color: 'rgba(136,51,204,', key: '3' },
-    { label: endlessUnlocked ? 'ENDLESS' : '\uD83D\uDD12 ENDLESS', desc: endlessUnlocked ? 'Drive forever!' : 'Beat campaign to unlock!', color: endlessUnlocked ? 'rgba(0,200,200,' : 'rgba(80,80,80,', key: '4' }
+    { label: endlessUnlocked ? 'ENDLESS' : '\uD83D\uDD12 ENDLESS', desc: endlessUnlocked ? 'Drive forever!' : 'Beat campaign to unlock!', color: endlessUnlocked ? 'rgba(0,200,200,' : 'rgba(80,80,80,', key: '3' }
   ];
 
   // Coin count display
@@ -1522,7 +1438,7 @@ function drawModeSelectScreen() {
   }
 
   ctx.fillStyle = '#666'; ctx.font = '12px Arial';
-  ctx.fillText('Press 1, 2, or 3  \u2022  or tap a button', W / 2, H - 25);
+  ctx.fillText('Press 1, 2, or 3 \u2022 or tap a button', W / 2, H - 25);
 
   // Back to games (top-left — prominent orange button)
   drawGamesButton(10, 5);
@@ -1530,44 +1446,6 @@ function drawModeSelectScreen() {
   // Change truck (top-right — prominent orange button, matching GAMES button)
   drawChangeTruckButton(W - 145, 5);
 
-  ctx.textAlign = 'left';
-}
-
-function drawPlayerSelectScreen() {
-  ctx.fillStyle = 'rgba(0,0,0,0.8)';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffcc00';
-  ctx.font = 'bold 36px "Arial Black", Impact, sans-serif';
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
-  ctx.strokeText('HOW MANY PLAYERS?', W / 2, 140);
-  ctx.fillText('HOW MANY PLAYERS?', W / 2, 140);
-
-  ctx.save();
-  ctx.translate(W / 2, 190);
-  ctx.scale(0.8, 0.8);
-  drawVehiclePreview(-45, -25, TRUCK_ROSTER[selectedTruck], true, 0, selectedTruck);
-  ctx.restore();
-
-  const btnW = 180, btnH = 70, gap = 40;
-  const bx1 = W / 2 - btnW - gap / 2, by = 230;
-  const bx2 = W / 2 + gap / 2;
-
-  const pulse1 = 0.7 + Math.sin(Date.now() * 0.004) * 0.25;
-  ctx.fillStyle = `rgba(34,204,68,${pulse1})`;
-  ctx.beginPath(); ctx.roundRect(bx1, by, btnW, btnH, 15); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 28px "Arial Black", Impact, sans-serif';
-  ctx.fillText('1 PLAYER', bx1 + btnW / 2, by + 45);
-
-  const pulse2 = 0.7 + Math.sin(Date.now() * 0.004 + 1) * 0.25;
-  ctx.fillStyle = `rgba(34,100,255,${pulse2})`;
-  ctx.beginPath(); ctx.roundRect(bx2, by, btnW, btnH, 15); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText('2 PLAYERS', bx2 + btnW / 2, by + 45);
-
-  ctx.fillStyle = '#888'; ctx.font = '14px Arial';
-  ctx.fillText('Press 1 or 2, or tap a button', W / 2, by + btnH + 35);
   ctx.textAlign = 'left';
 }
 
@@ -1765,48 +1643,8 @@ function drawGameOverScreen() {
 
   const bounce = Math.sin(Date.now() * 0.005) * 5;
 
-  if (gameMode === 'battle' && player1 && player2) {
-    // Battle sumo: show winner
-    const p1c = TRUCK_ROSTER[player1.truckIdx];
-    const p2c = TRUCK_ROSTER[player2.truckIdx];
-
-    let winText, winColor;
-    if (battleScores[0] >= battleWinScore) { winText = 'PLAYER 1 WINS!'; winColor = p1c.body; }
-    else { winText = 'PLAYER 2 WINS!'; winColor = p2c.body; }
-
-    // Big winner text
-    ctx.fillStyle = winColor;
-    ctx.font = 'bold 44px "Arial Black", Impact, sans-serif';
-    ctx.strokeText(winText, W / 2, 110 + bounce);
-    ctx.fillText(winText, W / 2, 110 + bounce);
-
-    // Score display
-    ctx.save(); ctx.translate(W / 4, 200);
-    ctx.scale(0.8, 0.8);
-    drawVehiclePreview(-45, -25, p1c, false, 0, player1.truckIdx);
-    ctx.restore();
-    ctx.fillStyle = p1c.body; ctx.font = 'bold 18px Arial';
-    ctx.fillText('P1: ' + p1c.name, W / 4, 250);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 36px "Arial Black", Impact, sans-serif';
-    ctx.strokeText(battleScores[0] + ' pts', W / 4, 295);
-    ctx.fillText(battleScores[0] + ' pts', W / 4, 295);
-
-    ctx.save(); ctx.translate(W * 3 / 4, 200);
-    ctx.scale(0.8, 0.8);
-    drawVehiclePreview(-45, -25, p2c, false, 0, player2.truckIdx);
-    ctx.restore();
-    ctx.fillStyle = p2c.body; ctx.font = 'bold 18px Arial';
-    ctx.fillText('P2: ' + p2c.name, W * 3 / 4, 250);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 36px "Arial Black", Impact, sans-serif';
-    ctx.strokeText(battleScores[1] + ' pts', W * 3 / 4, 295);
-    ctx.fillText(battleScores[1] + ' pts', W * 3 / 4, 295);
-
-    ctx.fillStyle = winColor; ctx.font = 'bold 32px "Arial Black", Impact, sans-serif';
-    const winBounce = Math.sin(Date.now() * 0.006) * 4;
-    ctx.strokeText(winText, W / 2, 350 + winBounce);
-    ctx.fillText(winText, W / 2, 350 + winBounce);
-  } else {
-    // Frenzy/Rally: show TIME'S UP
+  {
+    // Frenzy: show TIME'S UP
     ctx.fillStyle = '#ff4400';
     ctx.font = 'bold 44px "Arial Black", Impact, sans-serif';
     ctx.strokeText("TIME'S UP!", W / 2, 110 + bounce);
@@ -1859,7 +1697,7 @@ function drawCountdown() {
 // ============================================================
 function spawnObstacle() {
   let types;
-  if (gameMode === 'frenzy' || gameMode === 'battle') {
+  if (gameMode === 'frenzy') {
     types = ['red_racer','red_racer','red_racer','cool_blue','cool_blue','cool_blue',
              'gold_rush','gold_rush','big_suv','big_suv',
              'school_bus','stretch_limo',
@@ -4206,7 +4044,7 @@ function updatePlayer(p) {
     if (overlap && truckBottom > obs.y && truckBottom < obs.y + obs.h + 15 && (tk.vy > 0 || isMega)) {
       obs.crushed = true;
       p.combo++; p.totalCrushes++; if (gameMode === 'rally') levelStats.crushes++;
-      p.comboTimer = (gameMode === 'frenzy' || gameMode === 'battle') ? 120 : 90;
+      p.comboTimer = (gameMode === 'frenzy') ? 120 : 90;
       const basePoints = obs.points || 10;
       const points = basePoints * p.combo * pointsMult;
       p.score += points;
@@ -4276,257 +4114,6 @@ function updatePlayer(p) {
   }
 }
 
-// ============================================================
-// BATTLE MODE (Monster Truck Sumo)
-// ============================================================
-function resetBattlePositions() {
-  player1.truck.x = 150; player1.truck.y = GROUND_Y;
-  player1.truck.vy = 0; player1.truck.grounded = true;
-  player1.truck.squish = 0; player1.truck.tilt = 0;
-  player1.flipAngle = 0; player1.flipInProgress = false;
-
-  player2.truck.x = 620; player2.truck.y = GROUND_Y;
-  player2.truck.vy = 0; player2.truck.grounded = true;
-  player2.truck.squish = 0; player2.truck.tilt = 0;
-  player2.flipAngle = 0; player2.flipInProgress = false;
-
-  battleResetTimer = 90; // brief pause before next round
-}
-
-function updateBattle() {
-  wheelAngle += 0.05;
-
-  // Reset timer (pause between rounds)
-  if (battleResetTimer > 0) {
-    battleResetTimer--;
-    // Screen shake decay
-    if (screenShake > 0) screenShake *= 0.85;
-    if (flashTimer > 0) flashTimer--;
-    // Update particles during reset
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.x += p.vx; p.y += p.vy;
-      if (p.type === 'spark' || p.type === 'dust') p.vy += 0.15;
-      p.life -= p.decay;
-      if (p.life <= 0) particles.splice(i, 1);
-    }
-    return;
-  }
-
-  // Check win condition
-  if (battleScores[0] >= battleWinScore || battleScores[1] >= battleWinScore) {
-    gameState = 'gameover';
-    stopEngine();
-    return;
-  }
-
-  // Update each player's physics
-  for (const p of [player1, player2]) {
-    const tk = p.truck;
-
-    // Jump
-    if (p.jumpPressed && tk.grounded) {
-      tk.vy = JUMP_FORCE;
-      tk.grounded = false;
-      spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
-    }
-    p.jumpPressed = false;
-
-    // Gravity
-    if (!tk.grounded) {
-      tk.vy += GRAVITY;
-      tk.y += tk.vy;
-      tk.tilt = tk.vy * 0.5;
-
-      if (tk.y >= GROUND_Y) {
-        tk.y = GROUND_Y; tk.vy = 0; tk.grounded = true;
-        tk.squish = 1; tk.tilt = 0;
-        spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
-        playSound('landing', 5);
-      }
-    }
-
-    // Squish decay
-    if (tk.squish > 0) tk.squish *= 0.85;
-    if (tk.squish < 0.01) tk.squish = 0;
-  }
-
-  // Movement: auto-charge + player control
-  const t1 = player1.truck, t2 = player2.truck;
-  const moveSpeed = 4;
-  // Auto-charge (always approach)
-  t1.x += battleAutoCharge;
-  t2.x -= battleAutoCharge;
-  // Player-controlled movement (desktop)
-  if (player1.battleMoveDir !== 0) t1.x += player1.battleMoveDir * moveSpeed;
-  if (player2.battleMoveDir !== 0) t2.x += player2.battleMoveDir * moveSpeed;
-
-  // Clamp positions
-  t1.x = Math.max(30, Math.min(W / 2 - 20, t1.x));
-  t2.x = Math.min(W - 30 - t2.w, Math.max(W / 2 + 20 - t2.w, t2.x));
-
-  // Collision check
-  const overlap = t1.x + t1.w > t2.x && t1.x < t2.x + t2.w;
-  if (overlap) {
-    const heightDiff = t1.y - t2.y; // negative = P1 higher (above P2)
-
-    if (heightDiff < -15 && t1.vy > 0) {
-      // P1 landed on P2!
-      battleScores[0]++;
-      screenShake = 12; flashTimer = 10;
-      flashColor = TRUCK_ROSTER[player1.truckIdx].body;
-      t2.squish = 1;
-      playSound('crush');
-      spawnCrushParticlesColored(
-        (t1.x + t2.x + t2.w) / 2, GROUND_Y - 10,
-        [TRUCK_ROSTER[player1.truckIdx].body, TRUCK_ROSTER[player2.truckIdx].body, '#ffcc00', '#fff']
-      );
-      particles.push({
-        x: (t1.x + t2.x + t2.w) / 2, y: GROUND_Y - 40,
-        vx: 0, vy: -2, size: 1, color: '#fff', life: 1, decay: 0.015,
-        type: 'text', text: ['SMASH!','CRUSHED!','STOMPED!'][Math.floor(Math.random() * 3)]
-      });
-      resetBattlePositions();
-    } else if (heightDiff > 15 && t2.vy > 0) {
-      // P2 landed on P1!
-      battleScores[1]++;
-      screenShake = 12; flashTimer = 10;
-      flashColor = TRUCK_ROSTER[player2.truckIdx].body;
-      t1.squish = 1;
-      playSound('crush');
-      spawnCrushParticlesColored(
-        (t1.x + t1.w + t2.x) / 2, GROUND_Y - 10,
-        [TRUCK_ROSTER[player2.truckIdx].body, TRUCK_ROSTER[player1.truckIdx].body, '#ffcc00', '#fff']
-      );
-      particles.push({
-        x: (t1.x + t1.w + t2.x) / 2, y: GROUND_Y - 40,
-        vx: 0, vy: -2, size: 1, color: '#fff', life: 1, decay: 0.015,
-        type: 'text', text: ['SMASH!','CRUSHED!','STOMPED!'][Math.floor(Math.random() * 3)]
-      });
-      resetBattlePositions();
-    } else {
-      // Same height: bounce both back
-      t1.x -= 8; t2.x += 8;
-      screenShake = 4;
-      playSound('landing', 3);
-    }
-  }
-
-  // Screen shake & flash decay
-  if (screenShake > 0) screenShake *= 0.85;
-  if (flashTimer > 0) flashTimer--;
-
-  // Update particles
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx; p.y += p.vy;
-    if (p.type === 'spark' || p.type === 'dust') p.vy += 0.15;
-    p.life -= p.decay;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-}
-
-function drawBattleArena() {
-  const env = ENVIRONMENTS[0]; // desert background
-  // Sky
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  skyGrad.addColorStop(0, '#0a0020');
-  skyGrad.addColorStop(0.5, '#1a0040');
-  skyGrad.addColorStop(1, '#0f0c29');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, W, GROUND_Y);
-
-  // Stars
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  for (let i = 0; i < 30; i++) {
-    const sx = (i * 137.5) % W;
-    const sy = (i * 73.1) % (GROUND_Y - 50) + 10;
-    ctx.fillRect(sx, sy, 1.5, 1.5);
-  }
-
-  // Arena ground
-  ctx.fillStyle = '#3a2a1a';
-  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-  // Dirt oval
-  ctx.fillStyle = '#4a3a2a';
-  ctx.beginPath();
-  ctx.ellipse(W / 2, GROUND_Y + 30, 350, 40, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Center line
-  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([8, 8]);
-  ctx.beginPath();
-  ctx.moveTo(W / 2, GROUND_Y - 80);
-  ctx.lineTo(W / 2, GROUND_Y + 60);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Crowd silhouettes along edges
-  ctx.fillStyle = 'rgba(50,30,60,0.6)';
-  for (let i = 0; i < 30; i++) {
-    const cx = i * 28 + 5;
-    const ch = 15 + Math.sin(i * 1.7) * 5;
-    ctx.beginPath();
-    ctx.arc(cx, GROUND_Y + 70, 8, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(cx - 4, GROUND_Y + 70, 8, ch);
-  }
-
-  // Spotlights
-  ctx.fillStyle = 'rgba(255,200,100,0.03)';
-  ctx.beginPath();
-  ctx.moveTo(200, 0); ctx.lineTo(100, GROUND_Y); ctx.lineTo(300, GROUND_Y);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(600, 0); ctx.lineTo(500, GROUND_Y); ctx.lineTo(700, GROUND_Y);
-  ctx.fill();
-}
-
-function drawBattleHUD() {
-  const p1c = TRUCK_ROSTER[player1.truckIdx];
-  const p2c = TRUCK_ROSTER[player2.truckIdx];
-
-  ctx.textAlign = 'center';
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
-
-  // Score: "P1: 3 — P2: 2"
-  ctx.font = 'bold 28px "Arial Black", Impact, sans-serif';
-  ctx.fillStyle = p1c.body;
-  ctx.strokeText('P1: ' + battleScores[0], W / 4, 35);
-  ctx.fillText('P1: ' + battleScores[0], W / 4, 35);
-
-  ctx.fillStyle = '#fff';
-  ctx.strokeText('—', W / 2, 35);
-  ctx.fillText('—', W / 2, 35);
-
-  ctx.fillStyle = p2c.body;
-  ctx.strokeText('P2: ' + battleScores[1], W * 3 / 4, 35);
-  ctx.fillText('P2: ' + battleScores[1], W * 3 / 4, 35);
-
-  // Score dots (first to 5)
-  for (let i = 0; i < battleWinScore; i++) {
-    ctx.fillStyle = i < battleScores[0] ? p1c.accent : 'rgba(255,255,255,0.2)';
-    ctx.beginPath(); ctx.arc(W / 4 - 40 + i * 18, 55, 6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = i < battleScores[1] ? p2c.accent : 'rgba(255,255,255,0.2)';
-    ctx.beginPath(); ctx.arc(W * 3 / 4 - 40 + i * 18, 55, 6, 0, Math.PI * 2); ctx.fill();
-  }
-
-  // "FIRST TO 5" label
-  ctx.fillStyle = '#888'; ctx.font = '11px Arial';
-  ctx.fillText('FIRST TO ' + battleWinScore, W / 2, 55);
-
-  // Mute button
-  const muteX = W - 20, muteY = 15;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath(); ctx.arc(muteX, muteY, 12, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = '12px Arial';
-  ctx.fillText(audioMuted ? '🔇' : '🔊', muteX, muteY + 4);
-
-  ctx.textAlign = 'left';
-}
-
 function update() {
   // Always decay visual effects regardless of state
   if (screenShake > 0) screenShake *= 0.85;
@@ -4559,9 +4146,6 @@ function update() {
 
   if (gameState !== 'playing') return;
 
-  // Battle mode: completely different update loop
-  if (gameMode === 'battle') { updateBattle(); return; }
-
   // Get highest player score for speed/spawning
   let maxScore = 0;
   for (const p of players) { if (p.score > maxScore) maxScore = p.score; }
@@ -4570,7 +4154,7 @@ function update() {
   const effSpeed = getEffectiveSpeed();
   // Speed progression
   if (gameMode === 'endless') {
-    gameSpeed = Math.min(maxSpeed, 1.6 + maxScore / 1000);
+    gameSpeed = Math.min(maxSpeed, 1.9 + maxScore / 1000);
   } else if (gameMode === 'rally') {
     const lvl = CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0];
     gameSpeed = Math.min(lvl.maxSpeed, lvl.baseSpeed + maxScore / lvl.speedRamp);
@@ -4672,7 +4256,7 @@ function update() {
   obstacleTimer--;
   if (obstacleTimer <= 0) {
     spawnObstacle();
-    if (gameMode === 'frenzy' || gameMode === 'battle') {
+    if (gameMode === 'frenzy') {
       obstacleTimer = 20 + Math.random() * 20; // wall-to-wall cars!
     } else {
       if (gameMode === 'rally') {
@@ -4690,7 +4274,7 @@ function update() {
     if (starTimer <= 0) { spawnStar(); starTimer = 50 + Math.random() * 40; }
   }
 
-  // Spawn power-ups (rally + frenzy, not battle)
+  // Spawn power-ups (rally + frenzy)
   if (gameMode === 'rally' || gameMode === 'frenzy') {
     powerUpSpawnTimer--;
     if (powerUpSpawnTimer <= 0) {
@@ -4840,7 +4424,7 @@ function drawHUD() {
     }
   }
 
-  // Round timer for frenzy/battle
+  // Round timer for frenzy
   if (roundTimer > 0) {
     const secs = Math.ceil(roundTimer / 60);
     const urgent = secs <= 5;
@@ -4853,7 +4437,7 @@ function drawHUD() {
     ctx.fillText(secs + 's', W / 2, timerY);
     // Mode label
     ctx.fillStyle = '#ffcc00'; ctx.font = 'bold 11px Arial';
-    ctx.fillText(gameMode === 'battle' ? 'BATTLE' : 'CRUSH FRENZY', W / 2, 18);
+    ctx.fillText('CRUSH FRENZY', W / 2, 18);
     ctx.textAlign = 'left';
   }
 
@@ -4861,7 +4445,7 @@ function drawHUD() {
   if (gameMode === 'rally' || gameMode === 'endless') {
   const speedBarY = (gameMode === 'rally') ? 26 : 8; // offset down in campaign to avoid level text
   const lvlRef = (gameMode === 'rally') ? (CAMPAIGN_LEVELS[campaignLevel] || CAMPAIGN_LEVELS[0]) : null;
-  const spdBase = lvlRef ? lvlRef.baseSpeed : 1.6;
+  const spdBase = lvlRef ? lvlRef.baseSpeed : 1.9;
   const spdMax = lvlRef ? lvlRef.maxSpeed : maxSpeed;
   const speedPct = Math.max(0, (gameSpeed - spdBase) / (spdMax - spdBase));
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -5102,38 +4686,11 @@ function draw() {
   }
 
   if (gameState === 'playing' || gameState === 'countdown' || gameState === 'gameover' || gameState === 'paused' || gameState === 'levelcomplete') {
-    // Battle mode: draw arena instead of scrolling level
-    if (gameMode === 'battle') {
-      // Arena is drawn instead of normal environment (override bg)
-      // We already drew environment bg above, so draw arena on top
-      drawBattleArena();
-
-      // Draw trucks facing each other (P2 flipped)
-      if (player2) {
-        ctx.save();
-        const tk2 = player2.truck;
-        ctx.translate(tk2.x + tk2.w / 2, tk2.y + tk2.h);
-        ctx.scale(-1, 1); // flip horizontally
-        ctx.translate(-(tk2.x + tk2.w / 2), -(tk2.y + tk2.h));
-        drawPlayerTruck(player2);
-        ctx.restore();
-      }
-      if (player1) drawPlayerTruck(player1);
-    } else {
-      // Normal mode: draw stars, power-ups, obstacles, trucks
-      // Draw stars
-      for (const s of stars) { if (!s.collected) drawStar(s); }
-
-      // Draw power-ups
-      for (const pu of powerUps) { if (!pu.collected) drawPowerUp(pu); }
-
-      // Draw obstacles
-      for (const obs of obstacles) drawObstacle(obs);
-
-      // Draw trucks (P2 first if exists, so P1 draws on top)
-      if (player2) drawPlayerTruck(player2);
-      if (player1) drawPlayerTruck(player1);
-    }
+    // Draw stars, power-ups, obstacles, trucks
+    for (const s of stars) { if (!s.collected) drawStar(s); }
+    for (const pu of powerUps) { if (!pu.collected) drawPowerUp(pu); }
+    for (const obs of obstacles) drawObstacle(obs);
+    if (player1) drawPlayerTruck(player1);
 
     // Draw particles
     for (const p of particles) {
@@ -5191,8 +4748,7 @@ function draw() {
     }
 
     if (gameState === 'playing' || gameState === 'paused') {
-      if (gameMode === 'battle') drawBattleHUD();
-      else drawHUD();
+      drawHUD();
       drawPauseButton();
 
       // Campaign HUD: level indicator + max speed text + countdown
@@ -5235,7 +4791,6 @@ function draw() {
   if (gameState === 'title') drawTitleScreen();
   if (gameState === 'picker') drawPickerScreen();
   if (gameState === 'modeselect') drawModeSelectScreen();
-  if (gameState === 'playerselect') drawPlayerSelectScreen();
   if (gameState === 'gameover') drawGameOverScreen();
   if (gameState === 'levelcomplete') drawLevelCompleteScreen();
   if (gameState === 'campaignwin') drawCampaignWinScreen();
