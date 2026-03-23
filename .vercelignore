@@ -1,0 +1,35 @@
+# Dev/spec files — stay in Git, excluded from Vercel deployment
+CLAUDE.md
+CAMPAIGN-MODE.md
+CHANGES-PHASE2-MODES.md
+FLAME-CRUSHER-HD.md
+FULL-SVG-ROSTER.md
+HD-TRUCKS-10-12.md
+MASTER-VEHICLE-SPEC.md
+MOBILE-FIXES.md
+OBJECTS-REDESIGN.md
+PATCH-2.md
+PATCH-3.md
+PHASE-1-BUILD.md
+PHASE-2-BUILD.md
+POWERUP-ICONS.md
+QUICK-PATCH.md
+REFINEMENT-PASS.md
+SKG-Website-Audit.md
+STAR-COIN.md
+
+# Concept/mockup HTML files
+powerup-concepts.html
+star-concepts.html
+pro_stadium_trucks_final.html
+objects-redesign.html
+trash-concepts.html
+ramp-concepts.html
+unified_monster_trucks.html
+
+# Reference images and ideas
+reference/
+ideas/
+
+# Local dev
+.claude/
