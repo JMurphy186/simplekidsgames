@@ -193,6 +193,21 @@ const FLIP_DURATION = 24; // frames for full 360 (snappy and satisfying)
 const FLIP_BONUS_POINTS = 50;
 
 // ============================================================
+// FLAME CRUSHER HD — SVG ASSETS (embedded as data URIs)
+// ============================================================
+const FCHD_BODY_SVG = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMjUwIiB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJib2R5R3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRjhDMDAiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNFNjUxMDAiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0ic3RyaXBlR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRkZGMDAiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNGRkQ2MDAiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0id2luZG93R3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzkwQ0FGOSIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzQyQTVGNSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxlbGxpcHNlIGN4PSIyMDAiIGN5PSIyMTAiIHJ4PSIxNDAiIHJ5PSIxMCIgZmlsbD0iIzAwMDAwMCIgb3BhY2l0eT0iMC4xNSIvPjxwYXRoIGQ9Ik0gNjAgMTE1IFEgMzAgMTEwIDIwIDEyMCBRIDQwIDEyNSAzNSAxMzAgUSA1MCAxMzAgNTUgMTM1IFEgMzAgMTQwIDQwIDE0NSBRIDYwIDE0MCA3MCAxMjUgWiIgZmlsbD0iI0ZGOTgwMCIvPjxwYXRoIGQ9Ik0gNjUgMTIwIFEgNDUgMTE4IDQwIDEyNSBRIDU1IDEyOCA1MiAxMzIgUSA2NSAxMzIgNzAgMTI1IFoiIGZpbGw9IiNGRkVCM0IiLz48cmVjdCB4PSI2NSIgeT0iMTIwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTAiIGZpbGw9IiM3NTc1NzUiIHJ4PSIyIi8+PHJlY3QgeD0iMTEwIiB5PSIxNDAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMjAiIGZpbGw9IiMyNjMyMzgiIHJ4PSI1Ii8+PHJlY3QgeD0iMTMwIiB5PSIxMjAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI0MCIgZmlsbD0iIzM3NDc0RiIvPjxyZWN0IHg9IjI1MCIgeT0iMTIwIiB3aWR0aD0iMjAiIGhlaWdodD0iNDAiIGZpbGw9IiMzNzQ3NEYiLz48cmVjdCB4PSI4MCIgeT0iMTI1IiB3aWR0aD0iMTAiIGhlaWdodD0iMTUiIGZpbGw9IiNCMEJFQzUiIHJ4PSIyIi8+PHBhdGggZD0iTSA4NSA4NSBMIDE4MCA4NSBMIDE5MCA1MCBMIDI1MCA1MCBMIDI2NSA4NSBMIDMxMCA4NSBDIDMyMCA4NSAzMjUgOTAgMzI1IDEwMCBMIDMyNSAxNDAgTCA4NSAxNDAgWiIgZmlsbD0idXJsKCNib2R5R3JhZCkiLz48cmVjdCB4PSIzMTUiIHk9IjEzMCIgd2lkdGg9IjE1IiBoZWlnaHQ9IjEwIiBmaWxsPSIjRkZGOUM0IiByeD0iMiIvPjxyZWN0IHg9IjI4NSIgeT0iMTAwIiB3aWR0aD0iMzUiIGhlaWdodD0iMTUiIGZpbGw9IiM0MjQyNDIiLz48cmVjdCB4PSIyNjAiIHk9IjEwMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkZGOUM0Ii8+PHBhdGggZD0iTSAxOTUgNTUgTCAyMTUgNTUgTCAyMTUgODUgTCAxODUgODUgWiIgZmlsbD0idXJsKCN3aW5kb3dHcmFkKSIvPjxwYXRoIGQ9Ik0gMjI1IDU1IEwgMjQ1IDU1IEwgMjU1IDg1IEwgMjI1IDg1IFoiIGZpbGw9InVybCgjd2luZG93R3JhZCkiLz48cGF0aCBkPSJNIDg1IDEwNSBMIDE0MCAxMDUgTCAxNTUgMTMwIEwgMTc1IDEwNSBMIDE5NSAxMzAgTCAyMTUgMTA1IEwgMjU1IDEwNSBMIDI1NSAxMTUgTCAyMTAgMTE1IEwgMTk1IDE0MCBMIDE3NSAxMTUgTCAxNTUgMTQwIEwgMTM1IDExNSBMIDg1IDExNSBaIiBmaWxsPSJ1cmwoI3N0cmlwZUdyYWQpIi8+PC9zdmc+';
+const FCHD_WHEEL_SVG = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii00OCAtNDggOTYgOTYiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJ0aXJlR3JhZCIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMyQzJDMzQiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxQTFBMjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFBMUEyNCIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWRhc2hhcnJheT0iMTAgNiIvPjxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSI0MCIgZmlsbD0idXJsKCN0aXJlR3JhZCkiLz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iMjgiIGZpbGw9IiMxMTExMTgiLz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iMjAiIGZpbGw9IiNFMEUwRTAiLz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iMTQiIGZpbGw9IiM5RTlFOUUiLz48Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNiIgZmlsbD0iIzExMTExOCIvPjwvc3ZnPg==';
+
+// Load SVG images
+const fchdAssets = { body: new Image(), wheel: new Image(), loaded: false };
+let fchdToLoad = 2;
+function onFchdLoad() { fchdToLoad--; if (fchdToLoad <= 0) fchdAssets.loaded = true; }
+fchdAssets.body.onload = onFchdLoad;
+fchdAssets.wheel.onload = onFchdLoad;
+fchdAssets.body.src = FCHD_BODY_SVG;
+fchdAssets.wheel.src = FCHD_WHEEL_SVG;
+
+// ============================================================
 // TRUCK ROSTER
 // ============================================================
 const TRUCK_ROSTER = [
@@ -206,6 +221,8 @@ const TRUCK_ROSTER = [
   { name: 'Red Rampage', body: '#cc1100', accent: '#ff4444', highlight: '#dd3322', decal: 'claws', style: 'monster', type: 'monster' },
   { name: 'Thunder Bull', body: '#1144aa', accent: '#ffcc00', highlight: '#2255bb', decal: 'horns', style: 'monster', type: 'monster' },
   { name: 'Toxic Crusher', body: '#338833', accent: '#00ff88', highlight: '#44aa44', decal: 'hazard', style: 'monster', type: 'monster' },
+  // HD SVG truck
+  { name: 'Flame Crusher HD', body: '#FF8C00', accent: '#FFD600', highlight: '#E65100', decal: 'zigzag', style: 'hd', type: 'monster', renderMode: 'svg' },
   // Cars (the crushable ones, now playable!)
   { name: 'Red Racer', body: '#e74c3c', accent: '#ff6b6b', highlight: '#c0392b', decal: 'stripes', style: 'car', type: 'car' },
   { name: 'Cool Blue', body: '#3498db', accent: '#74b9ff', highlight: '#2980b9', decal: 'stripes', style: 'car', type: 'car' },
@@ -1217,7 +1234,8 @@ function drawPickerScreen() {
 
     // Style/type badge
     let badge, badgeColor;
-    if (t.style === 'classic') { badge = 'CLASSIC'; badgeColor = '#ff6600'; }
+    if (t.style === 'hd') { badge = 'HD'; badgeColor = '#ffd700'; }
+    else if (t.style === 'classic') { badge = 'CLASSIC'; badgeColor = '#ff6600'; }
     else if (t.style === 'monster') { badge = 'MONSTER'; badgeColor = '#44ff44'; }
     else { badge = t.type.toUpperCase(); badgeColor = '#4488ff'; }
     ctx.fillStyle = badgeColor; ctx.font = '9px Arial';
@@ -2504,6 +2522,54 @@ function drawMonsterWheel(cx, cy, r, hubColor) {
   ctx.beginPath(); ctx.arc(cx, cy, r * 0.15, 0, Math.PI * 2); ctx.fill();
 }
 
+// ============================================================
+// FLAME CRUSHER HD — SVG-BASED DRAWING
+// ============================================================
+function drawTruckHD(tx, ty, tw, th, showExhaust, squishY) {
+  if (!fchdAssets.loaded) {
+    // Fallback to canvas Flame Crusher if SVGs not loaded yet
+    drawTruckWithColors(tx, ty, tw, th, TRUCK_ROSTER[0], showExhaust, squishY);
+    return;
+  }
+
+  // SVG body: visible content spans ~x=20..330 (310px), y=50..160 (110px) in a 400x250 viewBox
+  // Scale SVG to fit the game truck width (tw=90)
+  const scale = tw / 260;
+  const fullW = 400 * scale;
+  const fullH = 250 * scale;
+
+  // Offset so the body portion aligns with the collision box
+  const drawX = tx - 55 * scale;
+  const drawY = ty - 45 * scale + squishY;
+
+  // Draw body SVG
+  ctx.drawImage(fchdAssets.body, drawX, drawY, fullW, fullH);
+
+  // Wheels — spin independently using wheelAngle
+  // In SVG: rear wheel ~x=140, front wheel ~x=270, wheel center y~=165
+  const wheelR = 42 * scale;
+  const wheelDiam = wheelR * 2;
+
+  const rearCX = drawX + 140 * scale;
+  const rearCY = drawY + 165 * scale;
+  const frontCX = drawX + 270 * scale;
+  const frontCY = drawY + 165 * scale;
+
+  // Rear wheel
+  ctx.save();
+  ctx.translate(rearCX, rearCY);
+  ctx.rotate(wheelAngle);
+  ctx.drawImage(fchdAssets.wheel, -wheelDiam / 2, -wheelDiam / 2, wheelDiam, wheelDiam);
+  ctx.restore();
+
+  // Front wheel
+  ctx.save();
+  ctx.translate(frontCX, frontCY);
+  ctx.rotate(wheelAngle);
+  ctx.drawImage(fchdAssets.wheel, -wheelDiam / 2, -wheelDiam / 2, wheelDiam, wheelDiam);
+  ctx.restore();
+}
+
 // Draw car-type vehicle (for car/suv/bus/limo roster entries)
 function drawCarVehicle(tx, ty, tw, th, colors, vehicleType, squishY) {
   const bodyY = ty + th * 0.3 + squishY;
@@ -2578,7 +2644,9 @@ function drawCarVehicle(tx, ty, tw, th, colors, vehicleType, squishY) {
 
 // Unified vehicle preview for picker (works for both monster trucks and cars)
 function drawVehiclePreview(tx, ty, roster, showExhaust, squishY) {
-  if (roster.style === 'monster') {
+  if (roster.renderMode === 'svg') {
+    drawTruckHD(tx, ty, 90, 50, showExhaust, squishY);
+  } else if (roster.style === 'monster') {
     drawTruckMonster(tx, ty, 90, 50, roster, showExhaust, squishY);
   } else if (!roster.type || roster.type === 'monster' || roster.style === 'classic') {
     drawTruckWithColors(tx, ty, 90, 50, roster, showExhaust, squishY);
@@ -4422,7 +4490,9 @@ function drawPlayerTruck(p) {
   ctx.closePath(); ctx.fill();
 
   // Draw the right vehicle type based on style
-  if (colors.style === 'monster') {
+  if (colors.renderMode === 'svg') {
+    drawTruckHD(tk.x, tk.y, tk.w, tk.h, !tk.grounded, squishY);
+  } else if (colors.style === 'monster') {
     drawTruckMonster(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY);
   } else if (!colors.type || colors.type === 'monster' || colors.style === 'classic') {
     drawTruckWithColors(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY);
