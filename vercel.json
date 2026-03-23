@@ -15,25 +15,47 @@
         { "key": "Pragma", "value": "no-cache" },
         { "key": "Expires", "value": "0" }
       ]
+    },
+    {
+      "source": "/:path*.md",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/reference/:path*",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
     }
   ],
-  "rewrites": [
-    { "source": "/CLAUDE.md", "destination": "/404.html" },
-    { "source": "/CAMPAIGN-MODE.md", "destination": "/404.html" },
-    { "source": "/FULL-SVG-ROSTER.md", "destination": "/404.html" },
-    { "source": "/OBJECTS-REDESIGN.md", "destination": "/404.html" },
-    { "source": "/STAR-COIN.md", "destination": "/404.html" },
-    { "source": "/PATCH-3.md", "destination": "/404.html" },
-    { "source": "/MOBILE-FIXES.md", "destination": "/404.html" },
-    { "source": "/POWERUP-ICONS.md", "destination": "/404.html" },
-    { "source": "/FLAME-CRUSHER-HD.md", "destination": "/404.html" },
-    { "source": "/HD-TRUCKS-10-12.md", "destination": "/404.html" },
-    { "source": "/pro_stadium_trucks_final.html", "destination": "/404.html" },
-    { "source": "/objects-redesign.html", "destination": "/404.html" },
-    { "source": "/trash-concepts.html", "destination": "/404.html" },
-    { "source": "/ramp-concepts.html", "destination": "/404.html" },
-    { "source": "/star-concepts.html", "destination": "/404.html" },
-    { "source": "/unified_monster_trucks.html", "destination": "/404.html" },
-    { "source": "/powerup-concepts.html", "destination": "/404.html" }
+  "redirects": [
+    { "source": "/CLAUDE.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/CAMPAIGN-MODE.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/FULL-SVG-ROSTER.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/OBJECTS-REDESIGN.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/STAR-COIN.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/PATCH-3.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/MOBILE-FIXES.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/POWERUP-ICONS.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/FLAME-CRUSHER-HD.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/HD-TRUCKS-10-12.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/SKG-Website-Audit.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/PHASE-1-BUILD.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/PHASE-2-BUILD.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/REFINEMENT-PASS.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/CHANGES-PHASE2-MODES.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/MASTER-VEHICLE-SPEC.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/QUICK-PATCH.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/PATCH-2.md", "destination": "/404", "statusCode": 404 },
+    { "source": "/pro_stadium_trucks_final.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/objects-redesign.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/trash-concepts.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/ramp-concepts.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/star-concepts.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/unified_monster_trucks.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/powerup-concepts.html", "destination": "/404", "statusCode": 404 },
+    { "source": "/reference/:path*", "destination": "/404", "statusCode": 404 }
   ]
 }
