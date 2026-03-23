@@ -1878,8 +1878,12 @@ function spawnFlipParticles(x, y, truckIdx, flipCount) {
 // POWER-UP SPAWNING
 // ============================================================
 function spawnPowerUp() {
-  // All power-ups available at any time
-  const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+  // Frenzy: only Mega Truck and Turbo Boost (no stars to magnetize)
+  let pool = POWERUP_TYPES;
+  if (gameMode === 'frenzy') {
+    pool = POWERUP_TYPES.filter(p => p.effect === 'mega' || p.effect === 'turbo');
+  }
+  const type = pool[Math.floor(Math.random() * pool.length)];
   powerUps.push({
     x: W + 50, y: GROUND_Y - 50 - Math.random() * 60,
     type: type, collected: false, bobPhase: Math.random() * Math.PI * 2,
