@@ -62,19 +62,16 @@
     font-size: 14px;
     color: #888;
   }
+  #rotate-msg .dismiss {
+    font-size: 14px;
+    opacity: 0.5;
+    margin-top: 10px;
+  }
   @keyframes rotatePhone {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(90deg); }
     50% { transform: rotate(90deg); }
     75% { transform: rotate(0deg); }
-  }
-  @media (orientation: portrait) {
-    #rotate-msg { display: flex; }
-    #game { display: none; }
-  }
-  @media (orientation: landscape) {
-    #rotate-msg { display: none; }
-    #game { display: block; }
   }
 </style>
 </head>
@@ -83,11 +80,44 @@
   <span class="rotate-icon">📱</span>
   <span class="rotate-text">Rotate your device!</span>
   <span class="rotate-sub">This game plays best in landscape mode</span>
+  <div class="dismiss">Tap to continue anyway</div>
 </div>
 <canvas id="game"></canvas>
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d', { willReadFrequently: false });
+
+// ============================================================
+// ORIENTATION DETECTION (JS-based, replaces CSS media queries)
+// ============================================================
+const rotateOverlay = document.getElementById('rotate-msg');
+let rotateOverlayDismissed = false;
+
+function checkOrientation() {
+  if (rotateOverlayDismissed) return;
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const isMobile = window.innerWidth < 900 || window.innerHeight < 900;
+  if (isPortrait && isMobile) {
+    rotateOverlay.style.display = 'flex';
+    canvas.style.display = 'none';
+  } else {
+    rotateOverlay.style.display = 'none';
+    canvas.style.display = 'block';
+  }
+}
+
+rotateOverlay.addEventListener('click', () => {
+  rotateOverlayDismissed = true;
+  rotateOverlay.style.display = 'none';
+  canvas.style.display = 'block';
+});
+
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', () => { setTimeout(checkOrientation, 200); });
+if (window.screen && window.screen.orientation) {
+  window.screen.orientation.addEventListener('change', () => { setTimeout(checkOrientation, 200); });
+}
+checkOrientation();
 
 // ============================================================
 // RESPONSIVE SIZING
