@@ -813,14 +813,6 @@ canvas {
   </div>
   <button id="trophyBtn" onclick="openTrophyRoom()">🏆</button>
   <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
-  <div id="trophyRoom">
-    <div class="trophy-header">
-      <button class="trophy-close" onclick="closeTrophyRoom()">✕</button>
-      <div class="trophy-title">🏆 TROPHY ROOM</div>
-      <div class="trophy-progress" id="trophyProgress">0 / 0 species</div>
-    </div>
-    <div class="trophy-grid" id="trophyGrid"></div>
-  </div>
   <div id="pauseMenu">
     <div class="pause-title">PAUSED</div>
     <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
@@ -828,6 +820,16 @@ canvas {
     <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
     <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
   </div>
+</div>
+
+<!-- Trophy Room lives outside gameContainer so it's accessible from character select too -->
+<div id="trophyRoom">
+  <div class="trophy-header">
+    <button class="trophy-close" onclick="closeTrophyRoom()">✕</button>
+    <div class="trophy-title">🏆 TROPHY ROOM</div>
+    <div class="trophy-progress" id="trophyProgress">0 / 0 species</div>
+  </div>
+  <div class="trophy-grid" id="trophyGrid"></div>
 </div>
 
 <script>
