@@ -1162,15 +1162,54 @@ function drawTitle() {
   titleShipBob += 0.03;
   const t = Date.now() / 1000;
 
-  // Title
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.round(38 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  // Title — animated wave + glow per letter
+  const titleLetters = [
+    { ch: 'S', color: '#42A5F5' },
+    { ch: 'P', color: '#64B5F6' },
+    { ch: 'A', color: '#90CAF9' },
+    { ch: 'C', color: '#BBDEFB' },
+    { ch: 'E', color: '#E3F2FD' },
+    { ch: ' ', color: 'none' },
+    { ch: 'D', color: '#FFFFFF' },
+    { ch: 'O', color: '#E3F2FD' },
+    { ch: 'D', color: '#BBDEFB' },
+    { ch: 'G', color: '#90CAF9' },
+    { ch: 'E', color: '#64B5F6' },
+  ];
+  const titleFontSize = Math.round(40 * scale);
+  ctx.font = `bold ${titleFontSize}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('SPACE DODGE', W / 2, H * 0.09);
+  // Measure total width
+  let totalTitleW = 0;
+  const letterWidths = [];
+  for (const l of titleLetters) {
+    const w = l.ch === ' ' ? titleFontSize * 0.4 : ctx.measureText(l.ch).width;
+    letterWidths.push(w);
+    totalTitleW += w;
+  }
+  let tx = W / 2 - totalTitleW / 2;
+  const titleBaseY = H * 0.09;
+  for (let i = 0; i < titleLetters.length; i++) {
+    const l = titleLetters[i];
+    if (l.ch === ' ') { tx += letterWidths[i]; continue; }
+    const waveY = Math.sin(t * 2.5 + i * 0.55) * 8 * scale;
+    const scaleBoost = 1 + Math.sin(t * 2.5 + i * 0.55) * 0.03;
+    ctx.save();
+    ctx.translate(tx + letterWidths[i] / 2, titleBaseY + waveY);
+    ctx.scale(scaleBoost, scaleBoost);
+    ctx.shadowColor = '#42A5F5';
+    ctx.shadowBlur = 15 + Math.sin(t * 3 + i) * 5;
+    ctx.fillStyle = l.color;
+    ctx.fillText(l.ch, 0, 0);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+    tx += letterWidths[i];
+  }
 
   // Subtitle
   ctx.fillStyle = '#42A5F5';
-  ctx.font = `${Math.round(14 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.font = `bold ${Math.round(20 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.textAlign = 'center';
   ctx.fillText('Dodge and blast the asteroids!', W / 2, H * 0.155);
 
   // --- SPOTLIGHT SHOWCASE ---
@@ -1218,8 +1257,8 @@ function drawTitle() {
 
   // --- SHIP PICKER ARROWS ---
   const arrowY = spotY;
-  const arrowSpread = 130 * scale;
-  const arrowSz = 20 * scale;
+  const arrowSpread = 145 * scale;
+  const arrowSz = 32 * scale;
 
   // Left arrow
   ctx.fillStyle = 'rgba(255,255,255,0.15)';
@@ -1227,8 +1266,8 @@ function drawTitle() {
   ctx.arc(spotX - arrowSpread, arrowY, arrowSz, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.font = `bold ${Math.round(20 * scale)}px Arial, sans-serif`;
-  ctx.fillText('‹', spotX - arrowSpread, arrowY + 6 * scale);
+  ctx.font = `bold ${Math.round(32 * scale)}px Arial, sans-serif`;
+  ctx.fillText('‹', spotX - arrowSpread, arrowY + 9 * scale);
   titleBtns.prevShip = { x: spotX - arrowSpread - arrowSz, y: arrowY - arrowSz, w: arrowSz * 2, h: arrowSz * 2 };
 
   // Right arrow
@@ -1237,33 +1276,33 @@ function drawTitle() {
   ctx.arc(spotX + arrowSpread, arrowY, arrowSz, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('›', spotX + arrowSpread, arrowY + 6 * scale);
+  ctx.fillText('›', spotX + arrowSpread, arrowY + 9 * scale);
   titleBtns.nextShip = { x: spotX + arrowSpread - arrowSz, y: arrowY - arrowSz, w: arrowSz * 2, h: arrowSz * 2 };
 
   // Ship name + type
   const s = getShip();
   if (unlocked) {
     ctx.fillStyle = s.accent;
-    ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.fillText(s.name, spotX, spotY + 72 * scale);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `${Math.round(11 * scale)}px Arial, sans-serif`;
-    ctx.fillText(s.type, spotX, spotY + 88 * scale);
+    ctx.font = `bold ${Math.round(22 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+    ctx.fillText(s.name, spotX, spotY + 115 * scale);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+    ctx.fillText(s.type, spotX, spotY + 135 * scale);
   } else {
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.font = `bold ${Math.round(14 * scale)}px Arial, sans-serif`;
-    ctx.fillText('🔒 LOCKED', spotX, spotY + 72 * scale);
+    ctx.font = `bold ${Math.round(20 * scale)}px Arial, sans-serif`;
+    ctx.fillText('🔒 LOCKED', spotX, spotY + 115 * scale);
     ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.font = `${Math.round(10 * scale)}px Arial, sans-serif`;
-    if (selectedShip > 0) ctx.fillText('Beat campaign with ' + SHIPS[selectedShip - 1].name, spotX, spotY + 88 * scale);
+    ctx.font = `${Math.round(13 * scale)}px Arial, sans-serif`;
+    if (selectedShip > 0) ctx.fillText('Beat campaign with ' + SHIPS[selectedShip - 1].name, spotX, spotY + 135 * scale);
   }
 
   // Ship dots (page indicators)
-  const dotY = spotY + 102 * scale;
+  const dotY = spotY + 155 * scale;
   for (let i = 0; i < SHIPS.length; i++) {
     ctx.fillStyle = i === selectedShip ? getShip().accent : 'rgba(255,255,255,' + (unlockedShips.includes(i) ? '0.3' : '0.1') + ')';
     ctx.beginPath();
-    ctx.arc(spotX + (i - 2) * 16 * scale, dotY, 4 * scale, 0, Math.PI * 2);
+    ctx.arc(spotX + (i - 2) * 22 * scale, dotY, 6 * scale, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1748,8 +1787,9 @@ function showWorldTitle() {
 function startCountdown() {
   gameState = 'countdown';
   countdownNum = 3;
-  transitionTimer = 60; // 1 second per number
+  transitionTimer = 60;
   resetPlayState();
+  playSound('beep'); // sound on 3
 }
 
 function resetPlayState() {
@@ -2385,8 +2425,8 @@ document.addEventListener('keyup', e => {
 
 function handleAction() {
   if (gameState === 'title') { if (unlockedShips.includes(selectedShip)) startCampaign(); return; }
-  if (gameState === 'gameover') { gameState = 'title'; return; }
-  if (gameState === 'victory') { gameState = 'title'; return; }
+  if (gameState === 'gameover') { gameState = 'title'; if (!muted) restartMusic(); return; }
+  if (gameState === 'victory') { gameState = 'title'; if (!muted) restartMusic(); return; }
   if (gameState === 'playing' && paused) { paused = false; }
 }
 
@@ -2397,6 +2437,7 @@ function hitTest(x, y, btn) {
 
 function handleTitleClick(tx, ty) {
   initAudio();
+  if (!musicPlaying && !muted) startMusic(); // ambient music on title
   // Ship picker arrows
   if (hitTest(tx, ty, titleBtns.prevShip)) {
     selectedShip = (selectedShip - 1 + SHIPS.length) % SHIPS.length;
@@ -2467,7 +2508,7 @@ canvas.addEventListener('touchstart', e => {
 
   if (gameState === 'title') { handleTitleClick(tx, ty); return; }
   if (gameState === 'shippicker') { initAudio(); handlePickerClick(tx, ty); return; }
-  if (gameState === 'gameover' || gameState === 'victory') { gameState = 'title'; return; }
+  if (gameState === 'gameover' || gameState === 'victory') { gameState = 'title'; if (!muted) restartMusic(); return; }
 
   touchActive = true;
   touchX = tx;
