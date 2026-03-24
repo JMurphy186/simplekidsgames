@@ -677,13 +677,6 @@ canvas {
         <div id="bestCatchText"></div>
       </div>
     </div>
-    <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
-    <div id="pauseMenu">
-      <div class="pause-title">PAUSED</div>
-      <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
-      <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
-      <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
-    </div>
     <div id="bestCatch" style="display:none;"></div>
     <div id="instruction"></div>
     <div id="reelUI">
@@ -701,6 +694,13 @@ canvas {
       <div id="catchDetails"></div>
       <div id="catchAction"></div>
     </div>
+  </div>
+  <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
+  <div id="pauseMenu">
+    <div class="pause-title">PAUSED</div>
+    <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
+    <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
+    <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
   </div>
 </div>
 
@@ -1727,7 +1727,7 @@ function drawCharacter() {
   const isReeling = gameState === ST.REEL;
   const cc = CHAR_COLORS[playerChar] || CHAR_COLORS.pirate;
   const bodyColor = cc.body;
-  const headColor = playerChar === 'alien' ? '#7aee7a' : playerChar === 'robot' ? '#8899aa' : '#ffcc99';
+  const headColor = playerChar === 'alien' ? '#7aee7a' : playerChar === 'robot' ? '#8899aa' : playerChar === 'ninja' ? '#2a2a2a' : '#ffcc99';
   const handColor = playerChar === 'alien' ? '#5ecc5e' : playerChar === 'robot' ? '#aabbcc' : '#ffcc99';
 
   const roundRect = (x,y,w,h,r) => { ctx.beginPath(); ctx.roundRect(x,y,w,h,[r]); ctx.fill(); };
