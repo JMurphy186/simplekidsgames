@@ -22,7 +22,7 @@ html, body {
 
 #gameContainer {
   position: relative;
-  width: 100vw; height: 100vh;
+  width: 100vw; height: 100vh; height: 100dvh;
 }
 
 canvas {
@@ -376,60 +376,12 @@ canvas {
 }
 
 /* ── Rotate Device Overlay ── */
-#rotate-msg {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #0B0E18;
-  z-index: 9999;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  text-align: center;
-  padding: 2rem;
-}
-.rotate-icon {
-  font-size: 64px;
-  animation: rotatePhone 2s ease-in-out infinite;
-  display: inline-block;
-}
-@keyframes rotatePhone {
-  0%   { transform: rotate(0deg); }
-  30%  { transform: rotate(90deg); }
-  60%  { transform: rotate(90deg); }
-  100% { transform: rotate(0deg); }
-}
-.rotate-title {
-  font-family: 'Luckiest Guy', cursive;
-  font-size: clamp(18px, 5vw, 28px);
-  color: #ffcc00;
-  text-shadow: 0 0 10px #ffcc0066;
-}
-.rotate-sub {
-  font-family: 'Baloo 2', cursive;
-  font-size: clamp(13px, 3.5vw, 18px);
-  color: rgba(255,255,255,0.6);
-  font-weight: 500;
-}
-.rotate-dismiss {
-  font-family: 'Baloo 2', cursive;
-  font-size: clamp(12px, 3vw, 15px);
-  color: rgba(255,255,255,0.35);
-  margin-top: 20px;
-  cursor: pointer;
-}
+/* Rotate overlay removed — game works in any orientation */
 </style>
 </head>
 <body>
 
-<!-- Rotate Device Overlay -->
-<div id="rotate-msg">
-  <div class="rotate-icon">📱</div>
-  <div class="rotate-title">Rotate Your Device!</div>
-  <div class="rotate-sub">This game plays best in landscape mode</div>
-  <div class="rotate-dismiss">Tap to continue anyway</div>
-</div>
+<!-- Game works in any orientation — no rotate overlay -->
 
 <!-- Character Select Screen -->
 <div id="charSelect">
@@ -520,22 +472,31 @@ canvas {
         </svg>
         <div class="char-label">Ninja</div>
       </button>
-      <button class="char-option" data-char="astro">
+      <button class="char-option" data-char="princess">
         <svg class="char-face-svg" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-          <ellipse cx="50" cy="52" rx="44" ry="44" fill="#dde4ea"/>
-          <ellipse cx="50" cy="52" rx="44" ry="44" fill="none" stroke="#bbc4cc" stroke-width="2.5"/>
-          <ellipse cx="50" cy="54" rx="34" ry="34" fill="#aad4ff" opacity="0.3"/>
-          <circle cx="50" cy="54" r="30" fill="#ffcc99"/>
-          <circle cx="38" cy="50" r="4" fill="#2a2a2a"/><circle cx="39.5" cy="48.5" r="1.5" fill="#fff"/>
-          <circle cx="62" cy="50" r="4" fill="#2a2a2a"/><circle cx="63.5" cy="48.5" r="1.5" fill="#fff"/>
-          <path d="M40 62 Q50 72 60 62" stroke="#c47a3a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <ellipse cx="32" cy="60" rx="4" ry="2.5" fill="#ffaa88" opacity="0.4"/>
-          <ellipse cx="68" cy="60" rx="4" ry="2.5" fill="#ffaa88" opacity="0.4"/>
-          <rect x="6" y="50" width="10" height="6" rx="3" fill="#dde4ea" stroke="#bbc4cc" stroke-width="1.5"/>
-          <rect x="84" y="50" width="10" height="6" rx="3" fill="#dde4ea" stroke="#bbc4cc" stroke-width="1.5"/>
-          <ellipse cx="28" cy="28" rx="8" ry="5" fill="#fff" opacity="0.25" transform="rotate(-30 28 28)"/>
+          <ellipse cx="50" cy="58" rx="38" ry="42" fill="#8B6914"/>
+          <ellipse cx="22" cy="68" rx="12" ry="22" fill="#8B6914"/>
+          <ellipse cx="78" cy="68" rx="12" ry="22" fill="#8B6914"/>
+          <circle cx="50" cy="56" r="30" fill="#ffcc99"/>
+          <circle cx="50" cy="56" r="30" fill="none" stroke="#e0aa77" stroke-width="1.5"/>
+          <ellipse cx="39" cy="54" rx="4" ry="4.5" fill="#2a2a2a"/>
+          <circle cx="40.5" cy="52.5" r="1.5" fill="#fff"/>
+          <ellipse cx="61" cy="54" rx="4" ry="4.5" fill="#2a2a2a"/>
+          <circle cx="62.5" cy="52.5" r="1.5" fill="#fff"/>
+          <path d="M34 50 L33 48" stroke="#2a2a2a" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M36 49 L34.5 47" stroke="#2a2a2a" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M66 50 L67 48" stroke="#2a2a2a" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M64 49 L65.5 47" stroke="#2a2a2a" stroke-width="1.2" stroke-linecap="round"/>
+          <ellipse cx="33" cy="60" rx="5" ry="3" fill="#ffaa88" opacity="0.4"/>
+          <ellipse cx="67" cy="60" rx="5" ry="3" fill="#ffaa88" opacity="0.4"/>
+          <path d="M40 64 Q50 73 60 64" stroke="#c47a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M28 38 L34 24 L40 34 L46 20 L50 32 L54 20 L60 34 L66 24 L72 38" fill="#FFD700" stroke="#DAA520" stroke-width="1.5"/>
+          <rect x="28" y="36" width="44" height="6" rx="3" fill="#FFD700" stroke="#DAA520" stroke-width="1"/>
+          <circle cx="50" cy="26" r="3" fill="#FF69B4"/>
+          <circle cx="40" cy="30" r="2" fill="#69D4FF"/>
+          <circle cx="60" cy="30" r="2" fill="#69D4FF"/>
         </svg>
-        <div class="char-label">Astro</div>
+        <div class="char-label">Princess</div>
       </button>
     </div>
   </div>
@@ -584,31 +545,7 @@ canvas {
 const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || ('ontouchstart' in window);
 const actionText = isMobile ? 'Tap' : 'Press SPACE';
 
-// --- Rotate Device Overlay ---
-const rotateMsg = document.getElementById('rotate-msg');
-let rotateOverlayDismissed = false;
-
-function checkOrientation() {
-  const isPortrait = window.innerHeight > window.innerWidth;
-  const isSmallScreen = window.innerWidth < 900 || window.innerHeight < 900;
-  if (isPortrait && isSmallScreen && !rotateOverlayDismissed) {
-    rotateMsg.style.display = 'flex';
-  } else {
-    rotateMsg.style.display = 'none';
-  }
-}
-
-rotateMsg.addEventListener('click', () => {
-  rotateOverlayDismissed = true;
-  rotateMsg.style.display = 'none';
-});
-
-window.addEventListener('resize', checkOrientation);
-if (window.screen && window.screen.orientation) {
-  window.screen.orientation.addEventListener('change', checkOrientation);
-}
-window.addEventListener('orientationchange', checkOrientation);
-checkOrientation();
+// --- Rotate overlay removed — game adapts to any orientation ---
 
 // --- Character Selection ---
 let playerChar = null; // always show character select
@@ -621,7 +558,7 @@ const CHAR_COLORS = {
   alien:   { body: '#7aee7a', hat: '#44aa44', accent: '#39FF14' },
   wizard:  { body: '#6B35CC', hat: '#6B35CC', accent: '#FFE135' },
   ninja:   { body: '#2a2a2a', hat: '#1a1a1a', accent: '#cc2222' },
-  astro:   { body: '#dde4ea', hat: '#bbc4cc', accent: '#aad4ff' },
+  princess:{ body: '#FFD700', hat: '#FF69B4', accent: '#FF69B4' },
 };
 
 document.querySelectorAll('.char-option').forEach(btn => {
@@ -708,8 +645,9 @@ let W, H, dpr;
 
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = window.innerWidth;
-  H = window.innerHeight;
+  const vv = window.visualViewport || { width: window.innerWidth, height: window.innerHeight };
+  W = vv.width;
+  H = vv.height;
   cvs.width = W * dpr;
   cvs.height = H * dpr;
   cvs.style.width = W + 'px';
@@ -717,6 +655,8 @@ function resize() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => { setTimeout(resize, 200); });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
 resize();
 
 // ================== WEB AUDIO API ==================
@@ -1695,7 +1635,7 @@ function drawCharacter() {
     ctx.beginPath(); ctx.arc(cx - 3.5*s, cy - 57*s, 1.5*s, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(cx + 5.5*s, cy - 57*s, 1.5*s, 0, Math.PI*2); ctx.fill();
   } else {
-    // Default face (pirate, wizard, astro)
+    // Default face (pirate, wizard, princess)
     ctx.fillStyle = '#2a2a2a';
     ctx.beginPath(); ctx.arc(cx - 4*s, cy - 57*s, 2*s, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(cx + 5*s, cy - 57*s, 2*s, 0, Math.PI*2); ctx.fill();
@@ -1731,17 +1671,29 @@ function drawCharacter() {
       // Beard
       ctx.fillStyle = '#ccc';
       ctx.beginPath(); ctx.moveTo(cx - 6*s, cy - 50*s); ctx.quadraticCurveTo(cx, cy - 38*s, cx + 6*s, cy - 50*s); ctx.fill();
-    } else if (playerChar === 'astro') {
-      // Helmet
-      ctx.strokeStyle = '#bbc4cc'; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.arc(cx, cy - 56*s, 14*s, 0, Math.PI*2); ctx.stroke();
-      // Visor glare
-      ctx.fillStyle = 'rgba(170,212,255,0.2)';
-      ctx.beginPath(); ctx.arc(cx, cy - 56*s, 13*s, 0, Math.PI*2); ctx.fill();
-      // Ear pieces
-      ctx.fillStyle = '#dde4ea';
-      roundRect(cx - 15*s, cy - 58*s, 4*s, 5*s, 2*s);
-      roundRect(cx + 11*s, cy - 58*s, 4*s, 5*s, 2*s);
+    } else if (playerChar === 'princess') {
+      // Flowing golden hair
+      ctx.fillStyle = '#8B6914';
+      ctx.beginPath(); ctx.ellipse(cx, cy - 54*s, 14*s, 16*s, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx - 10*s, cy - 48*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx + 10*s, cy - 48*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
+      // Tiara
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.moveTo(cx - 10*s, cy - 65*s);
+      ctx.lineTo(cx - 6*s, cy - 73*s);
+      ctx.lineTo(cx - 2*s, cy - 67*s);
+      ctx.lineTo(cx, cy - 76*s);
+      ctx.lineTo(cx + 2*s, cy - 67*s);
+      ctx.lineTo(cx + 6*s, cy - 73*s);
+      ctx.lineTo(cx + 10*s, cy - 65*s);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#FF69B4';
+      ctx.beginPath(); ctx.arc(cx, cy - 73*s, 1.5*s, 0, Math.PI*2); ctx.fill();
+      // Blush
+      ctx.fillStyle = 'rgba(255,170,136,0.35)';
+      ctx.beginPath(); ctx.ellipse(cx - 8*s, cy - 53*s, 3*s, 1.5*s, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx + 9*s, cy - 53*s, 3*s, 1.5*s, 0, 0, Math.PI*2); ctx.fill();
     }
   }
 
