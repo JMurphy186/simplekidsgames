@@ -383,6 +383,27 @@ canvas {
   transform: scale(1.1);
 }
 
+/* ── Character select MENU button ── */
+.char-select-menu {
+  position: absolute;
+  top: clamp(10px, 2vh, 20px);
+  left: clamp(10px, 2vw, 20px);
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: clamp(12px, 1.8vw, 16px);
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  background: rgba(255,255,255,0.1);
+  padding: 6px 14px;
+  border-radius: 8px;
+  z-index: 101;
+  pointer-events: auto;
+}
+.char-select-menu:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+}
+
 /* ── Responsive character select ── */
 @media (max-width: 480px) {
   .char-select-options {
@@ -401,6 +422,7 @@ canvas {
 
 <!-- Character Select Screen -->
 <div id="charSelect">
+  <a href="/" class="char-select-menu">🏠 MENU</a>
   <div class="char-select-inner">
     <div class="char-select-title">CATCH & REEL</div>
     <div class="char-select-sub">Choose your fisher!</div>
@@ -495,6 +517,10 @@ canvas {
         <svg class="char-face-svg" viewBox="0 0 100 100" fill="none" aria-hidden="true">
           <path d="M30 78 Q36 96 50 98 Q64 96 70 78 Q64 92 50 94 Q36 92 30 78Z" fill="#ccc"/>
           <path d="M34 80 Q40 90 50 92 Q60 90 66 80" fill="none" stroke="#bbb" stroke-width="0.8"/>
+          <!-- Long hair behind face -->
+          <ellipse cx="50" cy="62" rx="32" ry="36" fill="#ccc"/>
+          <ellipse cx="26" cy="72" rx="10" ry="20" fill="#ccc"/>
+          <ellipse cx="74" cy="72" rx="10" ry="20" fill="#ccc"/>
           <circle cx="50" cy="60" r="28" fill="#ffcc99"/>
           <circle cx="50" cy="60" r="28" fill="none" stroke="#e0aa77" stroke-width="1.5"/>
           <path d="M30 50 Q36 46 42 50" stroke="#999" stroke-width="3" fill="none" stroke-linecap="round"/>
@@ -1651,12 +1677,17 @@ function drawCharacter() {
   ctx.fillStyle = headColor;
   ctx.fillRect(cx - 3*s, cy - 48*s, 7*s, 6*s);
 
-  // Princess hair renders BEHIND the face
+  // Hair renders BEHIND the face
   if (playerChar === 'princess') {
     ctx.fillStyle = '#8B6914';
     ctx.beginPath(); ctx.ellipse(cx, cy - 54*s, 14*s, 16*s, 0, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(cx - 10*s, cy - 48*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(cx + 10*s, cy - 48*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
+  } else if (playerChar === 'wizard') {
+    ctx.fillStyle = '#ccc';
+    ctx.beginPath(); ctx.ellipse(cx, cy - 52*s, 14*s, 18*s, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx - 10*s, cy - 46*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 10*s, cy - 46*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
   }
 
   // Head
