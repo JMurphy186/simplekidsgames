@@ -165,6 +165,114 @@ canvas {
 .pause-menu { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
 .pause-menu:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
+/* ── Trophy button (gameplay) ── */
+#trophyBtn {
+  position: absolute;
+  top: clamp(10px, 2vh, 20px);
+  right: clamp(52px, 7vw, 72px);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.7);
+  font-size: clamp(18px, 3vw, 24px);
+  padding: 6px 10px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 10;
+  line-height: 1;
+}
+#trophyBtn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+/* ── Trophy button (character select) ── */
+.char-select-trophy {
+  position: absolute;
+  top: clamp(10px, 2vh, 20px);
+  right: clamp(10px, 2vw, 20px);
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: clamp(12px, 1.8vw, 16px);
+  color: #FFE135;
+  text-shadow: 0 0 8px #FFE13544;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,229,53,0.2);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 101;
+}
+.char-select-trophy:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Pause trophy button ── */
+.pause-trophy { background: rgba(255,229,53,0.15); color: #FFE135; border: 1px solid rgba(255,229,53,0.25); }
+.pause-trophy:hover { background: rgba(255,229,53,0.25); }
+
+/* ── Trophy Room overlay ── */
+#trophyRoom {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(11,14,24,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 60;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(16px, 3vh, 24px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#trophyRoom.open { display: flex; }
+.trophy-header {
+  text-align: center;
+  margin-bottom: clamp(12px, 2vh, 20px);
+  position: relative;
+  width: 100%; max-width: 600px;
+}
+.trophy-close {
+  position: absolute; top: 0; right: 0;
+  background: rgba(255,255,255,0.1); border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: clamp(18px, 3vw, 24px);
+  width: 36px; height: 36px; border-radius: 50%;
+  cursor: pointer; pointer-events: auto;
+}
+.trophy-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
+.trophy-title {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: clamp(24px, 5vw, 36px);
+  color: #FFE135;
+  text-shadow: 0 0 10px #FFE13566;
+}
+.trophy-progress {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(12px, 2vw, 16px);
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 1.5vw, 14px);
+  width: 100%; max-width: 600px;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+.trophy-card {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: clamp(10px, 2vw, 16px);
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.trophy-card.caught { border-color: var(--rarity-color, rgba(255,255,255,0.2)); box-shadow: 0 0 12px var(--rarity-color-glow, transparent); }
+.trophy-card.locked { opacity: 0.35; }
+.trophy-emoji { font-size: clamp(28px, 7vw, 44px); }
+.trophy-name { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: clamp(10px, 1.8vw, 14px); color: #fff; }
+.trophy-rarity { font-family: 'Baloo 2', cursive; font-weight: 600; font-size: clamp(8px, 1.3vw, 11px); letter-spacing: 1px; }
+.trophy-stats { font-family: 'Baloo 2', cursive; font-size: clamp(9px, 1.4vw, 12px); color: rgba(255,255,255,0.5); }
+.trophy-card.locked .trophy-emoji { filter: brightness(0) invert(0.2); }
+@media (max-width: 480px) { .trophy-grid { grid-template-columns: repeat(2, 1fr); } }
+
 #bestCatch { display: none !important; /* merged into scoreBoard */ }
 .hud-divider { display: none; /* not used */ font-size: clamp(11px, 1.6vw, 16px);
   color: #FF6B35;
@@ -489,6 +597,7 @@ canvas {
 <!-- Character Select Screen -->
 <div id="charSelect">
   <a href="/" class="char-select-menu">🏠 MENU</a>
+  <button class="char-select-trophy" onclick="openTrophyRoom()">🏆 TROPHIES</button>
   <div class="char-select-inner">
     <div class="char-select-title">CATCH & REEL</div>
     <div class="char-select-sub">Choose your fisher!</div>
@@ -702,10 +811,20 @@ canvas {
       <div id="catchAction"></div>
     </div>
   </div>
+  <button id="trophyBtn" onclick="openTrophyRoom()">🏆</button>
   <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
+  <div id="trophyRoom">
+    <div class="trophy-header">
+      <button class="trophy-close" onclick="closeTrophyRoom()">✕</button>
+      <div class="trophy-title">🏆 TROPHY ROOM</div>
+      <div class="trophy-progress" id="trophyProgress">0 / 0 species</div>
+    </div>
+    <div class="trophy-grid" id="trophyGrid"></div>
+  </div>
   <div id="pauseMenu">
     <div class="pause-title">PAUSED</div>
     <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
+    <button class="pause-btn pause-trophy" onclick="closePauseOpenTrophy()">🏆 TROPHIES</button>
     <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
     <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
   </div>
@@ -834,6 +953,21 @@ const FISH = [
   { name:'Old Boot',        emoji:'\uD83E\uDD7E', rarity:'EXOTIC',    wMin:0.5,  wMax:2.0,   lMin:8,  lMax:14   },
 ];
 
+// --- TROPHY ROOM DATA ---
+function loadTrophies() {
+  try { return JSON.parse(localStorage.getItem('catchreel_trophies') || '{}'); } catch(e) { return {}; }
+}
+function saveTrophy(fishName, weight, length, rarity) {
+  const trophies = loadTrophies();
+  const existing = trophies[fishName];
+  if (!existing || weight > existing.weight) {
+    trophies[fishName] = { weight, length, rarity, date: Date.now() };
+    localStorage.setItem('catchreel_trophies', JSON.stringify(trophies));
+    return true;
+  }
+  return false;
+}
+
 // --- Game states ---
 const ST = { IDLE:0, CAST_ANIM:1, WAIT:2, BITE:3, REEL:4, CAUGHT:5, FAIL:6 };
 
@@ -880,6 +1014,67 @@ function changeCharacter() {
   document.getElementById('charSelect').style.display = 'flex';
   gameStarted = false;
   gameState = ST.IDLE;
+}
+
+// ── Trophy Room ──
+function openTrophyRoom() {
+  const trophies = loadTrophies();
+  const grid = document.getElementById('trophyGrid');
+  const progress = document.getElementById('trophyProgress');
+  grid.innerHTML = '';
+
+  let caught = 0;
+  const total = FISH.length;
+  const rarityOrder = ['COMMON','UNCOMMON','RARE','ULTRA_RARE','EPIC','LEGENDARY','EXOTIC'];
+
+  const sorted = [...FISH].sort((a, b) => {
+    const aT = trophies[a.name], bT = trophies[b.name];
+    if (aT && !bT) return -1;
+    if (!aT && bT) return 1;
+    return rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity);
+  });
+
+  for (const fish of sorted) {
+    const trophy = trophies[fish.name];
+    const isCaught = !!trophy;
+    if (isCaught) caught++;
+    const rarityData = RARITY[fish.rarity];
+    const rarityColor = rarityData ? rarityData.color : '#9CA3AF';
+    const isRainbow = rarityColor === 'rainbow';
+
+    const card = document.createElement('div');
+    card.className = `trophy-card ${isCaught ? 'caught' : 'locked'}`;
+    if (isCaught && !isRainbow) {
+      card.style.setProperty('--rarity-color', rarityColor + '44');
+      card.style.setProperty('--rarity-color-glow', rarityColor + '22');
+      card.style.borderColor = rarityColor + '66';
+    }
+    if (isCaught && isRainbow) {
+      card.style.animation = 'rainbowBorder 3s linear infinite';
+    }
+
+    card.innerHTML = `
+      <div class="trophy-emoji">${isCaught ? fish.emoji : '❓'}</div>
+      <div class="trophy-name">${isCaught ? fish.name : '???'}</div>
+      <div class="trophy-rarity" style="color:${isRainbow ? '#ff6600' : rarityColor}">${isCaught ? rarityData.label : '—'}</div>
+      ${isCaught ? `<div class="trophy-stats">${trophy.weight.toFixed(1)} lbs • ${trophy.length}"</div>` : '<div class="trophy-stats">Not caught yet</div>'}
+    `;
+    grid.appendChild(card);
+  }
+
+  progress.textContent = `${caught} / ${total} species discovered`;
+  document.getElementById('trophyRoom').classList.add('open');
+  gamePaused = true;
+}
+
+function closeTrophyRoom() {
+  document.getElementById('trophyRoom').classList.remove('open');
+  gamePaused = false;
+}
+
+function closePauseOpenTrophy() {
+  document.getElementById('pauseMenu').classList.remove('open');
+  openTrophyRoom();
 }
 
 function tone(freq, dur, type='sine', vol=0.12) {
@@ -1278,7 +1473,9 @@ function enterCaught() {
 
   elCatchEmoji.textContent = caughtFish.emoji;
   elCatchTitle.textContent = `You caught a ${caughtFish.name}!`;
-  elCatchDetail.innerHTML = `Weight: ${formatWeight(caughtFish.weight)} &nbsp;|&nbsp; Length: ${formatLength(caughtFish.length)}`;
+  const isNewRecord = saveTrophy(caughtFish.name, caughtFish.weight, caughtFish.length, caughtFish.rarity);
+  elCatchDetail.innerHTML = `Weight: ${formatWeight(caughtFish.weight)} &nbsp;|&nbsp; Length: ${formatLength(caughtFish.length)}`
+    + (isNewRecord ? '<br><span style="color:#FFE135;font-size:clamp(12px,2vw,16px)">🏆 NEW RECORD!</span>' : '');
   elCatchAction.textContent = '';
 
   elFishCount.textContent = fishCount;
