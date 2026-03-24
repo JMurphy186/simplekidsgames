@@ -581,30 +581,37 @@ canvas {
       </button>
       <button class="char-option" data-char="wizard">
         <svg class="char-face-svg" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-          <path d="M30 78 Q36 96 50 98 Q64 96 70 78 Q64 92 50 94 Q36 92 30 78Z" fill="#ccc"/>
-          <path d="M34 80 Q40 90 50 92 Q60 90 66 80" fill="none" stroke="#bbb" stroke-width="0.8"/>
-          <!-- Long hair behind face -->
           <ellipse cx="50" cy="62" rx="32" ry="36" fill="#ccc"/>
           <ellipse cx="26" cy="72" rx="10" ry="20" fill="#ccc"/>
           <ellipse cx="74" cy="72" rx="10" ry="20" fill="#ccc"/>
+          <path d="M30 68 Q28 82 32 98 Q38 100 44 96 Q48 88 50 98 Q52 88 56 96 Q62 100 68 98 Q72 82 70 68" fill="#ccc"/>
+          <path d="M34 72 Q38 84 42 92" stroke="#bbb" stroke-width="0.8" fill="none"/>
+          <path d="M50 70 Q50 82 50 94" stroke="#bbb" stroke-width="0.8" fill="none"/>
+          <path d="M66 72 Q62 84 58 92" stroke="#bbb" stroke-width="0.8" fill="none"/>
           <circle cx="50" cy="60" r="28" fill="#ffcc99"/>
           <circle cx="50" cy="60" r="28" fill="none" stroke="#e0aa77" stroke-width="1.5"/>
-          <path d="M30 50 Q36 46 42 50" stroke="#999" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <path d="M58 50 Q64 46 70 50" stroke="#999" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M30 50 Q36 45 42 50" stroke="#bbb" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path d="M58 50 Q64 45 70 50" stroke="#bbb" stroke-width="3.5" fill="none" stroke-linecap="round"/>
           <circle cx="36" cy="56" r="4" fill="#2a2a2a"/>
           <circle cx="37.5" cy="54.5" r="1.5" fill="#fff"/>
           <circle cx="64" cy="56" r="4" fill="#2a2a2a"/>
           <circle cx="65.5" cy="54.5" r="1.5" fill="#fff"/>
-          <ellipse cx="50" cy="64" rx="3.5" ry="3" fill="#e8a87a"/>
-          <path d="M42 70 Q50 76 58 70" stroke="#b06830" stroke-width="2" fill="none" stroke-linecap="round"/>
-          <ellipse cx="50" cy="38" rx="28" ry="6" fill="#5522aa"/>
-          <path d="M30 38 L50 2 L70 38" fill="#6B35CC"/>
-          <path d="M30 38 L50 2 L70 38" fill="none" stroke="#5522aa" stroke-width="1.5"/>
-          <path d="M32 36 Q50 30 68 36" stroke="#FFE135" stroke-width="3" fill="none"/>
-          <text x="50" y="22" text-anchor="middle" fill="#FFE135" font-size="10">★</text>
-          <text x="42" y="32" text-anchor="middle" fill="#FFE135" font-size="6" opacity="0.6">★</text>
-          <text x="58" y="16" text-anchor="middle" fill="#FFE135" font-size="5" opacity="0.5">★</text>
-          <path d="M50 2 Q56 4 54 10" stroke="#6B35CC" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <ellipse cx="50" cy="64" rx="4" ry="3.5" fill="#e8a87a"/>
+          <ellipse cx="48" cy="63" rx="1.5" ry="1" fill="#f0c0a0" opacity="0.5"/>
+          <path d="M38 68 Q44 72 50 70 Q56 72 62 68" stroke="#bbb" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <path d="M36 68 Q32 74 30 68" fill="#ccc"/>
+          <path d="M64 68 Q68 74 70 68" fill="#ccc"/>
+          <ellipse cx="50" cy="38" rx="30" ry="6" fill="#5522aa"/>
+          <ellipse cx="50" cy="38" rx="30" ry="6" fill="none" stroke="#441899" stroke-width="1"/>
+          <path d="M28 38 L50 -2 L72 38" fill="#6B35CC"/>
+          <path d="M28 38 L50 -2 L72 38" fill="none" stroke="#5522aa" stroke-width="1.5"/>
+          <path d="M30 36 Q50 28 70 36" stroke="#FFE135" stroke-width="3.5" fill="none"/>
+          <text x="50" y="20" text-anchor="middle" fill="#FFE135" font-size="12">★</text>
+          <text x="40" y="32" text-anchor="middle" fill="#FFE135" font-size="7" opacity="0.6">★</text>
+          <text x="60" y="14" text-anchor="middle" fill="#FFE135" font-size="5" opacity="0.5">★</text>
+          <text x="46" y="10" text-anchor="middle" fill="#FFE135" font-size="4" opacity="0.4">★</text>
+          <path d="M50 -2 Q58 0 56 8 Q54 14 58 16" stroke="#6B35CC" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="59" cy="17" r="2" fill="#FFE135" opacity="0.7"/>
         </svg>
         <div class="char-label">Wizard</div>
       </button>
@@ -729,6 +736,24 @@ const CHAR_COLORS = {
   ninja:   { body: '#2a2a2a', hat: '#1a1a1a', accent: '#cc2222' },
   princess:{ body: '#FF69B4', hat: '#FFD700', accent: '#FFD700' },
 };
+
+// --- CHARACTER HEAD SVGs (base64 encoded for Canvas drawImage) ---
+const CHAR_HEAD_SVGS = {
+  pirate: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjU2IiByPSIzMiIgZmlsbD0iI2U4Yjg3YSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTYiIHI9IjMyIiBmaWxsPSJub25lIiBzdHJva2U9IiNjNDkwNWEiIHN0cm9rZS13aWR0aD0iMS41Ii8+PGVsbGlwc2UgY3g9IjUwIiBjeT0iNjgiIHJ4PSIxOCIgcnk9IjEwIiBmaWxsPSIjYzQ5MDVhIiBvcGFjaXR5PSIwLjE1Ii8+PGNpcmNsZSBjeD0iMzgiIGN5PSI1MiIgcj0iNC41IiBmaWxsPSIjMmEyYTJhIi8+PGNpcmNsZSBjeD0iMzkuNSIgY3k9IjUwLjUiIHI9IjEuOCIgZmlsbD0iI2ZmZiIvPjxlbGxpcHNlIGN4PSI2MiIgY3k9IjUyIiByeD0iNyIgcnk9IjYiIGZpbGw9IiMxMTEiLz48cmVjdCB4PSI1NiIgeT0iNDYiIHdpZHRoPSIxNCIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjMjIyIi8+PHBhdGggZD0iTTY4IDQ4IEw3NCAzOCIgc3Ryb2tlPSIjMzMzIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTMwIDU4IEwzNiA1NCIgc3Ryb2tlPSIjYzQ3YTU1IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM2IDY0IFE1MCA3NiA2NCA2NCIgc3Ryb2tlPSIjOGE0YTIwIiBzdHJva2Utd2lkdGg9IjIuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHJlY3QgeD0iNDYiIHk9IjY2IiB3aWR0aD0iNCIgaGVpZ2h0PSI1IiByeD0iMSIgZmlsbD0iI0ZGRDcwMCIvPjxyZWN0IHg9IjQyIiB5PSI2NiIgd2lkdGg9IjQiIGhlaWdodD0iNC41IiByeD0iMSIgZmlsbD0iI2Y1ZjVmNSIvPjxyZWN0IHg9IjUwIiB5PSI2NiIgd2lkdGg9IjQiIGhlaWdodD0iNC41IiByeD0iMSIgZmlsbD0iI2Y1ZjVmNSIvPjxlbGxpcHNlIGN4PSI1MCIgY3k9IjMwIiByeD0iMzAiIHJ5PSI2IiBmaWxsPSIjMWExYTFhIi8+PHBhdGggZD0iTTIwIDMwIFE1MCA0IDgwIDMwIiBmaWxsPSIjMmEyYTJhIi8+PHBhdGggZD0iTTIwIDMwIFE1MCA0IDgwIDMwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTI0IDI4IFE1MCAyMCA3NiAyOCIgc3Ryb2tlPSIjOEIwMDAwIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjE4IiByPSI1IiBmaWxsPSIjZGRkIi8+PGNpcmNsZSBjeD0iNDgiIGN5PSIxNyIgcj0iMSIgZmlsbD0iIzMzMyIvPjxjaXJjbGUgY3g9IjUyIiBjeT0iMTciIHI9IjEiIGZpbGw9IiMzMzMiLz48cGF0aCBkPSJNNDggMjAgTDUyIDIwIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMC44Ii8+PHBhdGggZD0iTTQzIDIyIEw1NyAxNCIgc3Ryb2tlPSIjZGRkIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik00MyAxNCBMNTcgMjIiIHN0cm9rZT0iI2RkZCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4g',
+  robot: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj48cmVjdCB4PSI0NyIgeT0iMTAiIHdpZHRoPSI2IiBoZWlnaHQ9IjE2IiByeD0iMyIgZmlsbD0iIzc3ODg5OSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iOCIgcj0iNSIgZmlsbD0iI0ZGNkIzNSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iOCIgcj0iMyIgZmlsbD0iI0ZGYWE1NSIgb3BhY2l0eT0iMC42Ii8+PHJlY3QgeD0iMTYiIHk9IjI2IiB3aWR0aD0iNjgiIGhlaWdodD0iNjAiIHJ4PSIxNCIgZmlsbD0iIzg4OTlhYSIvPjxyZWN0IHg9IjE2IiB5PSIyNiIgd2lkdGg9IjY4IiBoZWlnaHQ9IjYwIiByeD0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY2Nzc4OCIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMjIiIHk9IjMyIiB3aWR0aD0iNTYiIGhlaWdodD0iNDgiIHJ4PSIxMCIgZmlsbD0iIzc3ODg5OSIvPjxyZWN0IHg9IjI2IiB5PSI0MCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiByeD0iNCIgZmlsbD0iIzAwMzM0NCIvPjxyZWN0IHg9IjU2IiB5PSI0MCIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE0IiByeD0iNCIgZmlsbD0iIzAwMzM0NCIvPjxjaXJjbGUgY3g9IjM1IiBjeT0iNDciIHI9IjQiIGZpbGw9IiMwMEU1RkYiLz48Y2lyY2xlIGN4PSIzNSIgY3k9IjQ3IiByPSIyIiBmaWxsPSIjODBGMEZGIi8+PGNpcmNsZSBjeD0iNjUiIGN5PSI0NyIgcj0iNCIgZmlsbD0iIzAwRTVGRiIvPjxjaXJjbGUgY3g9IjY1IiBjeT0iNDciIHI9IjIiIGZpbGw9IiM4MEYwRkYiLz48cmVjdCB4PSIzNCIgeT0iNjQiIHdpZHRoPSIzMiIgaGVpZ2h0PSIxMCIgcng9IjMiIGZpbGw9IiM1NTY2NzciLz48bGluZSB4MT0iMzgiIHkxPSI2NCIgeDI9IjM4IiB5Mj0iNzQiIHN0cm9rZT0iIzQ0NTU2NiIgc3Ryb2tlLXdpZHRoPSIxIi8+PGxpbmUgeDE9IjQyIiB5MT0iNjQiIHgyPSI0MiIgeTI9Ijc0IiBzdHJva2U9IiM0NDU1NjYiIHN0cm9rZS13aWR0aD0iMSIvPjxsaW5lIHgxPSI0NiIgeTE9IjY0IiB4Mj0iNDYiIHkyPSI3NCIgc3Ryb2tlPSIjNDQ1NTY2IiBzdHJva2Utd2lkdGg9IjEiLz48bGluZSB4MT0iNTAiIHkxPSI2NCIgeDI9IjUwIiB5Mj0iNzQiIHN0cm9rZT0iIzQ0NTU2NiIgc3Ryb2tlLXdpZHRoPSIxIi8+PGxpbmUgeDE9IjU0IiB5MT0iNjQiIHgyPSI1NCIgeTI9Ijc0IiBzdHJva2U9IiM0NDU1NjYiIHN0cm9rZS13aWR0aD0iMSIvPjxsaW5lIHgxPSI1OCIgeTE9IjY0IiB4Mj0iNTgiIHkyPSI3NCIgc3Ryb2tlPSIjNDQ1NTY2IiBzdHJva2Utd2lkdGg9IjEiLz48bGluZSB4MT0iNjIiIHkxPSI2NCIgeDI9IjYyIiB5Mj0iNzQiIHN0cm9rZT0iIzQ0NTU2NiIgc3Ryb2tlLXdpZHRoPSIxIi8+PGNpcmNsZSBjeD0iMjIiIGN5PSIzNCIgcj0iMi41IiBmaWxsPSIjOTlhYWJiIiBzdHJva2U9IiM2Njc3ODgiIHN0cm9rZS13aWR0aD0iMSIvPjxjaXJjbGUgY3g9Ijc4IiBjeT0iMzQiIHI9IjIuNSIgZmlsbD0iIzk5YWFiYiIgc3Ryb2tlPSIjNjY3Nzg4IiBzdHJva2Utd2lkdGg9IjEiLz48Y2lyY2xlIGN4PSIyMiIgY3k9Ijc4IiByPSIyLjUiIGZpbGw9IiM5OWFhYmIiIHN0cm9rZT0iIzY2Nzc4OCIgc3Ryb2tlLXdpZHRoPSIxIi8+PGNpcmNsZSBjeD0iNzgiIGN5PSI3OCIgcj0iMi41IiBmaWxsPSIjOTlhYWJiIiBzdHJva2U9IiM2Njc3ODgiIHN0cm9rZS13aWR0aD0iMSIvPjxyZWN0IHg9IjYiIHk9IjQ2IiB3aWR0aD0iMTIiIGhlaWdodD0iMTAiIHJ4PSI0IiBmaWxsPSIjNjY3Nzg4IiBzdHJva2U9IiM1NTY2NzciIHN0cm9rZS13aWR0aD0iMSIvPjxyZWN0IHg9IjgyIiB5PSI0NiIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEwIiByeD0iNCIgZmlsbD0iIzY2Nzc4OCIgc3Ryb2tlPSIjNTU2Njc3IiBzdHJva2Utd2lkdGg9IjEiLz48L3N2Zz4g',
+  alien: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj48bGluZSB4MT0iMzgiIHkxPSIyMiIgeDI9IjMyIiB5Mj0iNiIgc3Ryb2tlPSIjNTViYjU1IiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjYyIiB5MT0iMjIiIHgyPSI2OCIgeTI9IjgiIHN0cm9rZT0iIzU1YmI1NSIgc3Ryb2tlLXdpZHRoPSIyLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iNSIgcj0iNC41IiBmaWxsPSIjMzlGRjE0Ii8+PGNpcmNsZSBjeD0iMzIiIGN5PSI1IiByPSIyLjUiIGZpbGw9IiM4MEZGNjAiIG9wYWNpdHk9IjAuNyIvPjxjaXJjbGUgY3g9IjY4IiBjeT0iNyIgcj0iNCIgZmlsbD0iIzM5RkYxNCIvPjxjaXJjbGUgY3g9IjY4IiBjeT0iNyIgcj0iMi4yIiBmaWxsPSIjODBGRjYwIiBvcGFjaXR5PSIwLjciLz48ZWxsaXBzZSBjeD0iNTAiIGN5PSI1NiIgcng9IjM2IiByeT0iNDAiIGZpbGw9IiM3YWVlN2EiLz48ZWxsaXBzZSBjeD0iNTAiIGN5PSI1NiIgcng9IjM2IiByeT0iNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzU1YmI1NSIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iMjgiIGN5PSI0NCIgcj0iMyIgZmlsbD0iIzY2ZGQ2NiIgb3BhY2l0eT0iMC41Ii8+PGNpcmNsZSBjeD0iNzIiIGN5PSI1MCIgcj0iMi41IiBmaWxsPSIjNjZkZDY2IiBvcGFjaXR5PSIwLjUiLz48Y2lyY2xlIGN4PSIzNiIgY3k9Ijc2IiByPSIyIiBmaWxsPSIjNjZkZDY2IiBvcGFjaXR5PSIwLjQiLz48Y2lyY2xlIGN4PSI2NCIgY3k9Ijc0IiByPSIyLjUiIGZpbGw9IiM2NmRkNjYiIG9wYWNpdHk9IjAuNCIvPjxlbGxpcHNlIGN4PSIzNSIgY3k9IjQ4IiByeD0iMTMiIHJ5PSIxNSIgZmlsbD0iIzExMSIvPjxlbGxpcHNlIGN4PSI2NSIgY3k9IjQ4IiByeD0iMTMiIHJ5PSIxNSIgZmlsbD0iIzExMSIvPjxlbGxpcHNlIGN4PSIzNyIgY3k9IjQ2IiByeD0iNiIgcnk9IjciIGZpbGw9IiMzOUZGMTQiLz48ZWxsaXBzZSBjeD0iMzciIGN5PSI0NiIgcng9IjMiIHJ5PSI0IiBmaWxsPSIjODBGRjYwIi8+PGNpcmNsZSBjeD0iMzkiIGN5PSI0MyIgcj0iMiIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC43Ii8+PGVsbGlwc2UgY3g9IjY3IiBjeT0iNDYiIHJ4PSI2IiByeT0iNyIgZmlsbD0iIzM5RkYxNCIvPjxlbGxpcHNlIGN4PSI2NyIgY3k9IjQ2IiByeD0iMyIgcnk9IjQiIGZpbGw9IiM4MEZGNjAiLz48Y2lyY2xlIGN4PSI2OSIgY3k9IjQzIiByPSIyIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjciLz48ZWxsaXBzZSBjeD0iNTAiIGN5PSI3MiIgcng9IjciIHJ5PSI0IiBmaWxsPSIjNDRhYTQ0Ii8+PGVsbGlwc2UgY3g9IjUwIiBjeT0iNzEiIHJ4PSI0IiByeT0iMiIgZmlsbD0iIzMzODgzMyIvPjwvc3ZnPiA=',
+  wizard: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj48ZWxsaXBzZSBjeD0iNTAiIGN5PSI2MiIgcng9IjMyIiByeT0iMzYiIGZpbGw9IiNjY2MiLz48ZWxsaXBzZSBjeD0iMjYiIGN5PSI3MiIgcng9IjEwIiByeT0iMjAiIGZpbGw9IiNjY2MiLz48ZWxsaXBzZSBjeD0iNzQiIGN5PSI3MiIgcng9IjEwIiByeT0iMjAiIGZpbGw9IiNjY2MiLz48cGF0aCBkPSJNMzAgNjggUTI4IDgyIDMyIDk4IFEzOCAxMDAgNDQgOTYgUTQ4IDg4IDUwIDk4IFE1MiA4OCA1NiA5NiBRNjIgMTAwIDY4IDk4IFE3MiA4MiA3MCA2OCIgZmlsbD0iI2NjYyIvPjxwYXRoIGQ9Ik0zNCA3MiBRMzggODQgNDIgOTIiIHN0cm9rZT0iI2JiYiIgc3Ryb2tlLXdpZHRoPSIwLjgiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNTAgNzAgUTUwIDgyIDUwIDk0IiBzdHJva2U9IiNiYmIiIHN0cm9rZS13aWR0aD0iMC44IiBmaWxsPSJub25lIi8+PHBhdGggZD0iTTY2IDcyIFE2MiA4NCA1OCA5MiIgc3Ryb2tlPSIjYmJiIiBzdHJva2Utd2lkdGg9IjAuOCIgZmlsbD0ibm9uZSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNjAiIHI9IjI4IiBmaWxsPSIjZmZjYzk5Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI2MCIgcj0iMjgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2UwYWE3NyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNMzAgNTAgUTM2IDQ1IDQyIDUwIiBzdHJva2U9IiNiYmIiIHN0cm9rZS13aWR0aD0iMy41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNTggNTAgUTY0IDQ1IDcwIDUwIiBzdHJva2U9IiNiYmIiIHN0cm9rZS13aWR0aD0iMy41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48Y2lyY2xlIGN4PSIzNiIgY3k9IjU2IiByPSI0IiBmaWxsPSIjMmEyYTJhIi8+PGNpcmNsZSBjeD0iMzcuNSIgY3k9IjU0LjUiIHI9IjEuNSIgZmlsbD0iI2ZmZiIvPjxjaXJjbGUgY3g9IjY0IiBjeT0iNTYiIHI9IjQiIGZpbGw9IiMyYTJhMmEiLz48Y2lyY2xlIGN4PSI2NS41IiBjeT0iNTQuNSIgcj0iMS41IiBmaWxsPSIjZmZmIi8+PGVsbGlwc2UgY3g9IjUwIiBjeT0iNjQiIHJ4PSI0IiByeT0iMy41IiBmaWxsPSIjZThhODdhIi8+PGVsbGlwc2UgY3g9IjQ4IiBjeT0iNjMiIHJ4PSIxLjUiIHJ5PSIxIiBmaWxsPSIjZjBjMGEwIiBvcGFjaXR5PSIwLjUiLz48cGF0aCBkPSJNMzggNjggUTQ0IDcyIDUwIDcwIFE1NiA3MiA2MiA2OCIgc3Ryb2tlPSIjYmJiIiBzdHJva2Utd2lkdGg9IjIuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTM2IDY4IFEzMiA3NCAzMCA2OCIgZmlsbD0iI2NjYyIvPjxwYXRoIGQ9Ik02NCA2OCBRNjggNzQgNzAgNjgiIGZpbGw9IiNjY2MiLz48ZWxsaXBzZSBjeD0iNTAiIGN5PSIzOCIgcng9IjMwIiByeT0iNiIgZmlsbD0iIzU1MjJhYSIvPjxlbGxpcHNlIGN4PSI1MCIgY3k9IjM4IiByeD0iMzAiIHJ5PSI2IiBmaWxsPSJub25lIiBzdHJva2U9IiM0NDE4OTkiIHN0cm9rZS13aWR0aD0iMSIvPjxwYXRoIGQ9Ik0yOCAzOCBMNTAgLTIgTDcyIDM4IiBmaWxsPSIjNkIzNUNDIi8+PHBhdGggZD0iTTI4IDM4IEw1MCAtMiBMNzIgMzgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzU1MjJhYSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNMzAgMzYgUTUwIDI4IDcwIDM2IiBzdHJva2U9IiNGRkUxMzUiIHN0cm9rZS13aWR0aD0iMy41IiBmaWxsPSJub25lIi8+PHRleHQgeD0iNTAiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZFMTM1IiBmb250LXNpemU9IjEyIj7imIU8L3RleHQ+PHRleHQgeD0iNDAiIHk9IjMyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjRkZFMTM1IiBmb250LXNpemU9IjciIG9wYWNpdHk9IjAuNiI+4piFPC90ZXh0Pjx0ZXh0IHg9IjYwIiB5PSIxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI0ZGRTEzNSIgZm9udC1zaXplPSI1IiBvcGFjaXR5PSIwLjUiPuKYhTwvdGV4dD48dGV4dCB4PSI0NiIgeT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNGRkUxMzUiIGZvbnQtc2l6ZT0iNCIgb3BhY2l0eT0iMC40Ij7imIU8L3RleHQ+PHBhdGggZD0iTTUwIC0yIFE1OCAwIDU2IDggUTU0IDE0IDU4IDE2IiBzdHJva2U9IiM2QjM1Q0MiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNTkiIGN5PSIxNyIgcj0iMiIgZmlsbD0iI0ZGRTEzNSIgb3BhY2l0eT0iMC43Ii8+PC9zdmc+IA==',
+  ninja: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUyIiByPSIzOCIgZmlsbD0iIzJhMmEyYSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTIiIHI9IjM4IiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0xNiA0MiBRNTAgMzggODQgNDIiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIwLjgiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTYgNDggUTUwIDQ0IDg0IDQ4IiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMC44IiBmaWxsPSJub25lIi8+PHJlY3QgeD0iMTQiIHk9IjQ0IiB3aWR0aD0iNzIiIGhlaWdodD0iMTYiIHJ4PSI1IiBmaWxsPSIjMWExYTFhIi8+PGVsbGlwc2UgY3g9IjM2IiBjeT0iNTIiIHJ4PSI5IiByeT0iNS41IiBmaWxsPSIjZmZmIi8+PGVsbGlwc2UgY3g9IjY0IiBjeT0iNTIiIHJ4PSI5IiByeT0iNS41IiBmaWxsPSIjZmZmIi8+PGVsbGlwc2UgY3g9IjM3LjUiIGN5PSI1MiIgcng9IjQiIHJ5PSI0LjUiIGZpbGw9IiMyYTJhMmEiLz48Y2lyY2xlIGN4PSIzOC41IiBjeT0iNTEiIHI9IjEuMyIgZmlsbD0iI2ZmZiIvPjxlbGxpcHNlIGN4PSI2NS41IiBjeT0iNTIiIHJ4PSI0IiByeT0iNC41IiBmaWxsPSIjMmEyYTJhIi8+PGNpcmNsZSBjeD0iNjYuNSIgY3k9IjUxIiByPSIxLjMiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMjcgNDYgTDQwIDQ0IiBzdHJva2U9IiMxMTEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTczIDQ2IEw2MCA0NCIgc3Ryb2tlPSIjMTExIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxyZWN0IHg9IjEyIiB5PSI0MiIgd2lkdGg9Ijc2IiBoZWlnaHQ9IjUiIHJ4PSIyLjUiIGZpbGw9IiNjYzIyMjIiLz48cmVjdCB4PSIxMiIgeT0iNDIiIHdpZHRoPSI3NiIgaGVpZ2h0PSI1IiByeD0iMi41IiBmaWxsPSJub25lIiBzdHJva2U9IiNhYTExMTEiIHN0cm9rZS13aWR0aD0iMC44Ii8+PHBhdGggZD0iTTg0IDQyIEw5NCAzNiBROTYgNDAgOTIgNDQiIGZpbGw9IiNjYzIyMjIiLz48cGF0aCBkPSJNODQgNDcgTDk2IDUyIFE5NCA1NiA4OCA1MCIgZmlsbD0iI2NjMjIyMiIvPjxwb2x5Z29uIHBvaW50cz0iNTAsNDAgNTIsNDIgNTQsNDAgNTIsMzgiIGZpbGw9IiM4ODgiLz48cG9seWdvbiBwb2ludHM9IjUwLDQ0IDUyLDQyIDU0LDQ0IDUyLDQ2IiBmaWxsPSIjODg4Ii8+PHBvbHlnb24gcG9pbnRzPSI0OCw0MiA1MCw0MCA1MCw0NCA0OCw0MiIgZmlsbD0iIzk5OSIvPjxwb2x5Z29uIHBvaW50cz0iNTQsNDIgNTIsNDAgNTIsNDQgNTQsNDIiIGZpbGw9IiM5OTkiLz48L3N2Zz4g',
+  princess: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBmaWxsPSJub25lIj48ZWxsaXBzZSBjeD0iNTAiIGN5PSI1OCIgcng9IjM4IiByeT0iNDIiIGZpbGw9IiM4QjY5MTQiLz48ZWxsaXBzZSBjeD0iMjIiIGN5PSI2OCIgcng9IjEyIiByeT0iMjIiIGZpbGw9IiM4QjY5MTQiLz48ZWxsaXBzZSBjeD0iNzgiIGN5PSI2OCIgcng9IjEyIiByeT0iMjIiIGZpbGw9IiM4QjY5MTQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjU2IiByPSIzMCIgZmlsbD0iI2ZmY2M5OSIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTYiIHI9IjMwIiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGFhNzciIHN0cm9rZS13aWR0aD0iMS41Ii8+PGVsbGlwc2UgY3g9IjM5IiBjeT0iNTQiIHJ4PSI0IiByeT0iNC41IiBmaWxsPSIjMmEyYTJhIi8+PGNpcmNsZSBjeD0iNDAuNSIgY3k9IjUyLjUiIHI9IjEuNSIgZmlsbD0iI2ZmZiIvPjxlbGxpcHNlIGN4PSI2MSIgY3k9IjU0IiByeD0iNCIgcnk9IjQuNSIgZmlsbD0iIzJhMmEyYSIvPjxjaXJjbGUgY3g9IjYyLjUiIGN5PSI1Mi41IiByPSIxLjUiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMzQgNTAgTDMzIDQ4IiBzdHJva2U9IiMyYTJhMmEiIHN0cm9rZS13aWR0aD0iMS4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNMzYgNDkgTDM0LjUgNDciIHN0cm9rZT0iIzJhMmEyYSIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik02NiA1MCBMNjcgNDgiIHN0cm9rZT0iIzJhMmEyYSIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik02NCA0OSBMNjUuNSA0NyIgc3Ryb2tlPSIjMmEyYTJhIiBzdHJva2Utd2lkdGg9IjEuMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGVsbGlwc2UgY3g9IjMzIiBjeT0iNjAiIHJ4PSI1IiByeT0iMyIgZmlsbD0iI2ZmYWE4OCIgb3BhY2l0eT0iMC40Ii8+PGVsbGlwc2UgY3g9IjY3IiBjeT0iNjAiIHJ4PSI1IiByeT0iMyIgZmlsbD0iI2ZmYWE4OCIgb3BhY2l0eT0iMC40Ii8+PHBhdGggZD0iTTQwIDY0IFE1MCA3MyA2MCA2NCIgc3Ryb2tlPSIjYzQ3YTNhIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yOCAzOCBMMzQgMjQgTDQwIDM0IEw0NiAyMCBMNTAgMzIgTDU0IDIwIEw2MCAzNCBMNjYgMjQgTDcyIDM4IiBmaWxsPSIjRkZENzAwIiBzdHJva2U9IiNEQUE1MjAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMjgiIHk9IjM2IiB3aWR0aD0iNDQiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IiNGRkQ3MDAiIHN0cm9rZT0iI0RBQTUyMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PGNpcmNsZSBjeD0iNTAiIGN5PSIyNiIgcj0iMyIgZmlsbD0iI0ZGNjlCNCIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iMzAiIHI9IjIiIGZpbGw9IiM2OUQ0RkYiLz48Y2lyY2xlIGN4PSI2MCIgY3k9IjMwIiByPSIyIiBmaWxsPSIjNjlENEZGIi8+PC9zdmc+IA==',
+};
+
+// Pre-load all head images
+const charHeadImages = {};
+for (const [name, src] of Object.entries(CHAR_HEAD_SVGS)) {
+  const img = new Image();
+  img.src = src;
+  charHeadImages[name] = img;
+}
 
 document.querySelectorAll('.char-option').forEach(btn => {
   function selectChar() {
@@ -1727,7 +1752,6 @@ function drawCharacter() {
   const isReeling = gameState === ST.REEL;
   const cc = CHAR_COLORS[playerChar] || CHAR_COLORS.pirate;
   const bodyColor = cc.body;
-  const headColor = playerChar === 'alien' ? '#7aee7a' : playerChar === 'robot' ? '#8899aa' : playerChar === 'ninja' ? '#2a2a2a' : '#ffcc99';
   const handColor = playerChar === 'alien' ? '#5ecc5e' : playerChar === 'robot' ? '#aabbcc' : '#ffcc99';
 
   const roundRect = (x,y,w,h,r) => { ctx.beginPath(); ctx.roundRect(x,y,w,h,[r]); ctx.fill(); };
@@ -1764,220 +1788,22 @@ function drawCharacter() {
   ctx.lineCap = 'butt';
 
   // Neck
-  ctx.fillStyle = headColor;
+  ctx.fillStyle = playerChar === 'alien' ? '#7aee7a' : playerChar === 'robot' ? '#8899aa' : playerChar === 'ninja' ? '#2a2a2a' : '#ffcc99';
   ctx.fillRect(cx - 3*s, cy - 48*s, 7*s, 6*s);
 
-  // Hair renders BEHIND the face
-  if (playerChar === 'princess') {
-    ctx.fillStyle = '#8B6914';
-    ctx.beginPath(); ctx.ellipse(cx, cy - 54*s, 14*s, 16*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx - 10*s, cy - 48*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 10*s, cy - 48*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
-  } else if (playerChar === 'wizard') {
-    ctx.fillStyle = '#ccc';
-    ctx.beginPath(); ctx.ellipse(cx, cy - 52*s, 14*s, 18*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx - 10*s, cy - 46*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 10*s, cy - 46*s, 5*s, 14*s, 0, 0, Math.PI*2); ctx.fill();
-  }
-
-  // Head
-  ctx.fillStyle = headColor;
-  ctx.beginPath(); ctx.arc(cx, cy - 56*s, 12*s, 0, Math.PI*2); ctx.fill();
-
-  // Character-specific head details
-  if (playerChar === 'robot') {
-    // Antenna
-    ctx.strokeStyle = '#778899'; ctx.lineWidth = 2*s;
-    ctx.beginPath(); ctx.moveTo(cx, cy - 68*s); ctx.lineTo(cx, cy - 78*s); ctx.stroke();
-    ctx.fillStyle = '#FF6B35';
-    ctx.beginPath(); ctx.arc(cx, cy - 79*s, 3*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#FFaa55';
-    ctx.beginPath(); ctx.arc(cx, cy - 79*s, 1.5*s, 0, Math.PI*2); ctx.fill();
-    // Screen eyes with dark background
-    ctx.fillStyle = '#003344';
-    roundRect(cx - 8*s, cy - 61*s, 7*s, 6*s, 2*s);
-    roundRect(cx + 1*s, cy - 61*s, 7*s, 6*s, 2*s);
-    // Glowing pupils
-    ctx.fillStyle = '#00E5FF';
-    ctx.beginPath(); ctx.arc(cx - 4.5*s, cy - 58*s, 2*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 4.5*s, cy - 58*s, 2*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#80F0FF';
-    ctx.beginPath(); ctx.arc(cx - 4.5*s, cy - 58*s, 1*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 4.5*s, cy - 58*s, 1*s, 0, Math.PI*2); ctx.fill();
-    // Speaker mouth grid
-    ctx.fillStyle = '#556677';
-    ctx.fillRect(cx - 6*s, cy - 51*s, 12*s, 3.5*s);
-    ctx.strokeStyle = '#445566'; ctx.lineWidth = 0.5*s;
-    for (let i = -4; i <= 4; i += 2) {
-      ctx.beginPath(); ctx.moveTo(cx + i*s, cy - 51*s); ctx.lineTo(cx + i*s, cy - 47.5*s); ctx.stroke();
-    }
-    // Corner rivets
-    ctx.fillStyle = '#99aabb';
-    ctx.beginPath(); ctx.arc(cx - 10*s, cy - 65*s, 1.5*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 10*s, cy - 65*s, 1.5*s, 0, Math.PI*2); ctx.fill();
-  } else if (playerChar === 'alien') {
-    // Antennae with glowing tips
-    ctx.strokeStyle = '#55bb55'; ctx.lineWidth = 1.5*s;
-    ctx.beginPath(); ctx.moveTo(cx - 5*s, cy - 66*s); ctx.lineTo(cx - 8*s, cy - 78*s); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + 5*s, cy - 66*s); ctx.lineTo(cx + 8*s, cy - 78*s); ctx.stroke();
-    ctx.fillStyle = '#39FF14';
-    ctx.beginPath(); ctx.arc(cx - 8*s, cy - 79*s, 2.5*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 8*s, cy - 79*s, 2.5*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#80FF60';
-    ctx.beginPath(); ctx.arc(cx - 8*s, cy - 79*s, 1.2*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 8*s, cy - 79*s, 1.2*s, 0, Math.PI*2); ctx.fill();
-    // Skin spots
-    ctx.fillStyle = 'rgba(102,221,102,0.3)';
-    ctx.beginPath(); ctx.arc(cx - 9*s, cy - 54*s, 1.5*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 10*s, cy - 50*s, 1.2*s, 0, Math.PI*2); ctx.fill();
-    // Big wrap-around eyes with glow
-    ctx.fillStyle = '#111';
-    ctx.beginPath(); ctx.ellipse(cx - 5*s, cy - 57*s, 5*s, 6*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 5*s, cy - 57*s, 5*s, 6*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#39FF14';
-    ctx.beginPath(); ctx.ellipse(cx - 4.5*s, cy - 58*s, 2.5*s, 3*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 5.5*s, cy - 58*s, 2.5*s, 3*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#80FF60';
-    ctx.beginPath(); ctx.arc(cx - 4*s, cy - 59*s, 1*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 6*s, cy - 59*s, 1*s, 0, Math.PI*2); ctx.fill();
-    // Small mouth
-    ctx.fillStyle = '#44aa44';
-    ctx.beginPath(); ctx.ellipse(cx, cy - 50*s, 3*s, 2*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#338833';
-    ctx.beginPath(); ctx.ellipse(cx, cy - 50.5*s, 1.5*s, 1*s, 0, 0, Math.PI*2); ctx.fill();
-  } else if (playerChar === 'ninja') {
-    // Wrap texture
-    ctx.strokeStyle = '#333'; ctx.lineWidth = 0.5*s;
-    ctx.beginPath(); ctx.moveTo(cx - 12*s, cy - 62*s); ctx.quadraticCurveTo(cx, cy - 64*s, cx + 12*s, cy - 62*s); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - 12*s, cy - 59*s); ctx.quadraticCurveTo(cx, cy - 61*s, cx + 12*s, cy - 59*s); ctx.stroke();
-    // Mask covers lower face
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(cx - 12*s, cy - 60*s, 24*s, 6*s);
-    // Red headband
-    ctx.fillStyle = '#cc2222';
-    ctx.fillRect(cx - 14*s, cy - 63*s, 28*s, 3*s);
-    ctx.strokeStyle = '#aa1111'; ctx.lineWidth = 0.5*s;
-    ctx.strokeRect(cx - 14*s, cy - 63*s, 28*s, 3*s);
-    // Headband tails
-    ctx.strokeStyle = '#cc2222'; ctx.lineWidth = 2*s; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx + 14*s, cy - 62*s); ctx.lineTo(cx + 19*s, cy - 58*s); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + 14*s, cy - 61*s); ctx.lineTo(cx + 21*s, cy - 54*s); ctx.stroke();
-    ctx.lineCap = 'butt';
-    // Shuriken on headband
-    ctx.fillStyle = '#888';
-    ctx.beginPath(); ctx.moveTo(cx, cy - 63*s); ctx.lineTo(cx + 1.5*s, cy - 61.5*s); ctx.lineTo(cx, cy - 60*s); ctx.lineTo(cx - 1.5*s, cy - 61.5*s); ctx.closePath(); ctx.fill();
-    // Sharp eyes with angry brows
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.ellipse(cx - 4*s, cy - 57*s, 3.5*s, 2.5*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 5*s, cy - 57*s, 3.5*s, 2.5*s, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#2a2a2a';
-    ctx.beginPath(); ctx.arc(cx - 3.5*s, cy - 57*s, 1.8*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 5.5*s, cy - 57*s, 1.8*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx - 3*s, cy - 57.5*s, 0.6*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 6*s, cy - 57.5*s, 0.6*s, 0, Math.PI*2); ctx.fill();
-    // Angry brow lines
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5*s; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx - 8*s, cy - 58*s); ctx.lineTo(cx - 2*s, cy - 59.5*s); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + 9*s, cy - 58*s); ctx.lineTo(cx + 3*s, cy - 59.5*s); ctx.stroke();
-    ctx.lineCap = 'butt';
+  // --- Draw character head using SVG image ---
+  const headImg = charHeadImages[playerChar];
+  if (headImg && headImg.complete) {
+    const headSize = 40 * s;
+    const headDrawX = cx - headSize / 2;
+    const headDrawY = cy - 56*s - headSize * 0.55;
+    ctx.drawImage(headImg, headDrawX, headDrawY, headSize, headSize);
   } else {
-    // Default face (pirate, wizard, princess)
-    ctx.fillStyle = '#2a2a2a';
-    ctx.beginPath(); ctx.arc(cx - 4*s, cy - 57*s, 2*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 5*s, cy - 57*s, 2*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx - 3.2*s, cy - 58*s, 0.8*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 5.8*s, cy - 58*s, 0.8*s, 0, Math.PI*2); ctx.fill();
-    // Smile
-    ctx.strokeStyle = '#b06830'; ctx.lineWidth = 1.5*s; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(cx + 0.5*s, cy - 52*s, 4*s, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
-    ctx.lineCap = 'butt';
-
-    if (playerChar === 'pirate') {
-      // Stubble
-      ctx.fillStyle = 'rgba(100,70,40,0.15)';
-      ctx.beginPath(); ctx.ellipse(cx, cy - 50*s, 8*s, 5*s, 0, 0, Math.PI*2); ctx.fill();
-      // Bigger tricorn hat
-      ctx.fillStyle = '#2a2a2a';
-      ctx.beginPath(); ctx.ellipse(cx, cy - 65*s, 18*s, 5*s, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(cx - 14*s, cy - 68*s); ctx.quadraticCurveTo(cx, cy - 86*s, cx + 14*s, cy - 68*s); ctx.fill();
-      // Hat band
-      ctx.strokeStyle = '#8B0000'; ctx.lineWidth = 2*s;
-      ctx.beginPath(); ctx.moveTo(cx - 12*s, cy - 68*s); ctx.quadraticCurveTo(cx, cy - 74*s, cx + 12*s, cy - 68*s); ctx.stroke();
-      // Skull emblem
-      ctx.fillStyle = '#ddd';
-      ctx.beginPath(); ctx.arc(cx, cy - 76*s, 3*s, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#333';
-      ctx.beginPath(); ctx.arc(cx - 1*s, cy - 77*s, 0.7*s, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx + 1*s, cy - 77*s, 0.7*s, 0, Math.PI*2); ctx.fill();
-      // Eye patch
-      ctx.fillStyle = '#111';
-      ctx.beginPath(); ctx.ellipse(cx + 5*s, cy - 57*s, 3.5*s, 3*s, 0, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = '#333'; ctx.lineWidth = 1*s;
-      ctx.beginPath(); ctx.moveTo(cx + 7*s, cy - 58*s); ctx.lineTo(cx + 13*s, cy - 67*s); ctx.stroke();
-      // Gold tooth
-      ctx.fillStyle = '#FFD700';
-      ctx.fillRect(cx + 0.5*s, cy - 50*s, 2*s, 2.5*s);
-      // Cheek scar
-      ctx.strokeStyle = '#c47a55'; ctx.lineWidth = 1*s; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(cx - 10*s, cy - 55*s); ctx.lineTo(cx - 7*s, cy - 53*s); ctx.stroke();
-      ctx.lineCap = 'butt';
-    } else if (playerChar === 'wizard') {
-      // Longer beard
-      ctx.fillStyle = '#ccc';
-      ctx.beginPath();
-      ctx.moveTo(cx - 7*s, cy - 50*s);
-      ctx.quadraticCurveTo(cx - 4*s, cy - 34*s, cx, cy - 32*s);
-      ctx.quadraticCurveTo(cx + 4*s, cy - 34*s, cx + 7*s, cy - 50*s);
-      ctx.fill();
-      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 0.5*s;
-      ctx.beginPath(); ctx.moveTo(cx - 3*s, cy - 48*s); ctx.quadraticCurveTo(cx, cy - 38*s, cx + 3*s, cy - 48*s); ctx.stroke();
-      // Bushy eyebrows
-      ctx.strokeStyle = '#999'; ctx.lineWidth = 2*s; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(cx - 8*s, cy - 60*s); ctx.quadraticCurveTo(cx - 4*s, cy - 63*s, cx - 1*s, cy - 60*s); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx + 1*s, cy - 60*s); ctx.quadraticCurveTo(cx + 4*s, cy - 63*s, cx + 8*s, cy - 60*s); ctx.stroke();
-      ctx.lineCap = 'butt';
-      // Rosy nose
-      ctx.fillStyle = '#e8a87a';
-      ctx.beginPath(); ctx.ellipse(cx, cy - 53*s, 2*s, 1.8*s, 0, 0, Math.PI*2); ctx.fill();
-      // Taller wizard hat with brim
-      ctx.fillStyle = '#5522aa';
-      ctx.beginPath(); ctx.ellipse(cx, cy - 65*s, 18*s, 5*s, 0, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#6B35CC';
-      ctx.beginPath(); ctx.moveTo(cx - 12*s, cy - 68*s); ctx.lineTo(cx, cy - 92*s); ctx.lineTo(cx + 12*s, cy - 68*s); ctx.closePath(); ctx.fill();
-      // Hat band
-      ctx.strokeStyle = '#FFE135'; ctx.lineWidth = 2*s;
-      ctx.beginPath(); ctx.moveTo(cx - 10*s, cy - 68*s); ctx.quadraticCurveTo(cx, cy - 72*s, cx + 10*s, cy - 68*s); ctx.stroke();
-      // Star on hat
-      ctx.fillStyle = '#FFE135'; ctx.font = `${5*s}px sans-serif`; ctx.textAlign = 'center';
-      ctx.fillText('★', cx, cy - 78*s);
-      ctx.font = `${3*s}px sans-serif`;
-      ctx.fillText('★', cx - 4*s, cy - 72*s);
-      // Hat tip curl
-      ctx.strokeStyle = '#6B35CC'; ctx.lineWidth = 2*s; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(cx, cy - 92*s); ctx.quadraticCurveTo(cx + 4*s, cy - 90*s, cx + 3*s, cy - 86*s); ctx.stroke();
-      ctx.lineCap = 'butt';
-    } else if (playerChar === 'princess') {
-      // Tiara (hair already rendered before head)
-      ctx.fillStyle = '#FFD700';
-      ctx.beginPath();
-      ctx.moveTo(cx - 10*s, cy - 65*s);
-      ctx.lineTo(cx - 6*s, cy - 73*s);
-      ctx.lineTo(cx - 2*s, cy - 67*s);
-      ctx.lineTo(cx, cy - 76*s);
-      ctx.lineTo(cx + 2*s, cy - 67*s);
-      ctx.lineTo(cx + 6*s, cy - 73*s);
-      ctx.lineTo(cx + 10*s, cy - 65*s);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#FF69B4';
-      ctx.beginPath(); ctx.arc(cx, cy - 73*s, 1.5*s, 0, Math.PI*2); ctx.fill();
-      // Blush
-      ctx.fillStyle = 'rgba(255,170,136,0.35)';
-      ctx.beginPath(); ctx.ellipse(cx - 8*s, cy - 53*s, 3*s, 1.5*s, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(cx + 9*s, cy - 53*s, 3*s, 1.5*s, 0, 0, Math.PI*2); ctx.fill();
-    }
+    // Fallback: simple circle if image hasn't loaded
+    ctx.fillStyle = '#ffcc99';
+    ctx.beginPath(); ctx.arc(cx, cy - 56*s, 12*s, 0, Math.PI*2); ctx.fill();
   }
+
 
   // ── Fishing rod ──
   const bendAmt = isReeling ? Math.sin(globalTime * 5) * 4 + 8 : 0;
