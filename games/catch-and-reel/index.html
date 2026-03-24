@@ -99,6 +99,72 @@ canvas {
   border-top: 1px solid rgba(255,255,255,0.1);
 }
 
+/* ── Settings/Pause button ── */
+#settingsBtn {
+  position: absolute;
+  top: clamp(10px, 2vh, 20px);
+  right: clamp(12px, 2.5vw, 28px);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.7);
+  font-size: clamp(18px, 3vw, 24px);
+  padding: 6px 10px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 10;
+  line-height: 1;
+}
+#settingsBtn:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+}
+
+#pauseMenu {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(11,14,24,0.85);
+  backdrop-filter: blur(6px);
+  z-index: 50;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2.5vh, 20px);
+  pointer-events: auto;
+}
+#pauseMenu.open {
+  display: flex;
+}
+
+.pause-title {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: clamp(28px, 6vw, 44px);
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3);
+  margin-bottom: clamp(8px, 2vh, 16px);
+}
+
+.pause-btn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: clamp(14px, 2.5vw, 20px);
+  border: none;
+  border-radius: 12px;
+  padding: clamp(10px, 2vh, 16px) clamp(28px, 5vw, 48px);
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  min-width: clamp(180px, 40vw, 260px);
+  display: block;
+}
+.pause-resume { background: #2E7D32; color: #fff; }
+.pause-resume:hover { background: #388E3C; }
+.pause-char { background: #1565C0; color: #fff; }
+.pause-char:hover { background: #1976D2; }
+.pause-menu { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+.pause-menu:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
 #bestCatch { display: none !important; /* merged into scoreBoard */ }
 .hud-divider { display: none; /* not used */ font-size: clamp(11px, 1.6vw, 16px);
   color: #FF6B35;
@@ -611,6 +677,13 @@ canvas {
         <div id="bestCatchText"></div>
       </div>
     </div>
+    <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
+    <div id="pauseMenu">
+      <div class="pause-title">PAUSED</div>
+      <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
+      <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
+      <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
+    </div>
     <div id="bestCatch" style="display:none;"></div>
     <div id="instruction"></div>
     <div id="reelUI">
@@ -765,6 +838,23 @@ let ac = null;
 function initAudio() {
   if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
   if (ac.state === 'suspended') ac.resume();
+}
+
+// ── Pause menu ──
+let gamePaused = false;
+
+function togglePauseMenu() {
+  gamePaused = !gamePaused;
+  document.getElementById('pauseMenu').classList.toggle('open', gamePaused);
+}
+
+function changeCharacter() {
+  gamePaused = false;
+  document.getElementById('pauseMenu').classList.remove('open');
+  document.getElementById('gameContainer').style.display = 'none';
+  document.getElementById('charSelect').style.display = 'flex';
+  gameStarted = false;
+  gameState = ST.IDLE;
 }
 
 function tone(freq, dur, type='sine', vol=0.12) {
@@ -2160,16 +2250,18 @@ function frame(now) {
 
   computeLayout();
 
-  // Update state
-  switch (gameState) {
-    case ST.CAST_ANIM: updateCastAnim(dt); break;
-    case ST.WAIT:      updateWait(dt); break;
-    case ST.BITE:      updateBite(dt); break;
-    case ST.REEL:      updateReel(dt); break;
-    case ST.CAUGHT:    updateCaught(dt); break;
-    case ST.FAIL:      updateFail(dt); break;
+  // Update state (skip when paused)
+  if (!gamePaused) {
+    switch (gameState) {
+      case ST.CAST_ANIM: updateCastAnim(dt); break;
+      case ST.WAIT:      updateWait(dt); break;
+      case ST.BITE:      updateBite(dt); break;
+      case ST.REEL:      updateReel(dt); break;
+      case ST.CAUGHT:    updateCaught(dt); break;
+      case ST.FAIL:      updateFail(dt); break;
+    }
+    updateFX(dt);
   }
-  updateFX(dt);
 
   // Draw
   ctx.save();
