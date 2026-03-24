@@ -306,6 +306,10 @@ canvas {
   align-items: center;
   justify-content: center;
   background-image: radial-gradient(ellipse at 50% 30%, #0f1a2e 0%, #0B0E18 70%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 .char-select-inner {
   text-align: center;
@@ -313,6 +317,8 @@ canvas {
   flex-direction: column;
   align-items: center;
   gap: clamp(16px, 3vh, 32px);
+  max-height: none;
+  margin: auto;
 }
 .char-select-title {
   font-family: 'Luckiest Guy', cursive;
@@ -347,6 +353,8 @@ canvas {
   gap: 8px;
   transition: all 0.25s ease;
   font-family: inherit;
+  -webkit-tap-highlight-color: rgba(0,229,255,0.2);
+  touch-action: manipulation;
 }
 .char-option:hover {
   background: rgba(255,255,255,0.12);
@@ -375,8 +383,16 @@ canvas {
   transform: scale(1.1);
 }
 
-/* ── Rotate Device Overlay ── */
-/* Rotate overlay removed — game works in any orientation */
+/* ── Responsive character select ── */
+@media (max-width: 480px) {
+  .char-select-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .char-face-svg {
+    width: clamp(50px, 20vw, 70px);
+    height: clamp(50px, 20vw, 70px);
+  }
+}
 </style>
 </head>
 <body>
@@ -562,7 +578,7 @@ const CHAR_COLORS = {
 };
 
 document.querySelectorAll('.char-option').forEach(btn => {
-  btn.addEventListener('click', () => {
+  function selectChar() {
     playerChar = btn.dataset.char;
     localStorage.setItem('catchReelChar', playerChar);
     document.getElementById('charSelect').style.display = 'none';
@@ -570,6 +586,11 @@ document.querySelectorAll('.char-option').forEach(btn => {
     gameStarted = true;
     resize();
     initAudio();
+  }
+  btn.addEventListener('click', selectChar);
+  btn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    selectChar();
   });
 });
 
