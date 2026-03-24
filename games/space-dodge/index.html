@@ -155,13 +155,26 @@ let touchActive = false;
 
 // --- AUDIO ---
 let audioCtx = null;
+let muted = localStorage.getItem('sd_muted') === 'true';
+let musicNodes = [];
+let musicPingTimer = null;
+let musicPlaying = false;
+let blasterPewCount = 0; // for skipping pews during plasma
+
 function initAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
+function toggleMute() {
+  muted = !muted;
+  localStorage.setItem('sd_muted', muted.toString());
+  if (muted) stopMusic();
+  else if (gameState === 'playing') startMusic();
+}
+
 function playSound(type) {
-  if (!audioCtx) return;
+  if (!audioCtx || muted) return;
   const t = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -170,21 +183,27 @@ function playSound(type) {
 
   switch (type) {
     case 'hit':
+      // Deeper bass hit + crunch
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(300, t);
-      osc.frequency.exponentialRampToValueAtTime(80, t + 0.3);
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.exponentialRampToValueAtTime(40, t + 0.35);
       gain.gain.setValueAtTime(0.25, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      osc.start(t); osc.stop(t + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+      // Add noise burst for crunch
+      { const n = audioCtx.createOscillator(); const ng = audioCtx.createGain();
+        n.type = 'square'; n.frequency.setValueAtTime(100, t);
+        n.frequency.exponentialRampToValueAtTime(30, t + 0.15);
+        ng.gain.setValueAtTime(0.12, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        n.connect(ng); ng.connect(audioCtx.destination); n.start(t); n.stop(t + 0.15); }
       break;
     case 'dodge':
-      // subtle whoosh for near misses — future
       break;
     case 'lose':
       osc.type = 'square';
       osc.frequency.setValueAtTime(220, t);
       osc.frequency.exponentialRampToValueAtTime(55, t + 0.6);
-      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.setValueAtTime(0.18, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
       osc.start(t); osc.stop(t + 0.6);
       break;
@@ -193,35 +212,38 @@ function playSound(type) {
       osc.frequency.setValueAtTime(330, t);
       osc.frequency.setValueAtTime(440, t + 0.1);
       osc.frequency.setValueAtTime(660, t + 0.2);
-      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.setValueAtTime(0.18, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
       osc.start(t); osc.stop(t + 0.35);
       break;
     case 'score':
-      // every 50 points
       osc.type = 'sine';
       osc.frequency.setValueAtTime(523, t);
       osc.frequency.setValueAtTime(659, t + 0.08);
       osc.frequency.setValueAtTime(784, t + 0.16);
-      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.setValueAtTime(0.12, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
       osc.start(t); osc.stop(t + 0.3);
       break;
     case 'blaster':
+      // Half volume, skip every other pew during plasma
+      blasterPewCount++;
+      if (plasmaActive && blasterPewCount % 2 === 0) { osc.disconnect(); return; }
       osc.type = 'sine';
       osc.frequency.setValueAtTime(880, t);
-      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
-      gain.gain.setValueAtTime(0.08, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-      osc.start(t); osc.stop(t + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.06);
+      gain.gain.setValueAtTime(0.04, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      osc.start(t); osc.stop(t + 0.08);
       break;
     case 'explode':
+      // Deeper, more satisfying
       osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(200, t);
-      osc.frequency.exponentialRampToValueAtTime(60, t + 0.2);
-      gain.gain.setValueAtTime(0.18, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-      osc.start(t); osc.stop(t + 0.25);
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.exponentialRampToValueAtTime(35, t + 0.3);
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+      osc.start(t); osc.stop(t + 0.3);
       break;
     case 'levelup':
       osc.type = 'sine';
@@ -240,42 +262,137 @@ function playSound(type) {
       osc.frequency.setValueAtTime(784, t + 0.24);
       osc.frequency.setValueAtTime(1047, t + 0.36);
       osc.frequency.setValueAtTime(1319, t + 0.48);
-      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.setValueAtTime(0.22, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
       osc.start(t); osc.stop(t + 0.7);
       break;
     case 'beep':
       osc.type = 'sine';
       osc.frequency.setValueAtTime(440, t);
-      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.setValueAtTime(0.12, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
       osc.start(t); osc.stop(t + 0.15);
       break;
     case 'beepgo':
       osc.type = 'sine';
       osc.frequency.setValueAtTime(880, t);
-      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.setValueAtTime(0.18, t);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
       osc.start(t); osc.stop(t + 0.25);
       break;
     case 'powerup':
+      // Sparkly ascending — longer tail
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, t);
-      osc.frequency.setValueAtTime(900, t + 0.08);
-      osc.frequency.setValueAtTime(1200, t + 0.16);
-      gain.gain.setValueAtTime(0.2, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      osc.start(t); osc.stop(t + 0.3);
+      osc.frequency.setValueAtTime(500, t);
+      osc.frequency.setValueAtTime(800, t + 0.06);
+      osc.frequency.setValueAtTime(1100, t + 0.12);
+      osc.frequency.setValueAtTime(1400, t + 0.2);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t); osc.stop(t + 0.4);
+      // Sparkle overlay
+      { const s = audioCtx.createOscillator(); const sg = audioCtx.createGain();
+        s.type = 'triangle'; s.frequency.setValueAtTime(2000, t);
+        s.frequency.exponentialRampToValueAtTime(3000, t + 0.2);
+        sg.gain.setValueAtTime(0.03, t); sg.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        s.connect(sg); sg.connect(audioCtx.destination); s.start(t); s.stop(t + 0.3); }
       break;
     case 'shieldbreak':
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(500, t);
-      osc.frequency.exponentialRampToValueAtTime(150, t + 0.25);
-      gain.gain.setValueAtTime(0.2, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-      osc.start(t); osc.stop(t + 0.3);
+      // Glass shatter feel — high freq burst + descend
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1200, t);
+      osc.frequency.exponentialRampToValueAtTime(200, t + 0.2);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
+      // Tinkle fragments
+      { const s = audioCtx.createOscillator(); const sg = audioCtx.createGain();
+        s.type = 'triangle'; s.frequency.setValueAtTime(3000, t);
+        s.frequency.exponentialRampToValueAtTime(800, t + 0.15);
+        sg.gain.setValueAtTime(0.06, t + 0.05); sg.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        s.connect(sg); sg.connect(audioCtx.destination); s.start(t + 0.05); s.stop(t + 0.2); }
       break;
   }
+}
+
+// --- BACKGROUND MUSIC (Ambient Drone + Melodic Pings) ---
+const MUSIC_VOL = 0.04; // very subtle
+// Per-world pentatonic scales
+const WORLD_SCALES = [
+  [220, 261.6, 329.6, 392, 440, 523.3],           // Deep Space — A minor pentatonic
+  [233, 277.2, 311.1, 370, 415.3, 466.2],          // Nebula — Bb, shifted dreamy
+  [196, 246.9, 293.7, 329.6, 392, 493.9],          // Asteroid Belt — G, earthy
+  [261.6, 311.1, 370, 415.3, 523.3, 622.3],        // Ice Field — C, crystalline
+  [293.7, 349.2, 392, 466.2, 523.3, 587.3],        // Supernova — D, intense
+];
+
+function startMusic() {
+  if (muted || !audioCtx || musicPlaying) return;
+  musicPlaying = true;
+  const t = audioCtx.currentTime;
+  const idx = getWorldIdx();
+
+  // Bass drone — two detuned sines
+  const drone1 = audioCtx.createOscillator();
+  const drone2 = audioCtx.createOscillator();
+  const droneGain = audioCtx.createGain();
+  const baseFreq = [55, 52, 49, 58, 62][idx] || 55;
+  drone1.type = 'sine';
+  drone1.frequency.setValueAtTime(baseFreq, t);
+  drone1.frequency.linearRampToValueAtTime(baseFreq * 1.12, t + 10);
+  drone1.frequency.linearRampToValueAtTime(baseFreq, t + 20);
+  drone1.frequency.linearRampToValueAtTime(baseFreq * 0.9, t + 30);
+  drone1.frequency.linearRampToValueAtTime(baseFreq, t + 40);
+  drone2.type = 'sine';
+  drone2.frequency.setValueAtTime(baseFreq + 0.5, t);
+  drone2.frequency.linearRampToValueAtTime(baseFreq * 1.12 + 0.5, t + 10);
+  drone2.frequency.linearRampToValueAtTime(baseFreq + 0.5, t + 20);
+  drone2.frequency.linearRampToValueAtTime(baseFreq * 0.9 + 0.5, t + 30);
+  drone2.frequency.linearRampToValueAtTime(baseFreq + 0.5, t + 40);
+  droneGain.gain.setValueAtTime(MUSIC_VOL, t);
+  drone1.connect(droneGain); drone2.connect(droneGain);
+  droneGain.connect(audioCtx.destination);
+  drone1.start(t); drone2.start(t);
+  drone1.stop(t + 120); drone2.stop(t + 120);
+  musicNodes.push(drone1, drone2);
+
+  // Sub bass
+  const sub = audioCtx.createOscillator();
+  const subGain = audioCtx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(baseFreq / 2, t);
+  subGain.gain.setValueAtTime(MUSIC_VOL * 0.6, t);
+  sub.connect(subGain); subGain.connect(audioCtx.destination);
+  sub.start(t); sub.stop(t + 120);
+  musicNodes.push(sub);
+
+  // Melodic pings — world-specific scale
+  const scaleNotes = WORLD_SCALES[idx] || WORLD_SCALES[0];
+  musicPingTimer = setInterval(() => {
+    if (!audioCtx || muted || paused) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(scaleNotes[Math.floor(Math.random() * scaleNotes.length)], now);
+    g.gain.setValueAtTime(MUSIC_VOL * 0.6, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 2.5);
+    musicNodes.push(osc);
+  }, 2000 + Math.random() * 1500);
+}
+
+function stopMusic() {
+  musicPlaying = false;
+  musicNodes.forEach(n => { try { n.stop(); } catch(e) {} });
+  musicNodes = [];
+  if (musicPingTimer) { clearInterval(musicPingTimer); musicPingTimer = null; }
+}
+
+function restartMusic() {
+  stopMusic();
+  startMusic();
 }
 
 // --- RESIZE ---
@@ -1213,6 +1330,7 @@ function drawTitle() {
   }
 
   drawMenuButton();
+  drawMuteButton();
 }
 
 // --- MENU BUTTON ---
@@ -1383,6 +1501,7 @@ function drawGameOver() {
   }
 
   drawMenuButton();
+  drawMuteButton();
 }
 
 function drawStar5(cx, cy, r, color) {
@@ -1441,6 +1560,7 @@ function drawWorldTitle() {
   ctx.textAlign = 'center';
 
   drawMenuButton();
+  drawMuteButton();
 }
 
 // --- COUNTDOWN ---
@@ -1592,6 +1712,7 @@ function drawVictory() {
   }
 
   drawMenuButton();
+  drawMuteButton();
 }
 
 // --- GAME INIT ---
@@ -1612,6 +1733,7 @@ function startEndless() {
   gameState = 'playing';
   resetPlayState();
   generateWorldDecor();
+  restartMusic();
 }
 
 function showWorldTitle() {
@@ -1940,6 +2062,7 @@ function update() {
       } else {
         gameState = 'playing';
         playSound('start');
+        restartMusic();
       }
     }
     return;
@@ -1953,6 +2076,7 @@ function update() {
       if (currentWorld >= WORLDS.length) {
         // Beat all worlds!
         gameState = 'victory';
+        stopMusic();
         playSound('victory');
         endlessUnlocked = true;
         localStorage.setItem('sd_endless', 'true');
@@ -2060,6 +2184,7 @@ function update() {
 
         if (lives <= 0) {
           gameState = 'gameover';
+          stopMusic();
           playSound('lose');
           if (score > bestScore) {
             bestScore = score;
@@ -2076,7 +2201,8 @@ function update() {
   // Check world completion (campaign only)
   if (gameMode === 'campaign' && worldProgress >= WORLDS[currentWorld].threshold) {
     gameState = 'levelcomplete';
-    transitionTimer = 180; // 3 seconds
+    transitionTimer = 180;
+    stopMusic();
     playSound('levelup');
   }
 
@@ -2113,6 +2239,23 @@ let paused = false;
 let pauseBtn = {};
 let pauseMenuBtns = { resume: {}, restart: {}, menu: {} };
 
+let muteBtn = {};
+
+function drawMuteButton() {
+  const sz = 30 * scale;
+  const x = W - sz - 52 * scale;
+  const y = 13;
+  muteBtn = { x, y, w: sz, h: sz };
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.beginPath();
+  ctx.roundRect(x, y, sz, sz, 5);
+  ctx.fill();
+  ctx.fillStyle = muted ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)';
+  ctx.font = `${Math.round(14 * scale)}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.fillText(muted ? '🔇' : '🔊', x + sz / 2, y + sz / 2 + 4 * scale);
+}
+
 function drawPauseButton() {
   const sz = 36 * scale;
   const x = W - sz - 10;
@@ -2126,6 +2269,7 @@ function drawPauseButton() {
   ctx.font = `${Math.round(18 * scale)}px Arial`;
   ctx.textAlign = 'center';
   ctx.fillText(paused ? '▶' : '⏸', x + sz / 2, y + sz / 2 + 5 * scale);
+  drawMuteButton();
 }
 
 function drawPauseOverlay() {
@@ -2168,6 +2312,9 @@ function drawPauseOverlay() {
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.fillText('🏠  MENU', W / 2, mY + btnH / 2 + 5 * scale);
   pauseMenuBtns.menu = { x: W / 2 - btnW / 2, y: mY, w: btnW, h: btnH };
+
+  // Mute button on pause screen
+  drawMuteButton();
 }
 
 function handlePauseClick(tx, ty) {
@@ -2185,6 +2332,7 @@ function handlePauseClick(tx, ty) {
   }
   if (hitTest(tx, ty, pauseMenuBtns.menu)) {
     paused = false;
+    stopMusic();
     gameState = 'title';
     return;
   }
@@ -2218,6 +2366,9 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape' && gameState === 'playing') {
     paused = !paused;
+  }
+  if (e.key === 'm' || e.key === 'M') {
+    toggleMute();
   }
   // Arrow keys cycle ships on title
   if (gameState === 'title' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
@@ -2305,6 +2456,9 @@ canvas.addEventListener('touchstart', e => {
   // Check menu button
   if (hitTest(tx, ty, menuBtn)) { window.location.href = '/'; return; }
 
+  // Check mute button
+  if (hitTest(tx, ty, muteBtn)) { initAudio(); toggleMute(); return; }
+
   // Check pause button
   if (gameState === 'playing' && !paused && hitTest(tx, ty, pauseBtn)) { paused = true; return; }
 
@@ -2339,6 +2493,7 @@ canvas.addEventListener('click', e => {
   const my = (e.clientY - rect.top) * (canvas.height / rect.height);
 
   if (hitTest(mx, my, menuBtn)) { window.location.href = '/'; return; }
+  if (hitTest(mx, my, muteBtn)) { initAudio(); toggleMute(); return; }
   if (gameState === 'playing' && !paused && hitTest(mx, my, pauseBtn)) { paused = true; return; }
   if (gameState === 'playing' && paused) { handlePauseClick(mx, my); return; }
   if (gameState === 'title') { handleTitleClick(mx, my); return; }
