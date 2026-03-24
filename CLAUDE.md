@@ -350,3 +350,100 @@ Pause button is top-right (matches Monster Rally). Opens a proper menu overlay:
 - [ ] Works in both portrait and landscape (no rotate overlay)
 - [ ] 60fps on desktop Chrome and iPad Safari
 - [ ] No console errors
+
+---
+
+# Catch & Reel (`games/catch-and-reel/index.html`)
+
+**Status:** v1.0 — Arcade fishing game. Built by a friend, hosted on SKG. **Note:** This game was NOT built by Claude Code. Treat it as third-party code. Do not refactor or restructure without explicit instruction.
+
+## Architecture
+- **Single HTML file** (~2067 lines) — Canvas + DOM hybrid
+- **External dependency:** Google Fonts (Luckiest Guy, Baloo 2) — requires internet. This is an exception to SKG's "no external assets" rule. Noted for future self-hosting pass.
+- **Canvas** for scene rendering (sky, water, dock, character, fish, particles)
+- **DOM overlays** for UI (scoreboard, reel bars, catch display, character select)
+- Vignette overlay via CSS radial gradient
+- `100vh` layout, `user-select: none`, `touch-action: manipulation`
+
+## Game Flow (State Machine)
+States defined in `ST` object:
+1. **IDLE** — Character on dock, "Tap to cast!" prompt
+2. **CAST_ANIM** — Line arcs out to water (parabolic animation)
+3. **WAIT** — Bobber floating, waiting for bite (random 2-6s timer)
+4. **BITE** — Fish biting! "TAP NOW!" urgent prompt with pink pulse animation. ~2s window to react.
+5. **REEL** — Tension bar mini-game. Hold to reel, release to rest. Keep indicator in green zone. Progress bar fills to catch.
+6. **CAUGHT** — Catch display modal with fish emoji, name, weight, rarity, points
+7. **FAIL** — Line snapped or missed bite. Brief delay then back to IDLE.
+
+## Reel Mechanic
+- Tension bar: 25% red | 50% green | 25% red
+- Yellow indicator oscillates left/right
+- Hold = reel in (progress fills, tension moves)
+- Release = rest (tension drifts back to center)
+- Indicator in green zone = progress. In red zone = tension builds. Too much tension = line snaps.
+- Progress bar fills based on time in green zone. Full bar = caught.
+
+## Fish System
+- Rarity tiers: Common, Uncommon, Rare, Epic, Exotic
+- Each tier has multiple fish with emoji, name, weight range, point value
+- Exotic rarity gets rainbow cycling border + text animation on catch display
+- Weight randomized within range per fish
+- Points scale with rarity
+
+## Character Select
+- Multiple playable characters with different hat/skin/shirt colors
+- Selected via DOM overlay screen before gameplay
+- Character drawn on dock via Canvas (`drawCharacter()`)
+- Rod, reel handle, fishing line all animated per character position
+
+## Visual Features
+- Night sky with stars (`makeStars()`) and shooting stars
+- Moon rendered via Canvas
+- Water with layered sine waves, foam/whitecaps, ambient fish silhouettes
+- Dock with planks, posts, and character standing on edge
+- Bobber with white/red halves, highlight, ripple rings, shadow
+- Fishing line with catenary curve (sag when slack, taut + vibration when reeling)
+- Particles for splash, catch celebration, confetti
+- Screen shake on events
+- Flash overlay on catch/fail
+
+## Audio
+- No audio system currently implemented
+- Future opportunity: Web Audio API sounds for cast, splash, bite alert, reel, catch fanfare, line snap
+
+## Input
+- Tap/Click to cast (IDLE state)
+- Tap/Click to hook fish (BITE state)
+- Hold/Press to reel (REEL state, hold = reel, release = rest)
+- All input via `pointerdown`/`pointerup` events on canvas
+
+## DOM Elements
+- `#gameContainer` — wrapper
+- `#vignette` — CSS vignette overlay
+- `#uiOverlay` — UI container (pointer-events: none)
+- `#title` — "CATCH AND REEL" header
+- `#scoreBoard` — score + best catch HUD (top-left)
+- `#instruction` — bottom prompt text (changes per state)
+- `#reelUI` — tension bar + progress bar (visible during REEL state)
+- `#catchDisplay` — modal showing caught fish details
+- `#charSelect` — character selection screen
+
+## localStorage Keys
+- `catchreel_best` — best single catch points
+- `catchreel_total` — total score across sessions
+- `catchreel_char` — selected character index
+
+## Important Patterns
+- **Do NOT refactor without explicit instruction** — this is third-party code
+- **Visual-only changes** = no physics/mechanic modifications
+- The DOM/Canvas hybrid is intentional — UI overlays are DOM, scene is Canvas
+- Google Fonts dependency is a known exception — do not remove without providing alternative
+- Character drawing uses `cc` (character colors) object from selected character
+
+## Queued (Not Built)
+- Web Audio API sound system (cast, splash, bite, reel, catch, snap)
+- Self-host Google Fonts or swap to system fonts
+- Mobile optimization pass
+- Additional fish species
+- Seasonal themes
+- Integration with SKG coin economy (future)
