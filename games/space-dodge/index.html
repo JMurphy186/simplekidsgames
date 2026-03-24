@@ -1504,8 +1504,8 @@ function drawVictory() {
   ctx.fillRect(0, 0, W, H);
   drawStars();
 
-  // Confetti particles
-  if (Math.random() < 0.3) {
+  // Falling confetti stream
+  if (Math.random() < 0.4) {
     particles.push({
       x: Math.random() * W, y: -5,
       vx: (Math.random() - 0.5) * 2,
@@ -1516,43 +1516,72 @@ function drawVictory() {
       color: ['#FF5252','#FFD740','#69F0AE','#40C4FF','#E040FB','#FF6E40'][Math.floor(Math.random() * 6)]
     });
   }
+
+  // Confetti pops — bursts from sides
+  if (Math.random() < 0.06) {
+    const fromLeft = Math.random() > 0.5;
+    const bx = fromLeft ? W * 0.1 : W * 0.9;
+    const by = H * (0.2 + Math.random() * 0.4);
+    for (let i = 0; i < 15; i++) {
+      const angle = (fromLeft ? -0.5 : 0.5) * Math.PI + (Math.random() - 0.5) * Math.PI * 0.8;
+      const speed = 3 + Math.random() * 5;
+      particles.push({
+        x: bx, y: by,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        life: 40 + Math.random() * 30,
+        maxLife: 70,
+        size: 3 + Math.random() * 4,
+        color: ['#FF5252','#FFD740','#69F0AE','#40C4FF','#E040FB','#FF6E40','#FFFFFF'][Math.floor(Math.random() * 7)]
+      });
+    }
+  }
+
   drawParticles();
   updateParticles();
 
   // Ship celebration
   titleShipBob += 0.04;
-  const shipY = H * 0.42 + Math.sin(titleShipBob) * 10;
+  const shipY = H * 0.38 + Math.sin(titleShipBob) * 10;
   drawShip(W / 2, shipY, SHIP_WIDTH * 2 * scale, SHIP_HEIGHT * 2 * scale, 0);
 
   ctx.fillStyle = '#ffcc00';
-  ctx.font = `bold ${Math.round(44 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.font = `bold ${Math.round(42 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('GREAT PILOT!', W / 2, H * 0.12);
+  ctx.fillText('WELL DONE!', W / 2, H * 0.1);
 
   // Stars
-  const starY = H * 0.19;
+  const starY = H * 0.17;
   for (let i = 0; i < 5; i++) {
     drawStar5(W / 2 + (i - 2) * 36 * scale, starY, 14 * scale, '#ffcc00');
   }
 
   ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.round(32 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('ALL WORLDS COMPLETE!', W / 2, H * 0.68);
+  ctx.font = `bold ${Math.round(28 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText('ALL WORLDS COMPLETE!', W / 2, H * 0.65);
 
   ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.round(48 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText(score, W / 2, H * 0.78);
+  ctx.font = `bold ${Math.round(44 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText(score, W / 2, H * 0.74);
 
-  // Unlock messages
+  // Unlock messages with ship preview
   const nextShip = selectedShip + 1;
   if (nextShip < SHIPS.length && unlockedShips.includes(nextShip)) {
-    ctx.fillStyle = SHIPS[nextShip].accent;
+    const ns = SHIPS[nextShip];
+    const unlockY = H * 0.86;
+    // Draw the unlocked ship small preview
+    const previewSize = 30 * scale;
+    drawShipByIndex(nextShip, W / 2 - 90 * scale, unlockY - 4 * scale, previewSize, previewSize * 1.3);
+    // Text
+    ctx.fillStyle = ns.accent;
     ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.fillText('🚀 ' + SHIPS[nextShip].name.toUpperCase() + ' UNLOCKED!', W / 2, H * 0.87);
+    ctx.textAlign = 'left';
+    ctx.fillText(ns.name.toUpperCase() + ' UNLOCKED!', W / 2 - 60 * scale, unlockY + 4 * scale);
+    ctx.textAlign = 'center';
   } else {
     ctx.fillStyle = '#69F0AE';
     ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.fillText('♾️ ENDLESS MODE UNLOCKED!', W / 2, H * 0.87);
+    ctx.fillText('♾️ ENDLESS MODE UNLOCKED!', W / 2, H * 0.86);
   }
 
   const blink = Math.sin(Date.now() / 400) > 0;
