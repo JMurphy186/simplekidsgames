@@ -202,57 +202,117 @@ simplekidsgames/
 
 # Space Dodge (`games/space-dodge/index.html`)
 
-**Status:** v0.1 live — HD SVG ship + asteroids, auto-blasters, 5-world campaign, endless mode
+**Status:** v1.0 — Full game with 5 ships, 5 worlds, power-ups, campaign + endless modes
 
 ## Architecture
-- **Single HTML file**, same as Monster Rally — Canvas API, Web Audio API, no external assets
+- **Single HTML file** (~2300 lines) — Canvas API, Web Audio API, no external assets
 - **SVG art** loaded as base64 data URIs, drawn via `drawImage()` with Canvas rotation
 - **60fps frame cap**, `100dvh`, `visualViewport` API, Safari initial paint fix
-- **Landscape-only** with portrait rotate overlay
+- **Works in any orientation** — no rotate overlay, canvas adapts via resize
+- `orientationchange` listener with 200ms delay for browser dimension updates
 
 ## Game Modes
-- **Campaign:** 5 worlds (Deep Space → Nebula → Asteroid Belt → Ice Field → Supernova) with progression bar. Title card + 3-2-1 countdown between worlds. Beat all 5 → victory screen → Endless unlocked.
-- **Endless:** Unlocked after campaign. Background cycles through worlds. High score tracked.
+- **Campaign:** 5 worlds (Deep Space → Nebula → Asteroid Belt → Ice Field → Supernova). Title card + 3-2-1 countdown between worlds. Beat all 5 → "WELL DONE!" victory screen with confetti pops → Endless unlocked + next ship unlocked.
+- **Endless:** Unlocked after beating campaign. Background cycles through worlds over time. High score tracked.
+
+## Ship Roster (5 ships)
+Each ship in `SHIPS[]` array has: `id`, `name`, `type`, `accent` (UI color), `flameColors` [outer, mid, core], `drawW`/`drawH` (scale factors), `svg` (base64 data URI).
+
+| # | Ship | Type | Accent | Flame Colors | Unlock |
+|---|------|------|--------|-------------|--------|
+| 1 | Star Rider | Classic / Explorer | `#42A5F5` | Orange→Gold→White | Default |
+| 2 | Interceptor | Stealth / Fighter | `#00E676` | Teal→Green→Mint | Beat campaign with #1 |
+| 3 | Juggernaut | Heavy / Armor | `#FF6D00` | Red→Orange→Gold | Beat campaign with #2 |
+| 4 | Star Cruiser | Speed / Racing | `#FFCA28` | Navy→Cyan→Ice | Beat campaign with #3 |
+| 5 | Alien Tech | Exotic / Energy | `#EA80FC` | Purple→Violet→Magenta | Beat campaign with #4 |
+
+Ship picker is inline on the title screen — left/right arrows flanking a spotlight showcase. No separate picker screen. Arrow keys cycle ships on desktop. Locked ships show "?" silhouette with unlock hint. Dot indicators below show all 5 slots.
+
+### Ship Drawing
+- `drawShip()` uses `selectedShip` index to get the correct image, flame colors, and draw dimensions
+- `drawShipByIndex()` renders any ship by index (used for picker, victory preview)
+- Exhaust flames are always Canvas-animated (3-layer: outer→mid→core), never part of SVG
+- Ship SVGs have no flame elements, no drop shadow filters, no ambient stars
 
 ## Core Mechanics
 - Left/right movement only (arrow keys, A/D, touch drag)
-- Auto-firing blasters (every ~0.47s) — no button needed
-- 3 lives with hearts — hit = funny wobble + invincibility frames
+- Auto-firing blasters every ~0.47s (28 frames) — no button needed
+- 3 lives with mini ship indicators (active ships with flames, ghost ships when lost)
+- Bigger explosion on hit — 30 burst particles + 10 white core particles + expanding shockwave ring
 - Progression bar: blasted asteroids = 3x progress, dodged = 1x
-- "GREAT RUN!" on game over (no punishment language)
+- "GREAT RUN!" on game over, "WELL DONE!" on victory (no punishment language)
+
+## Power-Ups
+Two power-up types float down from top, collected on ship contact:
+
+| Power-Up | Icon | Color | Effect | Duration |
+|----------|------|-------|--------|----------|
+| Plasma Laser | Lightning bolt | `#00E5FF` | 2x+ fire rate, wider cyan beam, pierces through asteroids | 8 seconds |
+| Energy Shield | Shield + checkmark | `#69F0AE` | Green bubble around ship, absorbs ONE asteroid hit then pops | Until hit |
+
+- Spawn every ~10 seconds (`POWERUP_SPAWN_INTERVAL` = 600 frames)
+- Power-up HUD displays below lives area (top-left): plasma timer bar, shield active indicator
+- Both can be active simultaneously
+- Unique sounds: ascending chime on collect, descending break on shield pop
+- All power-up state resets on world transition
+
+## World System
+Each world in `WORLDS[]` has: `name`, `bg`, `starColor` (RGB), `accent`, `baseSpeed`, `spawnStart`, `spawnMin`, `speedInc`, `spawnDec`, `threshold`.
+
+| # | World | Threshold | Background Art |
+|---|-------|-----------|---------------|
+| 1 | Deep Space | 150 | Dark gradient, distant galaxy ellipses |
+| 2 | Nebula | 250 | Purple gradient, drifting gas cloud shapes (pink/purple) |
+| 3 | Asteroid Belt | 350 | Brown gradient, 14 background rocks + 30 dust particles |
+| 4 | Ice Field | 450 | Cyan gradient, crystal shards + animated aurora wave bands |
+| 5 | Supernova | 550 | Red gradient, expanding shockwave rings from bottom, ember particles floating up |
+
+World decorations generated via `generateWorldDecor()` on each world start. Rendered every frame via `drawWorldBackground()` which draws gradient + decorations + tinted stars.
+
+## UI Layout (matches Monster Rally)
+- **Title screen:** MENU (top-left), ship spotlight with arrows (center), Campaign/Endless buttons (bottom), best score, dot indicators
+- **Gameplay:** Lives + power-up status (top-left), World name + progress bar with % (top-center), Score (top-right, left of pause), Pause button (top-right corner)
+- **Pause menu:** Dark overlay with Resume (green), Restart (blue), Menu (grey) — three tappable buttons
+- **Victory:** "WELL DONE!" + confetti pops from sides + falling confetti + unlocked ship SVG preview next to unlock text
+
+## Pause Menu
+Pause button is top-right (matches Monster Rally). Opens a proper menu overlay:
+- ▶ Resume — unpause
+- 🔄 Restart — restart current world (campaign) or reset (endless)
+- 🏠 Menu — back to title screen
 
 ## SVG Assets
-- **Ship body:** `SHIP_SVG_B64` — metallic fuselage, blue hull panels, red fins/nose, cockpit viewport. Exhaust is animated Canvas (not in SVG).
-- **Asteroid:** `ASTEROID_SVG_B64` — gradient rock body, edge highlights, fissures, 3 craters with depth. All asteroids use same SVG at different scales + rotations.
+- **Ship bodies:** 5 entries in `SHIPS[]`, each with unique base64 SVG. All viewBox 300×400. Flames stripped.
+- **Asteroid:** `ASTEROID_SVG_B64` — gradient rock body, edge highlights, fissures, 3 craters. No drop shadow filter. All asteroids use same SVG at different scales + rotations.
 
 ## localStorage Keys
 - `sd_best` — best score (int)
 - `sd_endless` — endless mode unlocked (`'true'`)
+- `sd_ship` — selected ship index (int)
+- `sd_unlocked` — unlocked ship indices (JSON array, e.g. `[0,1,2]`)
 
-## World Definitions
-Each world in the `WORLDS[]` array has: `name`, `bg` (background color), `starColor` (RGB array), `accent` (UI color), `baseSpeed`, `spawnStart`, `spawnMin`, `speedInc`, `spawnDec`, `threshold` (progress points to advance).
-
-| # | World | Background | Star Tint | Threshold | Difficulty |
-|---|-------|-----------|-----------|-----------|------------|
-| 1 | Deep Space | Dark blue | White | 50 pts | Easy — learn the game |
-| 2 | Nebula | Purple | Lavender | 80 pts | Faster, tighter spawns |
-| 3 | Asteroid Belt | Dark brown | Amber | 120 pts | Dense field |
-| 4 | Ice Field | Deep cyan | Ice blue | 160 pts | Fast and tight |
-| 5 | Supernova | Dark red | Pink | 200 pts | Final push |
+## Audio (all Web Audio API synthesized)
+- `start` — ascending 3-note chime
+- `blaster` — quick sine pew
+- `explode` — sawtooth descend
+- `hit` — sawtooth descend (ship hit)
+- `lose` — square wave descend
+- `score` — 3-note milestone chime (every 50 pts)
+- `levelup` — 4-note ascending fanfare
+- `victory` — 5-note ascending fanfare
+- `beep` / `beepgo` — countdown tones
+- `powerup` — ascending 3-note collect chime
+- `shieldbreak` — triangle wave descend
 
 ## Queued (Not Built)
-- Full environment backgrounds per world (Canvas-drawn atmospheric art)
-- Bonus objects: Alien Saucer (+500), Golden Comet (+1000), Supply Capsule (+250)
-- Power-ups: Plasma Laser, Energy Shield, Hyper-Drive
-- SVG mockups exist for all queued items (reference HTML files in repo root)
+- Bonus objects: Alien Saucer (+500), Golden Comet (+1000), Supply Capsule (+250) — SVG mockups exist
+- Title screen demo scene — ship auto-fires on menu
+- Game over stats — blasted, dodged, world reached, time
+- Sound polish — blaster volume at high fire rates
+- World background enhancements — richer animations
+- Ship-specific abilities — stat differences per ship
 - Cross-game coin economy with Monster Rally
-
-## Important Patterns
-- **Visual-only changes** = no physics modifications — always specify this in prompts
-- **Single HTML file, no external assets** — everything embedded
-- Ship exhaust is always Canvas-animated, never part of the SVG
-- Asteroid SVG has no drop shadow filter — Canvas handles rotation cleaner without it
-- World speed/spawn values reset per world via `worldFrameCount` (not global `frameCount`)
+- PWA manifest for fullscreen on Add to Home Screen
 
 ## Do NOT
 - Add npm, webpack, vite, or any build tooling
@@ -262,17 +322,31 @@ Each world in the `WORLDS[]` array has: `name`, `bg` (background color), `starCo
 - Modify the landing page (root `index.html`) when working on Space Dodge
 - Change collision boxes when changing vehicle art (visual-only changes)
 
+## Important Patterns
+- **Visual-only changes** = no physics modifications — always specify this in prompts
+- **Single HTML file, no external assets** — everything embedded
+- Ship exhaust is always Canvas-animated, never part of the SVG
+- Asteroid SVG has no drop shadow filter — Canvas handles rotation cleaner without it
+- World speed/spawn values reset per world via `worldFrameCount` (not global `frameCount`)
+- Power-up state resets on `resetPlayState()` — powerups array, timers, shield, plasma all cleared
+- Ship picker is inline on title screen — no separate `shippicker` game state used (dead code remains)
+- `drawShipByIndex(idx, x, y, w, h)` for rendering any ship outside gameplay (picker, victory)
+
 ## Testing Checklist
 - [ ] Ship renders as SVG with animated Canvas exhaust
+- [ ] All 5 ships selectable, locked ships show "?" with unlock hint
 - [ ] Asteroids render as SVG at various scales and rotations
 - [ ] Auto-blasters fire every ~0.47s
 - [ ] Left/right controls work (keyboard + touch drag)
-- [ ] 3 lives with hearts displayed, wobble on hit
+- [ ] 3 lives with mini ship indicators, wobble on hit
 - [ ] Campaign: 5 worlds with progression bar, transitions, countdown
+- [ ] Each world has unique background art (nebula clouds, crystals, etc.)
+- [ ] Plasma Laser power-up: piercing cyan beam, 8 second timer
+- [ ] Energy Shield power-up: green bubble, absorbs one hit
 - [ ] Level complete screen shows stats
-- [ ] Victory screen after World 5 with confetti + unlock
+- [ ] Victory screen: "WELL DONE!" with confetti + unlocked ship preview
 - [ ] Endless mode accessible after campaign completion
-- [ ] localStorage persists high score and endless unlock
-- [ ] Portrait mode shows rotate overlay
+- [ ] localStorage persists high score, endless unlock, ship selection, unlocked ships
+- [ ] Works in both portrait and landscape (no rotate overlay)
 - [ ] 60fps on desktop Chrome and iPad Safari
 - [ ] No console errors
