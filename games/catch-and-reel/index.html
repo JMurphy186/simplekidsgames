@@ -218,9 +218,9 @@ canvas {
   position: relative;
   overflow: hidden;
   background: linear-gradient(90deg,
-    #cc0000 0%, #cc0000 25%,
-    #39FF14 25%, #39FF14 75%,
-    #cc0000 75%, #cc0000 100%
+    #cc0000 0%, #cc0000 30%,
+    #cc8800 30%, #cc8800 70%,
+    #39FF14 70%, #39FF14 100%
   );
   box-shadow: 0 0 16px rgba(255,255,255,0.15), inset 0 2px 4px rgba(0,0,0,0.4);
 }
@@ -228,7 +228,7 @@ canvas {
 #tensionBarOuter::after {
   content: '';
   position: absolute;
-  top: 0; left: 25%; width: 50%; height: 100%;
+  top: 0; left: 70%; width: 30%; height: 100%;
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
   animation: shimmerGreen 2s ease-in-out infinite;
 }
@@ -792,13 +792,13 @@ const C = {
 
 // --- Rarity tiers ---
 const RARITY = {
-  COMMON:     { label: 'COMMON',      color: '#9CA3AF', weight: 35,  fightMin: 0.4, fightMax: 0.6, reelMin: 3,  reelMax: 4,  fallMod: 1.0, tugFreqMod: 1.0, tugStrMod: 1.0, riseMod: 1.0, greenZone: [0.25, 0.75] },
-  UNCOMMON:   { label: 'UNCOMMON',    color: '#39FF14', weight: 25,  fightMin: 0.6, fightMax: 0.8, reelMin: 4,  reelMax: 5,  fallMod: 1.0, tugFreqMod: 1.0, tugStrMod: 1.0, riseMod: 1.0, greenZone: [0.25, 0.75] },
-  RARE:       { label: 'RARE',        color: '#00E5FF', weight: 18,  fightMin: 0.8, fightMax: 1.0, reelMin: 5,  reelMax: 6,  fallMod: 1.1, tugFreqMod: 1.1, tugStrMod: 1.1, riseMod: 0.95, greenZone: [0.25, 0.75] },
-  ULTRA_RARE: { label: 'ULTRA RARE',  color: '#B24BF3', weight: 10,  fightMin: 1.0, fightMax: 1.2, reelMin: 6,  reelMax: 7,  fallMod: 1.25, tugFreqMod: 1.2, tugStrMod: 1.2, riseMod: 0.9, greenZone: [0.25, 0.75] },
-  EPIC:       { label: 'EPIC',        color: '#FF6B35', weight: 6,   fightMin: 1.2, fightMax: 1.4, reelMin: 7,  reelMax: 8,  fallMod: 1.4, tugFreqMod: 1.4, tugStrMod: 1.3, riseMod: 0.85, greenZone: [0.25, 0.75] },
-  LEGENDARY:  { label: 'LEGENDARY',   color: '#FFD700', weight: 3,   fightMin: 1.4, fightMax: 1.6, reelMin: 8,  reelMax: 10, fallMod: 1.6, tugFreqMod: 1.6, tugStrMod: 1.5, riseMod: 0.8, greenZone: [0.28, 0.72] },
-  EXOTIC:     { label: 'EXOTIC',      color: 'rainbow', weight: 1.5, fightMin: 1.5, fightMax: 1.8, reelMin: 9,  reelMax: 12, fallMod: 1.7, tugFreqMod: 1.7, tugStrMod: 1.6, riseMod: 0.75, greenZone: [0.30, 0.70] },
+  COMMON:     { label: 'COMMON',      color: '#9CA3AF', weight: 35,  fightMin: 0.4, fightMax: 0.6, reelMin: 3,  reelMax: 4,  fallMod: 1.0, tugFreqMod: 1.0, tugStrMod: 1.0, riseMod: 1.0, greenZone: [0.70, 1.0], driftRate: 0.25 },
+  UNCOMMON:   { label: 'UNCOMMON',    color: '#39FF14', weight: 25,  fightMin: 0.6, fightMax: 0.8, reelMin: 4,  reelMax: 5,  fallMod: 1.0, tugFreqMod: 1.0, tugStrMod: 1.0, riseMod: 1.0, greenZone: [0.74, 1.0], driftRate: 0.30 },
+  RARE:       { label: 'RARE',        color: '#00E5FF', weight: 18,  fightMin: 0.8, fightMax: 1.0, reelMin: 5,  reelMax: 6,  fallMod: 1.1, tugFreqMod: 1.1, tugStrMod: 1.1, riseMod: 0.95, greenZone: [0.78, 1.0], driftRate: 0.35 },
+  ULTRA_RARE: { label: 'ULTRA RARE',  color: '#B24BF3', weight: 10,  fightMin: 1.0, fightMax: 1.2, reelMin: 6,  reelMax: 7,  fallMod: 1.25, tugFreqMod: 1.2, tugStrMod: 1.2, riseMod: 0.9, greenZone: [0.82, 1.0], driftRate: 0.40 },
+  EPIC:       { label: 'EPIC',        color: '#FF6B35', weight: 6,   fightMin: 1.2, fightMax: 1.4, reelMin: 7,  reelMax: 8,  fallMod: 1.4, tugFreqMod: 1.4, tugStrMod: 1.3, riseMod: 0.85, greenZone: [0.85, 1.0], driftRate: 0.45 },
+  LEGENDARY:  { label: 'LEGENDARY',   color: '#FFD700', weight: 3,   fightMin: 1.4, fightMax: 1.6, reelMin: 8,  reelMax: 10, fallMod: 1.6, tugFreqMod: 1.6, tugStrMod: 1.5, riseMod: 0.8, greenZone: [0.88, 1.0], driftRate: 0.50 },
+  EXOTIC:     { label: 'EXOTIC',      color: 'rainbow', weight: 1.5, fightMin: 1.5, fightMax: 1.8, reelMin: 9,  reelMax: 12, fallMod: 1.7, tugFreqMod: 1.7, tugStrMod: 1.6, riseMod: 0.75, greenZone: [0.92, 1.0], driftRate: 0.55 },
 };
 
 // --- Fish catalogue ---
@@ -1138,10 +1138,12 @@ function updateTensionUI() {
   const barW = elTensionBar.offsetWidth;
   const indW = elTensionInd.offsetWidth;
   elTensionInd.style.left = (tension * (barW - indW)) + 'px';
+  // Color based on zone: red (0-0.30), yellow (0.30-0.70), green (0.70+)
   let glow;
-  if (tension < 0.25 || tension > 0.75) glow = C.red;
-  else if (tension < 0.32 || tension > 0.68) glow = C.yellow;
-  else glow = '#FFE135';
+  const gz = caughtFish ? caughtFish.rarityData.greenZone : [0.70, 1.0];
+  if (tension >= gz[0]) glow = '#39FF14'; // green zone — reel in!
+  else if (tension > 0.30) glow = '#cc8800'; // yellow zone — push harder!
+  else glow = C.red; // danger — fish pulling free!
   elTensionInd.style.borderColor = glow;
   elTensionInd.style.boxShadow = `0 0 8px ${glow}, 0 0 18px ${glow}88, 0 0 3px #000`;
 }
@@ -1200,7 +1202,7 @@ function enterBite() {
 function enterReel() {
   gameState = ST.REEL;
   stateTime = 0;
-  tension = 0.35;
+  tension = 0.45; // start in the middle — player taps to push right toward green
   tensionVel = 0;
   reelProg = 0;
   fightTimer = rng(1, 2);
@@ -1211,15 +1213,16 @@ function enterReel() {
   const rd = caughtFish.rarityData;
   reelLen = rng(rd.reelMin, rd.reelMax);
 
-  // Update the green zone on the tension bar based on rarity
+  // Update the tension bar zones based on rarity — red | yellow | green (at right end)
   const gz = rd.greenZone;
-  const leftPct = (gz[0]*100).toFixed(0);
-  const rightPct = (gz[1]*100).toFixed(0);
+  const greenStart = (gz[0]*100).toFixed(0);
+  const yellowStart = Math.max(10, gz[0]*50).toFixed(0); // yellow starts halfway to green
   elTensionBar.style.background = `linear-gradient(90deg,
-    #cc0000 0%, #cc0000 ${leftPct}%,
-    #39FF14 ${leftPct}%, #39FF14 ${rightPct}%,
-    #cc0000 ${rightPct}%, #cc0000 100%
+    #cc0000 0%, #cc0000 ${yellowStart}%,
+    #cc8800 ${yellowStart}%, #cc8800 ${greenStart}%,
+    #39FF14 ${greenStart}%, #39FF14 100%
   )`;
+  reelTapBoost = 0;
 
   // Progress bar color matches rarity
   const rc = getRarityColor(caughtFish.rarity);
@@ -1227,7 +1230,7 @@ function enterReel() {
   elProgInner.style.color = rc;
 
   showUI(true, true, false);
-  const holdText = isMobile ? 'HOLD to reel \u2014 release to ease off!' : 'HOLD SPACE to reel \u2014 release to ease off!';
+  const holdText = isMobile ? 'TAP to reel in the fish!' : 'TAP SPACE to reel in the fish!';
   setInstruction(holdText, false);
 }
 
@@ -1312,9 +1315,10 @@ function enterFail(msg) {
 // ================== INPUT ==================
 let holding = false;
 let reelClickTimer = 0;
+let reelTapBoost = 0; // tap-to-push boost amount
 
 function onPress() {
-  if (gameState === ST.REEL) { holding = true; return; }
+  if (gameState === ST.REEL) { reelTapBoost = 0.07; holding = true; return; }
   switch (gameState) {
     case ST.IDLE:   enterCastAnim(); break;
     case ST.BITE:   enterReel(); break;
@@ -1378,22 +1382,19 @@ function updateReel(dt) {
   const fight = caughtFish.fight;
   const gz = rd.greenZone;
 
-  // Core mechanic: HOLD = tension rises, RELEASE = tension falls
-  const riseSpeed = 0.55 * rd.riseMod;
-  const fallSpeed = (0.35 + fight * 0.08) * rd.fallMod;
+  // Core mechanic: TAP pushes indicator right, it drifts left naturally
+  // Drift left (constant pull from the fish)
+  const driftSpeed = (rd.driftRate + fight * 0.06) * rd.fallMod;
+  tension -= driftSpeed * dt;
 
-  if (holding) {
-    tension += riseSpeed * dt;
-    reelClickTimer -= dt;
-    if (reelClickTimer <= 0) {
-      reelClickTimer = 0.15;
-      sfxReel();
-    }
-  } else {
-    tension -= fallSpeed * dt;
+  // Process tap boost (set by onPress)
+  if (reelTapBoost > 0) {
+    tension += reelTapBoost;
+    reelTapBoost = 0;
+    sfxReel();
   }
 
-  // Fish fight bursts
+  // Fish fight bursts — sudden pulls leftward
   fightTimer -= dt;
   if (fightTimer <= 0) {
     const baseInterval = rng(0.8, 2.0);
@@ -1410,14 +1411,12 @@ function updateReel(dt) {
 
   // Fail conditions
   if (tension <= 0.02) { enterFail("The fish pulled free!"); return; }
-  if (tension >= 0.98) { enterFail("SNAP! Your line broke!"); return; }
 
-  // Progress - only when in the green zone
-  if (tension >= gz[0] && tension <= gz[1]) {
-    const mid = (gz[0] + gz[1]) / 2;
-    const halfW = (gz[1] - gz[0]) / 2;
-    const greenQuality = 1 - Math.abs(tension - mid) / halfW;
-    reelProg += (1 / reelLen) * dt * (0.5 + greenQuality * 0.6);
+  // Progress - only when in the green zone (right end of bar)
+  if (tension >= gz[0]) {
+    const greenWidth = gz[1] - gz[0];
+    const greenDepth = (tension - gz[0]) / greenWidth;
+    reelProg += (1 / reelLen) * dt * (0.5 + greenDepth * 0.6);
   }
   reelProg = clamp(reelProg, 0, 1);
 
@@ -1427,7 +1426,6 @@ function updateReel(dt) {
 
   updateTensionUI();
   elProgInner.style.width = (reelProg * 100) + '%';
-  // progress bar width updated below
 
   if (reelProg >= 1) enterCaught();
 }
