@@ -893,6 +893,17 @@ document.querySelectorAll('.char-option').forEach(btn => {
   });
 });
 
+// iOS Safari touchend fallbacks for buttons that use onclick
+document.getElementById('trophyBtn')?.addEventListener('touchend', (e) => {
+  e.preventDefault(); openTrophyRoom();
+});
+document.getElementById('settingsBtn')?.addEventListener('touchend', (e) => {
+  e.preventDefault(); togglePauseMenu();
+});
+document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) => {
+  e.preventDefault(); openTrophyRoom();
+});
+
 // If they already chose before, skip the select screen
 if (playerChar) {
   document.getElementById('charSelect').style.display = 'none';
