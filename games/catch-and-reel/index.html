@@ -886,6 +886,12 @@ for (const [name, src] of Object.entries(CHAR_HEAD_SVGS)) {
   charHeadImages[name] = img;
 }
 
+// --- FULL CHARACTER BODY SVGs (head + body, no rod) ---
+// Note: wizard, ninja, princess, alien body SVGs to be added in next commit
+// For now, fallback to Canvas drawing for those characters
+const CHAR_BODY_SVGS = {};
+const charBodyImages = {};
+
 document.querySelectorAll('.char-option').forEach(btn => {
   function selectChar() {
     playerChar = btn.dataset.char;
@@ -1978,87 +1984,73 @@ function drawCharacter() {
   const cx = personX, cy = personY;
   const isReeling = gameState === ST.REEL;
   const cc = CHAR_COLORS[playerChar] || CHAR_COLORS.pirate;
-  const bodyColor = cc.body;
-  const handColor = playerChar === 'alien' ? '#5ecc5e' : playerChar === 'robot' ? '#aabbcc' : '#ffcc99';
-
-  const roundRect = (x,y,w,h,r) => { ctx.beginPath(); ctx.roundRect(x,y,w,h,[r]); ctx.fill(); };
 
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.25)';
   ctx.beginPath(); ctx.ellipse(cx, cy + 1*s, 12*s, 3*s, 0, 0, Math.PI*2); ctx.fill();
 
-  // Legs
-  ctx.fillStyle = '#2a4a7a';
-  roundRect(cx - 7*s, cy - 20*s, 7*s, 22*s, 3*s);
-  roundRect(cx + 1*s, cy - 20*s, 7*s, 22*s, 3*s);
+  // Draw body SVG image if available
+  const bodyImg = charBodyImages[playerChar];
+  if (bodyImg && bodyImg.complete) {
+    const bodyH = 120 * s;
+    const bodyW = bodyH * (100 / 170);
+    const bodyX = cx - bodyW / 2;
+    const bodyY = cy - bodyH + 5 * s;
+    ctx.drawImage(bodyImg, bodyX, bodyY, bodyW, bodyH);
 
-  // Shoes
-  ctx.fillStyle = '#3a3a3a';
-  roundRect(cx - 8*s, cy - 2*s, 9*s, 4*s, 2*s);
-  roundRect(cx, cy - 2*s, 9*s, 4*s, 2*s);
+    // Calculate rod anchor point (right hand area)
+    const rodBaseX = bodyX + bodyW * 0.88;
+    const rodBaseY = bodyY + bodyH * 0.6;
+    const rodTipBaseX = rodBaseX + 15 * s;
+    const rodTipBaseY = bodyY + bodyH * 0.25;
 
-  // Body
-  ctx.fillStyle = bodyColor;
-  roundRect(cx - 10*s, cy - 44*s, 21*s, 28*s, 5*s);
+    // Rod bend animation during reeling
+    const bendAmt = isReeling ? Math.sin(globalTime * 5) * 4 + 8 : 0;
+    const midRodX = (rodBaseX + rodTipBaseX) / 2;
+    const midRodY = rodBaseY - (rodBaseY - rodTipBaseY) * 0.7;
+    let effTipX = rodTipBaseX;
+    let effTipY = rodTipBaseY;
+    if (isReeling) { effTipY += bendAmt; effTipX -= bendAmt * 0.3; }
 
-  // Left arm
-  ctx.strokeStyle = bodyColor; ctx.lineWidth = 6*s; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(cx - 10*s, cy - 38*s); ctx.lineTo(cx - 16*s, cy - 24*s); ctx.stroke();
-  ctx.fillStyle = handColor;
-  ctx.beginPath(); ctx.arc(cx - 16*s, cy - 22*s, 3.5*s, 0, Math.PI*2); ctx.fill();
-
-  // Right arm to rod
-  ctx.strokeStyle = bodyColor; ctx.lineWidth = 6*s;
-  ctx.beginPath(); ctx.moveTo(cx + 10*s, cy - 38*s); ctx.lineTo(rodBaseX, rodBaseY); ctx.stroke();
-  ctx.fillStyle = handColor;
-  ctx.beginPath(); ctx.arc(rodBaseX, rodBaseY, 3.5*s, 0, Math.PI*2); ctx.fill();
-  ctx.lineCap = 'butt';
-
-  // Neck
-  ctx.fillStyle = playerChar === 'alien' ? '#7aee7a' : playerChar === 'robot' ? '#8899aa' : playerChar === 'ninja' ? '#2a2a2a' : '#ffcc99';
-  ctx.fillRect(cx - 3*s, cy - 48*s, 7*s, 6*s);
-
-  // --- Draw character head using SVG image ---
-  const headImg = charHeadImages[playerChar];
-  if (headImg && headImg.complete) {
-    const headSize = 40 * s;
-    const headDrawX = cx - headSize / 2;
-    const headDrawY = cy - 56*s - headSize * 0.55;
-    ctx.drawImage(headImg, headDrawX, headDrawY, headSize, headSize);
-  } else {
-    // Fallback: simple circle if image hasn't loaded
-    ctx.fillStyle = '#ffcc99';
-    ctx.beginPath(); ctx.arc(cx, cy - 56*s, 12*s, 0, Math.PI*2); ctx.fill();
-  }
-
-
-  // ── Fishing rod ──
-  const bendAmt = isReeling ? Math.sin(globalTime * 5) * 4 + 8 : 0;
-  const midRodX = (rodBaseX + rodTipX) / 2;
-  const midRodY = rodBaseY - (rodBaseY - rodTipY) * 0.7;
-  let effTipX = rodTipX;
-  let effTipY = rodTipY;
-  if (isReeling) { effTipY += bendAmt; effTipX -= bendAmt * 0.3; }
-
-  ctx.strokeStyle = '#A0722A'; ctx.lineWidth = 3*s;
-  ctx.beginPath(); ctx.moveTo(rodBaseX, rodBaseY);
-  ctx.quadraticCurveTo(midRodX, midRodY + bendAmt * 0.5, effTipX, effTipY); ctx.stroke();
-  ctx.strokeStyle = '#8B6214'; ctx.lineWidth = 1.5*s;
-  ctx.beginPath(); ctx.moveTo(lerp(rodBaseX,effTipX,0.5), lerp(rodBaseY,effTipY,0.5) + bendAmt*0.2);
-  ctx.quadraticCurveTo(lerp(rodBaseX,effTipX,0.75), lerp(rodBaseY,effTipY,0.75) + bendAmt*0.1, effTipX, effTipY); ctx.stroke();
-  ctx.fillStyle = '#ccc';
-  ctx.beginPath(); ctx.arc(effTipX, effTipY, 1.5*s, 0, Math.PI*2); ctx.fill();
-  // Reel
-  ctx.fillStyle = cc.accent;
-  ctx.beginPath(); ctx.arc(rodBaseX + 4*s, rodBaseY + 2*s, 3.5*s, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = cc.hat;
-  ctx.beginPath(); ctx.arc(rodBaseX + 4*s, rodBaseY + 2*s, 1.8*s, 0, Math.PI*2); ctx.fill();
-  if (isReeling && holding) {
-    const ha = globalTime * 12;
-    ctx.fillStyle = '#aaa';
+    // Draw rod
+    ctx.strokeStyle = '#A0722A'; ctx.lineWidth = 3 * s;
+    ctx.beginPath(); ctx.moveTo(rodBaseX, rodBaseY);
+    ctx.quadraticCurveTo(midRodX, midRodY + bendAmt * 0.5, effTipX, effTipY);
+    ctx.stroke();
+    ctx.strokeStyle = '#8B6214'; ctx.lineWidth = 1.5 * s;
     ctx.beginPath();
-    ctx.arc(rodBaseX + 4*s + Math.cos(ha)*2.5*s, rodBaseY + 2*s + Math.sin(ha)*2.5*s, 1.2*s, 0, Math.PI*2);
-    ctx.fill();
+    ctx.moveTo(lerp(rodBaseX, effTipX, 0.5), lerp(rodBaseY, effTipY, 0.5) + bendAmt * 0.2);
+    ctx.quadraticCurveTo(effTipX - 2 * s, effTipY - 5 * s, effTipX, effTipY);
+    ctx.stroke();
+
+    // Reel circle
+    ctx.fillStyle = cc.accent;
+    ctx.beginPath(); ctx.arc(rodBaseX + 4*s, rodBaseY + 2*s, 3.5*s, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = cc.hat;
+    ctx.beginPath(); ctx.arc(rodBaseX + 4*s, rodBaseY + 2*s, 1.8*s, 0, Math.PI*2); ctx.fill();
+    if (isReeling && holding) {
+      const ha = globalTime * 12;
+      ctx.fillStyle = '#aaa';
+      ctx.beginPath();
+      ctx.arc(rodBaseX + 4*s + Math.cos(ha)*2.5*s, rodBaseY + 2*s + Math.sin(ha)*2.5*s, 1.2*s, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    rodTipX = effTipX;
+    rodTipY = effTipY;
+  } else {
+    // Fallback: simple colored rectangle + basic rod if SVG not loaded
+    const bw = 30 * s;
+    const bh = 60 * s;
+    ctx.fillStyle = cc.body;
+    ctx.fillRect(cx - bw/2, cy - bh, bw, bh);
+    // Basic rod
+    const rodBaseX = cx + bw * 0.4;
+    const rodBaseY = cy - bh * 0.4;
+    rodTipX = rodBaseX + 15 * s;
+    rodTipY = rodBaseY - 25 * s;
+    ctx.strokeStyle = '#A0722A'; ctx.lineWidth = 2.5 * s;
+    ctx.beginPath(); ctx.moveTo(rodBaseX, rodBaseY); ctx.lineTo(rodTipX, rodTipY); ctx.stroke();
   }
 }
 
