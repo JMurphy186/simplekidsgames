@@ -945,6 +945,7 @@ document.querySelectorAll('.char-option').forEach(btn => {
     gameStarted = true;
     resize();
     initAudio();
+    initSounds(); // Pre-decode audio buffers on character select (first user gesture)
     document.getElementById('title').style.display = 'none';
   }
   btn.addEventListener('click', selectChar);
