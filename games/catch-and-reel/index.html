@@ -799,7 +799,7 @@ canvas {
     <div id="title">CATCH & REEL</div>
     <div id="scoreBoard">
       <div><span class="hud-label">Caught</span></div>
-      <div class="hud-value">🐟 <span id="fishCount">0</span></div>
+      <div class="hud-value">🐟 <span id="fishCount">0</span> <span id="lastCaughtThumb"></span></div>
       <div class="hud-best" id="bestCatchRow" style="display:none;">
         <span class="hud-label">Best</span>
         <div id="bestCatchText"></div>
@@ -1276,6 +1276,8 @@ function togglePauseMenu() {
 function changeCharacter() {
   stopReelDrag();
   gamePaused = false;
+  var thumbEl = document.getElementById('lastCaughtThumb');
+  if (thumbEl) thumbEl.innerHTML = '';
   document.getElementById('pauseMenu').classList.remove('open');
   document.getElementById('reelUI').style.display = 'none';
   document.getElementById('catchDisplay').style.display = 'none';
@@ -1586,7 +1588,11 @@ function updateBestDisplay() {
   if (bestFish && row) {
     row.style.display = 'block';
     const brc = getRarityColor(bestFish.rarity);
-    elBestText.innerHTML = `<span style="color:${brc}">${bestFish.emoji} ${bestFish.name}</span> · <span style="color:rgba(255,255,255,0.7)">${formatWeight(bestFish.weight)}</span>`;
+    const bestSvg = FISH_SVGS[bestFish.name];
+    const bestIcon = bestSvg
+      ? '<img src="' + bestSvg + '" style="max-width:24px;max-height:15px;width:auto;height:auto;vertical-align:middle;" alt="' + bestFish.name + '">'
+      : bestFish.emoji;
+    elBestText.innerHTML = `<span style="color:${brc}">${bestIcon} ${bestFish.name}</span> · <span style="color:rgba(255,255,255,0.7)">${formatWeight(bestFish.weight)}</span>`;
   }
 }
 updateBestDisplay();
@@ -1768,6 +1774,14 @@ function enterCaught() {
   elCatchAction.textContent = '';
 
   elFishCount.textContent = fishCount;
+  // Show last-caught fish thumbnail in HUD
+  var thumbEl = document.getElementById('lastCaughtThumb');
+  var thumbSvg = FISH_SVGS[caughtFish.name];
+  if (thumbEl) {
+    thumbEl.innerHTML = thumbSvg
+      ? '<img src="' + thumbSvg + '" style="max-width:30px;max-height:18px;width:auto;height:auto;vertical-align:middle;margin-left:4px;opacity:0.9;" alt="' + caughtFish.name + '">'
+      : caughtFish.emoji;
+  }
   updateBestDisplay();
 
   if (isLegendaryPlus) {
