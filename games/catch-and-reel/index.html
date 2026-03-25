@@ -821,7 +821,7 @@ canvas {
       <div id="catchAction"></div>
     </div>
   </div>
-  <button id="muteBtn" onclick="toggleMuteBtn()" style="position:absolute;top:clamp(10px,2vh,20px);right:clamp(100px,13vw,130px);font-size:clamp(18px,3vw,24px);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);width:40px;height:40px;border-radius:50%;cursor:pointer;pointer-events:auto;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent">🔊</button>
+  <button id="muteBtn" onclick="toggleMuteBtn()" style="position:absolute;top:clamp(10px,2vh,20px);right:clamp(105px,16vw,140px);font-size:clamp(18px,3vw,24px);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);width:40px;height:40px;border-radius:50%;cursor:pointer;pointer-events:auto;z-index:10;display:flex;align-items:center;justify-content:center;padding:0;-webkit-tap-highlight-color:transparent">🔊</button>
   <button id="trophyBtn" onclick="openTrophyRoom()">🏆</button>
   <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
   <div id="pauseMenu">
@@ -943,6 +943,7 @@ document.querySelectorAll('.char-option').forEach(btn => {
     gameStarted = true;
     resize();
     initAudio();
+    document.getElementById('title').style.display = 'none';
   }
   btn.addEventListener('click', selectChar);
   btn.addEventListener('touchend', (e) => {
@@ -963,6 +964,23 @@ document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) 
 });
 document.getElementById('muteBtn')?.addEventListener('touchend', (e) => {
   e.preventDefault(); toggleMuteBtn();
+});
+
+// Trophy room close button — iOS touch fix
+var trophyClose = document.querySelector('.trophy-close') || document.querySelector('#trophyRoom button');
+if (trophyClose) {
+  trophyClose.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    closeTrophyRoom();
+  }, { passive: false });
+}
+
+// Pause menu buttons — iOS touch fix
+document.querySelectorAll('#pauseMenu button, #pauseMenu .pause-btn').forEach(function(btn) {
+  btn.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    btn.click();
+  }, { passive: false });
 });
 
 // Mute button helper
@@ -1155,6 +1173,7 @@ function changeCharacter() {
   document.getElementById('pauseMenu').classList.remove('open');
   document.getElementById('gameContainer').style.display = 'none';
   document.getElementById('charSelect').style.display = 'flex';
+  document.getElementById('title').style.display = '';
   gameStarted = false;
   gameState = ST.IDLE;
 }
@@ -2112,7 +2131,7 @@ function getRodShaftPoints(hx,hy,tx,ty){var dx=tx-hx,dy=ty-hy;return[{x:hx,y:hy}
 function getRodVectors(hx,hy,tx,ty){var dx=tx-hx,dy=ty-hy,len=Math.sqrt(dx*dx+dy*dy)||1;return{nx:dx/len,ny:dy/len,px:-dy/len,py:dx/len,len:len}}
 function rodPt(hx,hy,tx,ty,rv,t,perp){perp=perp||0;return{x:hx+(tx-hx)*t+rv.px*perp,y:hy+(ty-hy)*t+rv.py*perp}}
 
-function drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time){
+function drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time,rodScale){
   var g=style.gripType;
   if(g==='rope'){for(var i=0;i<6;i++){var t=i*0.018,pt=rodPt(hx,hy,tx,ty,rv,t,0);ctx.strokeStyle=style.gripColor;ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pt.x+rv.px*4+rv.nx*2,pt.y+rv.py*4+rv.ny*2);ctx.lineTo(pt.x-rv.px*4-rv.nx*2,pt.y-rv.py*4-rv.ny*2);ctx.stroke()}}
   else if(g==='tech'){var c=rodPt(hx,hy,tx,ty,rv,0.03,0);ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.atan2(ty-hy,tx-hx));ctx.fillStyle=style.gripColor;ctx.fillRect(-6,-9,12,18);ctx.strokeStyle='#4ecdc4';ctx.lineWidth=0.8;ctx.strokeRect(-6,-9,12,18);ctx.fillStyle='#4ecdc4';ctx.fillRect(-2,-4,2,2);ctx.fillRect(2,0,2,2);ctx.restore()}
@@ -2122,18 +2141,19 @@ function drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time){
   else if(g==='energy'){var c=rodPt(hx,hy,tx,ty,rv,0.03,0),pulse=0.5+Math.sin(time*4)*0.3;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.atan2(ty-hy,tx-hx));ctx.fillStyle='rgba(78,205,196,'+(pulse*0.3)+')';ctx.beginPath();ctx.ellipse(0,0,10,14,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(57,255,20,'+(pulse*0.6)+')';ctx.lineWidth=1;ctx.stroke();ctx.restore()}
 }
 
-function drawRodReel(ctx,style,hx,hy,tx,ty,rv,time){
+function drawRodReel(ctx,style,hx,hy,tx,ty,rv,time,rodScale){
   if(!style.hasReel)return;
-  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius;
+  var sc=rodScale||1;
+  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius*sc;
   ctx.fillStyle=style.reelColor;ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle=style.reelAccent||'#999';ctx.lineWidth=1.5;ctx.stroke();
-  var a=time*3;ctx.fillStyle=style.reelAccent||'#999';ctx.beginPath();ctx.arc(rx+Math.cos(a)*(rr-2),ry+Math.sin(a)*(rr-2),3,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=style.gripType==='tech'?'#bbb':style.gripType==='energy'?'#207040':'#aaa';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
+  var a=time*3;ctx.fillStyle=style.reelAccent||'#999';ctx.beginPath();ctx.arc(rx+Math.cos(a)*(rr-2*sc),ry+Math.sin(a)*(rr-2*sc),3*sc,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=style.gripType==='tech'?'#bbb':style.gripType==='energy'?'#207040':'#aaa';ctx.beginPath();ctx.arc(rx,ry,2.5*sc,0,Math.PI*2);ctx.fill();
   if(style.gripType==='rope'){ctx.fillStyle='rgba(139,90,43,0.4)';ctx.beginPath();ctx.arc(rx-3,ry+2,1.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(rx+4,ry-1,1,0,Math.PI*2);ctx.fill()}
   var gt=rodPt(hx,hy,tx,ty,rv,0.2,0),lc=style.lineColor;ctx.strokeStyle='rgba('+lc[0]+','+lc[1]+','+lc[2]+',0.4)';ctx.lineWidth=style.lineWidth*0.7;ctx.beginPath();ctx.moveTo(rx,ry-rr);ctx.lineTo(gt.x,gt.y);ctx.stroke()
 }
 
-function drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time){
+function drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time,rodScale){
   var d=style.shaftDetail;if(!d)return;
   if(d==='knots'){var k1=rodPt(hx,hy,tx,ty,rv,0.28,0),k2=rodPt(hx,hy,tx,ty,rv,0.45,0);ctx.fillStyle='#4a2e18';ctx.beginPath();ctx.arc(k1.x,k1.y,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(k2.x,k2.y,2,0,Math.PI*2);ctx.fill()}
   else if(d==='joints'){for(var i=1;i<pts.length;i++){ctx.fillStyle='#666';ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,3.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#4ecdc4';ctx.lineWidth=0.8;ctx.stroke()}}
@@ -2142,12 +2162,14 @@ function drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time){
   else if(d==='energyGaps'){var gp=0.5+Math.sin(time*5)*0.4;ctx.fillStyle='rgba(57,255,20,'+gp+')';var g1=rodPt(hx,hy,tx,ty,rv,0.25,0),g2=rodPt(hx,hy,tx,ty,rv,0.55,0);ctx.beginPath();ctx.arc(g1.x,g1.y,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(g2.x,g2.y,1.5,0,Math.PI*2);ctx.fill()}
 }
 
-function drawTipFeature(ctx,style,tx,ty,time){
+function drawTipFeature(ctx,style,tx,ty,time,rodScale){
   var f=style.tipFeature;if(!f)return;
+  var sc=rodScale||1;ctx.save();ctx.translate(tx,ty);ctx.scale(sc,sc);ctx.translate(-tx,-ty);
   if(f==='antenna'){var gl=0.5+Math.sin(time*4)*0.3;ctx.fillStyle='rgba(78,205,196,'+gl+')';ctx.beginPath();ctx.arc(tx,ty,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(tx,ty,1.5,0,Math.PI*2);ctx.fill()}
   else if(f==='orb'){var op=0.4+Math.sin(time*2.5)*0.3;ctx.fillStyle='rgba(155,126,216,'+op+')';ctx.beginPath();ctx.arc(tx,ty,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(200,168,255,'+(op+0.3)+')';ctx.beginPath();ctx.arc(tx,ty,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.arc(tx-2,ty-2,1.5,0,Math.PI*2);ctx.fill();for(var i=0;i<3;i++){var pa=time*2+i*2.1,pr=12+Math.sin(time+i)*4;ctx.fillStyle='rgba(200,168,255,'+(0.3+Math.sin(time*3+i)*0.2)+')';ctx.beginPath();ctx.arc(tx+Math.cos(pa)*pr,ty+Math.sin(pa)*pr,1.2,0,Math.PI*2);ctx.fill()}}
   else if(f==='bow'){ctx.fillStyle='#FF69B4';ctx.beginPath();ctx.ellipse(tx-6,ty-2,5,3,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(tx+6,ty-2,5,3,0.3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e0559a';ctx.beginPath();ctx.arc(tx,ty,2.5,0,Math.PI*2);ctx.fill()}
   else if(f==='plasma'){var pp=0.5+Math.sin(time*5)*0.4;ctx.fillStyle='rgba(57,255,20,'+(pp*0.4)+')';ctx.beginPath();ctx.arc(tx,ty,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(78,205,196,'+pp+')';ctx.beginPath();ctx.arc(tx,ty,3.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(tx,ty,1.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(57,255,20,'+(pp*0.5)+')';ctx.lineWidth=0.8;for(var i=0;i<2;i++){var aa=time*4+i*Math.PI;ctx.beginPath();ctx.arc(tx,ty,10+i*3,aa,aa+1.2);ctx.stroke()}}
+  ctx.restore();
 }
 
 function drawLineEffects(ctx,charName,tipX,tipY,bobberX,bobberY,sagX,sagY,time){
@@ -2159,12 +2181,13 @@ function drawLineEffects(ctx,charName,tipX,tipY,bobberX,bobberY,sagX,sagY,time){
 function drawThemedRod(ctx,charName,hx,hy,tx,ty,time){
   var style=CHAR_ROD_STYLES[charName];if(!style)return;
   var rv=getRodVectors(hx,hy,tx,ty),pts=getRodShaftPoints(hx,hy,tx,ty);
+  var rodScale=rv.len/200; // Scale all rod elements proportionally
   ctx.lineCap='round';
-  for(var i=0;i<pts.length-1;i++){ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i];ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[i+1].x,pts[i+1].y);ctx.stroke()}
-  drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time);
-  drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time);
-  drawRodReel(ctx,style,hx,hy,tx,ty,rv,time);
-  drawTipFeature(ctx,style,tx,ty,time);
+  for(var i=0;i<pts.length-1;i++){ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i]*rodScale;ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[i+1].x,pts[i+1].y);ctx.stroke()}
+  drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time,rodScale);
+  drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time,rodScale);
+  drawRodReel(ctx,style,hx,hy,tx,ty,rv,time,rodScale);
+  drawTipFeature(ctx,style,tx,ty,time,rodScale);
 }
 
 function drawCharacter() {
