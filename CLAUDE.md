@@ -151,26 +151,25 @@ All sounds triggered AFTER first user interaction (browser autoplay policy).
 ## File Structure (in repo)
 ```
 simplekidsgames/
-├── index.html                    ← Landing page (arcade grid, NOT the game)
-├── og-image.png                  ← Social sharing image
-├── vercel.json                   ← Clean URLs, caching
-├── CLAUDE.md                     ← This file
-├── MOBILE-FIXES.md               ← Current active spec
-├── REFINEMENT-PASS.md             ← Completed
-├── MASTER-VEHICLE-SPEC.md         ← Completed
-├── PHASE-1-BUILD.md               ← Completed
-├── PHASE-2-BUILD.md               ← Completed
-├── CHANGES-PHASE2-MODES.md        ← Completed
+├── index.html                        ← Landing page (90s arcade cabinet)
 ├── games/
-│   └── monster-rally/
-│       └── index.html             ← THE GAME (~4,200 lines)
-├── reference/
-│   ├── flame-crusher-target.png   ← Art quality target
-│   ├── vehicle-models-clean-vector.png
-│   └── vehicle-models-pixel-art.png
-└── ideas/
-    └── 8-bit-monster-trucks.md    ← Future game concept (parked)
+│   ├── monster-rally/
+│   │   └── index.html                ← Monster Rally (~5,000+ lines)
+│   ├── space-dodge/
+│   │   └── index.html                ← Space Dodge (~2,500 lines)
+│   └── catch-and-reel/
+│       └── index.html                ← Catch & Reel (~2,100+ lines)
+├── CLAUDE.md                         ← Master spec
+├── vercel.json                       ← Clean URLs, no-cache headers
+├── favicon.ico / favicon-32.png / apple-touch-icon.png
+├── skg-banner.png / og-image.png
+└── [spec MDs, reference HTMLs, ideas/]
 ```
+
+### Game Grid (current)
+- 3 live games: Monster Rally, Space Dodge, Catch & Reel
+- 2 coming soon placeholders (Dino Dash, Pirate Quest)
+- INSERT COIN random picker selects from all 3 live games
 
 ## Spec Documents (Status)
 | Document | Status | What It Covers |
@@ -202,248 +201,128 @@ simplekidsgames/
 
 # Space Dodge (`games/space-dodge/index.html`)
 
-**Status:** v1.0 — Full game with 5 ships, 5 worlds, power-ups, campaign + endless modes
+**Status:** v1.0 — Complete. 5 worlds, 5 ships, 2 power-ups, audio system.
 
-## Architecture
-- **Single HTML file** (~2300 lines) — Canvas API, Web Audio API, no external assets
-- **SVG art** loaded as base64 data URIs, drawn via `drawImage()` with Canvas rotation
-- **60fps frame cap**, `100dvh`, `visualViewport` API, Safari initial paint fix
-- **Works in any orientation** — no rotate overlay, canvas adapts via resize
-- `orientationchange` listener with 200ms delay for browser dimension updates
+### Architecture
+- Single HTML file (~2,500 lines) — Canvas only
+- No external dependencies (fonts, assets, or audio files)
+- 60fps frame cap, dt-based physics
+- All graphics: Canvas paths + SVG ships via base64 data URI drawImage()
+- All audio: Web Audio API synthesized (ambient drones, melodic pings, SFX)
 
-## Game Modes
-- **Campaign:** 5 worlds (Deep Space → Nebula → Asteroid Belt → Ice Field → Supernova). Title card + 3-2-1 countdown between worlds. Beat all 5 → "WELL DONE!" victory screen with confetti pops → Endless unlocked + next ship unlocked.
-- **Endless:** Unlocked after beating campaign. Background cycles through worlds over time. High score tracked.
+### Game Flow (State Machine)
+1. **TITLE** — Spotlight title screen with animated wave text. Inline ship picker below. MENU button (top-left), SHIPS label (top-right).
+2. **PLAYING** — Dodge asteroids, collect power-ups, survive. Left/right movement + auto-fire laser.
+3. **PAUSED** — Resume, Change Ship, Main Menu.
+4. **GAME_OVER** — Stats display, retry option.
+5. **VICTORY** — Confetti + unlocked ship preview after beating campaign.
 
-## Ship Roster (5 ships)
-Each ship in `SHIPS[]` array has: `id`, `name`, `type`, `accent` (UI color), `flameColors` [outer, mid, core], `drawW`/`drawH` (scale factors), `svg` (base64 data URI).
+### World Campaign (5 worlds)
 
-| # | Ship | Type | Accent | Flame Colors | Unlock |
-|---|------|------|--------|-------------|--------|
-| 1 | Star Rider | Classic / Explorer | `#42A5F5` | Orange→Gold→White | Default |
-| 2 | Interceptor | Stealth / Fighter | `#00E676` | Teal→Green→Mint | Beat campaign with #1 |
-| 3 | Juggernaut | Heavy / Armor | `#FF6D00` | Red→Orange→Gold | Beat campaign with #2 |
-| 4 | Star Cruiser | Speed / Racing | `#FFCA28` | Navy→Cyan→Ice | Beat campaign with #3 |
-| 5 | Alien Tech | Exotic / Energy | `#EA80FC` | Purple→Violet→Magenta | Beat campaign with #4 |
+| # | World | Background | Audio Vibe |
+|---|-------|-----------|------------|
+| 1 | Deep Space | Clean starfield | Calm drone |
+| 2 | Nebula | Purple/pink gas clouds, particle wisps | Ethereal |
+| 3 | Asteroid Belt | Dense floating rock debris, parallax layers | Tense |
+| 4 | Ice Field | Crystalline shards, frost particles, pale aurora | Crisp |
+| 5 | Supernova | Expanding red/orange shockwave rings, embers | Intense |
 
-Ship picker is inline on the title screen — left/right arrows flanking a spotlight showcase. No separate picker screen. Arrow keys cycle ships on desktop. Locked ships show "?" silhouette with unlock hint. Dot indicators below show all 5 slots.
+### Ships (5 total, all SVG base64 data URIs)
 
-### Ship Drawing
-- `drawShip()` uses `selectedShip` index to get the correct image, flame colors, and draw dimensions
-- `drawShipByIndex()` renders any ship by index (used for picker, victory preview)
-- Exhaust flames are always Canvas-animated (3-layer: outer→mid→core), never part of SVG
-- Ship SVGs have no flame elements, no drop shadow filters, no ambient stars
+| # | Ship | Style | Unlock |
+|---|------|-------|--------|
+| 1 | Star Rider | Blue panels, red fins | Default |
+| 2 | The Interceptor | Stealth black, green neon | Beat campaign with Ship 1 |
+| 3 | Red Phantom | Heavy red hull, triple engines | Beat campaign with Ship 2 |
+| 4 | Star Cruiser | White/gold needle, ion engine | Beat campaign with Ship 3 |
+| 5 | Alien Tech | Purple energy pylons, orb core | Beat campaign with Ship 4 |
 
-## Core Mechanics
-- Left/right movement only (arrow keys, A/D, touch drag)
-- Auto-firing blasters every ~0.47s (28 frames) — no button needed
-- 3 lives with mini ship indicators (active ships with flames, ghost ships when lost)
-- Bigger explosion on hit — 30 burst particles + 10 white core particles + expanding shockwave ring
-- Progression bar: blasted asteroids = 3x progress, dodged = 1x
-- "GREAT RUN!" on game over, "WELL DONE!" on victory (no punishment language)
+### Power-Ups (2)
 
-## Power-Ups
-Two power-up types float down from top, collected on ship contact:
+| Power-Up | Effect | Visual |
+|----------|--------|--------|
+| Plasma Laser | Faster fire rate + wider beam, ~8s | Cyan energy beam |
+| Energy Shield | Blocks ONE asteroid hit | Green bubble around ship |
 
-| Power-Up | Icon | Color | Effect | Duration |
-|----------|------|-------|--------|----------|
-| Plasma Laser | Lightning bolt | `#00E5FF` | 2x+ fire rate, wider cyan beam, pierces through asteroids | 8 seconds |
-| Energy Shield | Shield + checkmark | `#69F0AE` | Green bubble around ship, absorbs ONE asteroid hit then pops | Until hit |
+### Audio System
+- Per-world ambient drone + melodic ping patterns
+- SFX: laser fire, asteroid explosion, power-up collect, shield pop, game over
+- Mute toggle (persisted to localStorage)
+- All Web Audio API — zero audio files
 
-- Spawn every ~10 seconds (`POWERUP_SPAWN_INTERVAL` = 600 frames)
-- Power-up HUD displays below lives area (top-left): plasma timer bar, shield active indicator
-- Both can be active simultaneously
-- Unique sounds: ascending chime on collect, descending break on shield pop
-- All power-up state resets on world transition
+### localStorage Keys
+- `sd_highscore` — best score
+- `sd_unlocked` — unlocked ship indices
+- `sd_ship` — selected ship index
+- `sd_mute` — mute state
+- `sd_campaign` — campaign progress
 
-## World System
-Each world in `WORLDS[]` has: `name`, `bg`, `starColor` (RGB), `accent`, `baseSpeed`, `spawnStart`, `spawnMin`, `speedInc`, `spawnDec`, `threshold`.
-
-| # | World | Threshold | Background Art |
-|---|-------|-----------|---------------|
-| 1 | Deep Space | 150 | Dark gradient, distant galaxy ellipses |
-| 2 | Nebula | 250 | Purple gradient, drifting gas cloud shapes (pink/purple) |
-| 3 | Asteroid Belt | 350 | Brown gradient, 14 background rocks + 30 dust particles |
-| 4 | Ice Field | 450 | Cyan gradient, crystal shards + animated aurora wave bands |
-| 5 | Supernova | 550 | Red gradient, expanding shockwave rings from bottom, ember particles floating up |
-
-World decorations generated via `generateWorldDecor()` on each world start. Rendered every frame via `drawWorldBackground()` which draws gradient + decorations + tinted stars.
-
-## UI Layout (matches Monster Rally)
-- **Title screen:** MENU (top-left), ship spotlight with arrows (center), Campaign/Endless buttons (bottom), best score, dot indicators
-- **Gameplay:** Lives + power-up status (top-left), World name + progress bar with % (top-center), Score (top-right, left of pause), Pause button (top-right corner)
-- **Pause menu:** Dark overlay with Resume (green), Restart (blue), Menu (grey) — three tappable buttons
-- **Victory:** "WELL DONE!" + confetti pops from sides + falling confetti + unlocked ship SVG preview next to unlock text
-
-## Pause Menu
-Pause button is top-right (matches Monster Rally). Opens a proper menu overlay:
-- ▶ Resume — unpause
-- 🔄 Restart — restart current world (campaign) or reset (endless)
-- 🏠 Menu — back to title screen
-
-## SVG Assets
-- **Ship bodies:** 5 entries in `SHIPS[]`, each with unique base64 SVG. All viewBox 300×400. Flames stripped.
-- **Asteroid:** `ASTEROID_SVG_B64` — gradient rock body, edge highlights, fissures, 3 craters. No drop shadow filter. All asteroids use same SVG at different scales + rotations.
-
-## localStorage Keys
-- `sd_best` — best score (int)
-- `sd_endless` — endless mode unlocked (`'true'`)
-- `sd_ship` — selected ship index (int)
-- `sd_unlocked` — unlocked ship indices (JSON array, e.g. `[0,1,2]`)
-
-## Audio (all Web Audio API synthesized)
-- `start` — ascending 3-note chime
-- `blaster` — quick sine pew
-- `explode` — sawtooth descend
-- `hit` — sawtooth descend (ship hit)
-- `lose` — square wave descend
-- `score` — 3-note milestone chime (every 50 pts)
-- `levelup` — 4-note ascending fanfare
-- `victory` — 5-note ascending fanfare
-- `beep` / `beepgo` — countdown tones
-- `powerup` — ascending 3-note collect chime
-- `shieldbreak` — triangle wave descend
-
-## Queued (Not Built)
-- Bonus objects: Alien Saucer (+500), Golden Comet (+1000), Supply Capsule (+250) — SVG mockups exist
-- Title screen demo scene — ship auto-fires on menu
-- Game over stats — blasted, dodged, world reached, time
-- Sound polish — blaster volume at high fire rates
-- World background enhancements — richer animations
-- Ship-specific abilities — stat differences per ship
-- Cross-game coin economy with Monster Rally
-- PWA manifest for fullscreen on Add to Home Screen
-
-## Do NOT
-- Add npm, webpack, vite, or any build tooling
-- Create separate JS/CSS files — everything stays in the single `index.html`
-- Use external image or audio assets (URLs, files, CDNs)
-- Add punishment language ("Game Over", "You Lost") — use encouraging phrasing
-- Modify the landing page (root `index.html`) when working on Space Dodge
-- Change collision boxes when changing vehicle art (visual-only changes)
-
-## Important Patterns
-- **Visual-only changes** = no physics modifications — always specify this in prompts
-- **Single HTML file, no external assets** — everything embedded
-- Ship exhaust is always Canvas-animated, never part of the SVG
-- Asteroid SVG has no drop shadow filter — Canvas handles rotation cleaner without it
-- World speed/spawn values reset per world via `worldFrameCount` (not global `frameCount`)
-- Power-up state resets on `resetPlayState()` — powerups array, timers, shield, plasma all cleared
-- Ship picker is inline on title screen — no separate `shippicker` game state used (dead code remains)
-- `drawShipByIndex(idx, x, y, w, h)` for rendering any ship outside gameplay (picker, victory)
-
-## Testing Checklist
-- [ ] Ship renders as SVG with animated Canvas exhaust
-- [ ] All 5 ships selectable, locked ships show "?" with unlock hint
-- [ ] Asteroids render as SVG at various scales and rotations
-- [ ] Auto-blasters fire every ~0.47s
-- [ ] Left/right controls work (keyboard + touch drag)
-- [ ] 3 lives with mini ship indicators, wobble on hit
-- [ ] Campaign: 5 worlds with progression bar, transitions, countdown
-- [ ] Each world has unique background art (nebula clouds, crystals, etc.)
-- [ ] Plasma Laser power-up: piercing cyan beam, 8 second timer
-- [ ] Energy Shield power-up: green bubble, absorbs one hit
-- [ ] Level complete screen shows stats
-- [ ] Victory screen: "WELL DONE!" with confetti + unlocked ship preview
-- [ ] Endless mode accessible after campaign completion
-- [ ] localStorage persists high score, endless unlock, ship selection, unlocked ships
-- [ ] Works in both portrait and landscape (no rotate overlay)
-- [ ] 60fps on desktop Chrome and iPad Safari
-- [ ] No console errors
+### Queued (Not Built)
+- Bonus objects: UFO, Golden Comet, Supply Capsule
+- Title screen demo scene
+- Game over stats enhancement
+- Ship-specific abilities
 
 ---
 
 # Catch & Reel (`games/catch-and-reel/index.html`)
 
-**Status:** v1.0 — Arcade fishing game. Built by a friend, hosted on SKG. **Note:** This game was NOT built by Claude Code. Treat it as third-party code. Do not refactor or restructure without explicit instruction.
+**Status:** v1.5 — Arcade fishing game with trophy room, full-body SVG characters, rebalanced reel. **Note:** Originally built by a friend, now heavily modified.
 
-## Architecture
-- **Single HTML file** (~2067 lines) — Canvas + DOM hybrid
-- **External dependency:** Google Fonts (Luckiest Guy, Baloo 2) — requires internet. This is an exception to SKG's "no external assets" rule. Noted for future self-hosting pass.
-- **Canvas** for scene rendering (sky, water, dock, character, fish, particles)
-- **DOM overlays** for UI (scoreboard, reel bars, catch display, character select)
-- Vignette overlay via CSS radial gradient
-- `100vh` layout, `user-select: none`, `touch-action: manipulation`
+### Architecture
+- Single HTML file (~2,100+ lines) — Canvas + DOM hybrid
+- **External dependency:** Google Fonts (Luckiest Guy, Baloo 2) — requires internet
+- Canvas for scene rendering (sky, water, dock, character, fish, particles)
+- DOM overlays for UI (scoreboard, reel bars, catch display, character select, trophy room)
 
-## Game Flow (State Machine)
-States defined in `ST` object:
-1. **IDLE** — Character on dock, "Tap to cast!" prompt
-2. **CAST_ANIM** — Line arcs out to water (parabolic animation)
-3. **WAIT** — Bobber floating, waiting for bite (random 2-6s timer)
-4. **BITE** — Fish biting! "TAP NOW!" urgent prompt with pink pulse animation. ~2s window to react.
-5. **REEL** — Tension bar mini-game. Hold to reel, release to rest. Keep indicator in green zone. Progress bar fills to catch.
-6. **CAUGHT** — Catch display modal with fish emoji, name, weight, rarity, points
-7. **FAIL** — Line snapped or missed bite. Brief delay then back to IDLE.
+### Game Flow (State Machine)
+1. **CHAR_SELECT** — Character picker (6 characters, 2x3 grid). MENU + TROPHIES buttons.
+2. **IDLE** — Character on dock, rod out, waiting. Tap to cast.
+3. **CAST** — Bobber flies out and splashes down.
+4. **WAIT** — Bobber floating, ambient fish silhouettes. Random bite timer.
+5. **BITE** — Bobber dips! Tap to hook.
+6. **REEL** — Tension bar mini-game. Tap to push indicator right toward green zone. Gold pulse when in green.
+7. **CAUGHT** — Catch display with trophy tracking.
+8. **FAIL** — Line snapped or missed bite.
 
-## Reel Mechanic
-- Tension bar: 25% red | 50% green | 25% red
-- Yellow indicator oscillates left/right
-- Hold = reel in (progress fills, tension moves)
-- Release = rest (tension drifts back to center)
-- Indicator in green zone = progress. In red zone = tension builds. Too much tension = line snaps.
-- Progress bar fills based on time in green zone. Full bar = caught.
+### Reel Mechanic
+- Tap = pushes indicator RIGHT, no input = drifts LEFT
+- Green zone at END (right side) — difficulty scales by rarity
+- Gold pulse visual feedback when in green zone
+- Common fish: large green zone, slow drift. Exotic: tiny zone, fast drift.
 
-## Fish System
-- Rarity tiers: Common, Uncommon, Rare, Epic, Exotic
-- Each tier has multiple fish with emoji, name, weight range, point value
-- Exotic rarity gets rainbow cycling border + text animation on catch display
-- Weight randomized within range per fish
-- Points scale with rarity
+### Characters (6, full-body SVG)
 
-## Character Select
-- Multiple playable characters with different hat/skin/shirt colors
-- Selected via DOM overlay screen before gameplay
-- Character drawn on dock via Canvas (`drawCharacter()`)
-- Rod, reel handle, fishing line all animated per character position
+| # | Character | Theme |
+|---|-----------|-------|
+| 1 | Captain Hook Jr. | Pirate — red coat, hook hand, tricorn hat |
+| 2 | Robo-Fisher 3000 | Robot — metal chassis, glowing cyan eyes |
+| 3 | Merlin the Caster | Wizard — purple robes, Gandalf beard |
+| 4 | Shadow Ninja | Ninja — dark outfit, red sash, shuriken |
+| 5 | Princess Pearl | Princess — pink dress, tiara, glass slippers |
+| 6 | Zork the Angler | Alien — space suit, sucker hands, antennae |
 
-## Visual Features
-- Night sky with stars (`makeStars()`) and shooting stars
-- Moon rendered via Canvas
-- Water with layered sine waves, foam/whitecaps, ambient fish silhouettes
-- Dock with planks, posts, and character standing on edge
-- Bobber with white/red halves, highlight, ripple rings, shadow
-- Fishing line with catenary curve (sag when slack, taut + vibration when reeling)
-- Particles for splash, catch celebration, confetti
-- Screen shake on events
-- Flash overlay on catch/fail
+**Rendering:** Full-body SVGs via `CHAR_BODY_SVGS` base64 data URIs + Canvas fishing rod with per-character `CHAR_ROD_ANCHORS`.
 
-## Audio
-- No audio system currently implemented
-- Future opportunity: Web Audio API sounds for cast, splash, bite alert, reel, catch fanfare, line snap
+### Trophy Room
+- Best catch per species saved to localStorage
+- Grid display with rarity glow, locked cards for undiscovered species
+- Accessible from gameplay, pause menu, and character select
 
-## Input
-- Tap/Click to cast (IDLE state)
-- Tap/Click to hook fish (BITE state)
-- Hold/Press to reel (REEL state, hold = reel, release = rest)
-- All input via `pointerdown`/`pointerup` events on canvas
-
-## DOM Elements
-- `#gameContainer` — wrapper
-- `#vignette` — CSS vignette overlay
-- `#uiOverlay` — UI container (pointer-events: none)
-- `#title` — "CATCH AND REEL" header
-- `#scoreBoard` — score + best catch HUD (top-left)
-- `#instruction` — bottom prompt text (changes per state)
-- `#reelUI` — tension bar + progress bar (visible during REEL state)
-- `#catchDisplay` — modal showing caught fish details
-- `#charSelect` — character selection screen
-
-## localStorage Keys
+### localStorage Keys
 - `catchreel_best` — best single catch points
 - `catchreel_total` — total score across sessions
 - `catchreel_char` — selected character index
+- `catchreel_trophies` — JSON object of best catch per species
 
-## Important Patterns
-- **Do NOT refactor without explicit instruction** — this is third-party code
-- **Visual-only changes** = no physics/mechanic modifications
-- The DOM/Canvas hybrid is intentional — UI overlays are DOM, scene is Canvas
-- Google Fonts dependency is a known exception — do not remove without providing alternative
-- Character drawing uses `cc` (character colors) object from selected character
+### Audio
+- **NO AUDIO SYSTEM YET** — next feature to build
+- Planned: Web Audio API (cast, splash, bite, reel, catch, snap)
 
-## Queued (Not Built)
-- Web Audio API sound system (cast, splash, bite, reel, catch, snap)
-- Self-host Google Fonts or swap to system fonts
-- Mobile optimization pass
+### Queued (Not Built)
+- Sound system (Web Audio API)
+- Rod position fine-tuning per character
+- Self-host Google Fonts
 - Additional fish species
 - Seasonal themes
-- Integration with SKG coin economy (future)
+- Integration with SKG coin economy
