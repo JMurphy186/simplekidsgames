@@ -2075,7 +2075,7 @@ function drawThemedRod(ctx,charName,hx,hy,tx,ty,time){
   var style=CHAR_ROD_STYLES[charName];if(!style)return;
   var rv=getRodVectors(hx,hy,tx,ty),pts=getRodShaftPoints(hx,hy,tx,ty);
   ctx.lineCap='round';
-  if(charName==='wizard'){for(var i=0;i<pts.length-1;i++){ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i];ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[i+1].x,pts[i+1].y);ctx.stroke()}}else{var sagAmount=rv.len*0.12;for(var i=0;i<pts.length-1;i++){var segProgress=(i+1)/pts.length;var segSag=sagAmount*segProgress*segProgress;var midX=(pts[i].x+pts[i+1].x)/2+rv.px*segSag;var midY=(pts[i].y+pts[i+1].y)/2+rv.py*segSag;ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i];ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.quadraticCurveTo(midX,midY,pts[i+1].x,pts[i+1].y);ctx.stroke()}}
+  if(charName==='wizard'){for(var i=0;i<pts.length-1;i++){ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i];ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[i+1].x,pts[i+1].y);ctx.stroke()}}else{var sagAmount=rv.len*0.12;for(var i=0;i<pts.length-1;i++){var segProgress=(i+1)/pts.length;var segSag=sagAmount*segProgress*segProgress;var midX=(pts[i].x+pts[i+1].x)/2-rv.px*segSag;var midY=(pts[i].y+pts[i+1].y)/2-rv.py*segSag;ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i];ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.quadraticCurveTo(midX,midY,pts[i+1].x,pts[i+1].y);ctx.stroke()}}
   drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time);
   drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time);
   drawRodReel(ctx,style,hx,hy,tx,ty,rv,time);
