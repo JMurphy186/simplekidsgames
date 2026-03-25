@@ -914,6 +914,16 @@ const CHAR_ROD_ANCHORS = {
   alien:    { handX: 0.96, handY: 0.68, tipX: 1.21, tipY: 0.20 },
 };
 
+// ── CHARACTER-THEMED ROD STYLES ──
+const CHAR_ROD_STYLES = {
+  pirate: { shaftColors:['#8B6914','#6B4226','#5a3820','#4a2e18'], shaftWidths:[5,4.5,3.5,2], gripType:'rope', gripColor:'#a08040', reelColor:'#8B4513', reelAccent:'#a0522d', reelRadius:10, hasReel:true, lineColor:[180,160,120], lineWidth:1.8, bobberMain:'#c0392b', bobberTop:'#ddd', tipFeature:null, shaftDetail:'knots', lineEffect:null },
+  robot: { shaftColors:['#888','#999','#aaa','#bbb'], shaftWidths:[5,4,3,1.5], gripType:'tech', gripColor:'#555', reelColor:'#777', reelAccent:'#4ecdc4', reelRadius:11, hasReel:true, lineColor:[78,205,196], lineWidth:1.5, bobberMain:'#4ecdc4', bobberTop:'#fff', tipFeature:'antenna', shaftDetail:'joints', lineEffect:null },
+  wizard: { shaftColors:['#6B4E97','#7B5EA7','#8B6EB7','#9B7ED8'], shaftWidths:[5.5,4.5,3.5,2.5], gripType:'wrap', gripColor:'#FFD700', reelColor:null, reelAccent:null, reelRadius:0, hasReel:false, lineColor:[155,126,216], lineWidth:1.5, bobberMain:'#9B7ED8', bobberTop:'#ddc8ff', tipFeature:'orb', shaftDetail:'runes', lineEffect:null },
+  ninja: { shaftColors:['#222','#2a2a2a','#333','#3a3a3a'], shaftWidths:[4.5,4,3,1.5], gripType:'cord', gripColor:'#c0392b', reelColor:'#333', reelAccent:'#c0392b', reelRadius:9, hasReel:true, lineColor:[180,180,180], lineWidth:1.0, bobberMain:'#e74c3c', bobberTop:'#222', tipFeature:null, shaftDetail:'bindings', lineEffect:null },
+  princess: { shaftColors:['#FF69B4','#FF85C8','#FF9FD5','#FFB8E0'], shaftWidths:[4.5,4,3,2], gripType:'ribbon', gripColor:'#FF69B4', reelColor:'#d4a0c0', reelAccent:'#FFD700', reelRadius:10, hasReel:true, lineColor:[255,182,220], lineWidth:1.5, bobberMain:'#FF69B4', bobberTop:'#fff0f8', tipFeature:'bow', shaftDetail:null, lineEffect:'sparkles' },
+  alien: { shaftColors:['#1a5a3a','#207040','#2a8a4a','#39FF14'], shaftWidths:[5,3,2,1], gripType:'energy', gripColor:'#4ecdc4', reelColor:'#1a3a2a', reelAccent:'#39FF14', reelRadius:11, hasReel:true, lineColor:[57,255,20], lineWidth:1.5, bobberMain:'#39FF14', bobberTop:'#c0ffa0', tipFeature:'plasma', shaftDetail:'energyGaps', lineEffect:'energyPulse' }
+};
+
 const charBodyImages = {};
 for (const [name, src] of Object.entries(CHAR_BODY_SVGS)) {
   const img = new Image();
@@ -2010,6 +2020,68 @@ function drawDock() {
   ctx.fill();
 }
 
+// ══════════════════════════════════════════════════
+// CHARACTER-THEMED ROD DRAWING SYSTEM
+// ══════════════════════════════════════════════════
+function getRodShaftPoints(hx,hy,tx,ty){var dx=tx-hx,dy=ty-hy;return[{x:hx,y:hy},{x:hx+dx*0.16,y:hy+dy*0.16},{x:hx+dx*0.53,y:hy+dy*0.53},{x:tx,y:ty}]}
+function getRodVectors(hx,hy,tx,ty){var dx=tx-hx,dy=ty-hy,len=Math.sqrt(dx*dx+dy*dy)||1;return{nx:dx/len,ny:dy/len,px:-dy/len,py:dx/len,len:len}}
+function rodPt(hx,hy,tx,ty,rv,t,perp){perp=perp||0;return{x:hx+(tx-hx)*t+rv.px*perp,y:hy+(ty-hy)*t+rv.py*perp}}
+
+function drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time){
+  var g=style.gripType;
+  if(g==='rope'){for(var i=0;i<6;i++){var t=i*0.018,pt=rodPt(hx,hy,tx,ty,rv,t,0);ctx.strokeStyle=style.gripColor;ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pt.x+rv.px*4+rv.nx*2,pt.y+rv.py*4+rv.ny*2);ctx.lineTo(pt.x-rv.px*4-rv.nx*2,pt.y-rv.py*4-rv.ny*2);ctx.stroke()}}
+  else if(g==='tech'){var c=rodPt(hx,hy,tx,ty,rv,0.03,0);ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.atan2(ty-hy,tx-hx));ctx.fillStyle=style.gripColor;ctx.fillRect(-6,-9,12,18);ctx.strokeStyle='#4ecdc4';ctx.lineWidth=0.8;ctx.strokeRect(-6,-9,12,18);ctx.fillStyle='#4ecdc4';ctx.fillRect(-2,-4,2,2);ctx.fillRect(2,0,2,2);ctx.restore()}
+  else if(g==='wrap'){for(var i=0;i<5;i++){var t=i*0.02,pt=rodPt(hx,hy,tx,ty,rv,t,0);ctx.strokeStyle=style.gripColor;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pt.x+rv.px*5+rv.nx*3,pt.y+rv.py*5+rv.ny*3);ctx.lineTo(pt.x-rv.px*4-rv.nx*3,pt.y-rv.py*4-rv.ny*3);ctx.stroke()}}
+  else if(g==='cord'){for(var i=0;i<4;i++){var t=i*0.022,pt=rodPt(hx,hy,tx,ty,rv,t,0);ctx.strokeStyle=style.gripColor;ctx.lineWidth=1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pt.x+rv.px*3+rv.nx*3,pt.y+rv.py*3+rv.ny*3);ctx.lineTo(pt.x-rv.px*3-rv.nx*3,pt.y-rv.py*3-rv.ny*3);ctx.stroke();ctx.beginPath();ctx.moveTo(pt.x+rv.px*3-rv.nx*3,pt.y+rv.py*3-rv.ny*3);ctx.lineTo(pt.x-rv.px*3+rv.nx*3,pt.y-rv.py*3+rv.ny*3);ctx.stroke()}}
+  else if(g==='ribbon'){for(var i=0;i<4;i++){var t=i*0.02,pt=rodPt(hx,hy,tx,ty,rv,t,0);ctx.strokeStyle='#FF69B4';ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(pt.x+rv.px*4+rv.nx*3,pt.y+rv.py*4+rv.ny*3);ctx.lineTo(pt.x-rv.px*4-rv.nx*3,pt.y-rv.py*4-rv.ny*3);ctx.stroke()}var rb=rodPt(hx,hy,tx,ty,rv,0.01,0);ctx.strokeStyle='rgba(255,105,180,0.5)';ctx.lineWidth=1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(rb.x,rb.y);ctx.quadraticCurveTo(rb.x+rv.px*8-rv.nx*6+Math.sin(time*3)*rv.nx*4,rb.y+rv.py*8-rv.ny*6+Math.sin(time*3)*rv.ny*4,rb.x+rv.px*16+Math.sin(time*3)*rv.nx*4,rb.y+rv.py*16+Math.sin(time*3)*rv.ny*4);ctx.stroke();ctx.beginPath();ctx.moveTo(rb.x+rv.nx*2,rb.y+rv.ny*2);ctx.quadraticCurveTo(rb.x+rv.px*10+rv.nx*8+Math.sin(time*3+1)*rv.nx*4,rb.y+rv.py*10+rv.ny*8+Math.sin(time*3+1)*rv.ny*4,rb.x+rv.px*18+Math.sin(time*3+1)*rv.nx*4,rb.y+rv.py*18+Math.sin(time*3+1)*rv.ny*4);ctx.stroke()}
+  else if(g==='energy'){var c=rodPt(hx,hy,tx,ty,rv,0.03,0),pulse=0.5+Math.sin(time*4)*0.3;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.atan2(ty-hy,tx-hx));ctx.fillStyle='rgba(78,205,196,'+(pulse*0.3)+')';ctx.beginPath();ctx.ellipse(0,0,10,14,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(57,255,20,'+(pulse*0.6)+')';ctx.lineWidth=1;ctx.stroke();ctx.restore()}
+}
+
+function drawRodReel(ctx,style,hx,hy,tx,ty,rv,time){
+  if(!style.hasReel)return;
+  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius;
+  ctx.fillStyle=style.reelColor;ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=style.reelAccent||'#999';ctx.lineWidth=1.5;ctx.stroke();
+  var a=time*3;ctx.fillStyle=style.reelAccent||'#999';ctx.beginPath();ctx.arc(rx+Math.cos(a)*(rr-2),ry+Math.sin(a)*(rr-2),3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=style.gripType==='tech'?'#bbb':style.gripType==='energy'?'#207040':'#aaa';ctx.beginPath();ctx.arc(rx,ry,2.5,0,Math.PI*2);ctx.fill();
+  if(style.gripType==='rope'){ctx.fillStyle='rgba(139,90,43,0.4)';ctx.beginPath();ctx.arc(rx-3,ry+2,1.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(rx+4,ry-1,1,0,Math.PI*2);ctx.fill()}
+  var gt=rodPt(hx,hy,tx,ty,rv,0.2,0),lc=style.lineColor;ctx.strokeStyle='rgba('+lc[0]+','+lc[1]+','+lc[2]+',0.4)';ctx.lineWidth=style.lineWidth*0.7;ctx.beginPath();ctx.moveTo(rx,ry-rr);ctx.lineTo(gt.x,gt.y);ctx.stroke()
+}
+
+function drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time){
+  var d=style.shaftDetail;if(!d)return;
+  if(d==='knots'){var k1=rodPt(hx,hy,tx,ty,rv,0.28,0),k2=rodPt(hx,hy,tx,ty,rv,0.45,0);ctx.fillStyle='#4a2e18';ctx.beginPath();ctx.arc(k1.x,k1.y,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(k2.x,k2.y,2,0,Math.PI*2);ctx.fill()}
+  else if(d==='joints'){for(var i=1;i<pts.length;i++){ctx.fillStyle='#666';ctx.beginPath();ctx.arc(pts[i].x,pts[i].y,3.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#4ecdc4';ctx.lineWidth=0.8;ctx.stroke()}}
+  else if(d==='runes'){var ra=0.4+Math.sin(time*2)*0.3;ctx.fillStyle='rgba(200,168,255,'+ra+')';ctx.font='8px serif';ctx.textAlign='center';ctx.textBaseline='middle';var r1=rodPt(hx,hy,tx,ty,rv,0.28,0),r2=rodPt(hx,hy,tx,ty,rv,0.48,0),r3=rodPt(hx,hy,tx,ty,rv,0.65,0);ctx.fillText('\u2726',r1.x,r1.y);ctx.fillText('\u27E1',r2.x,r2.y);ctx.fillText('\u2727',r3.x,r3.y)}
+  else if(d==='bindings'){ctx.strokeStyle='rgba(200,50,50,0.4)';ctx.lineWidth=1;ctx.lineCap='round';for(var i=0;i<3;i++){var t=0.22+i*0.14,pt=rodPt(hx,hy,tx,ty,rv,t,0);ctx.beginPath();ctx.moveTo(pt.x+rv.px*3,pt.y+rv.py*3);ctx.lineTo(pt.x-rv.px*3,pt.y-rv.py*3);ctx.stroke()}}
+  else if(d==='energyGaps'){var gp=0.5+Math.sin(time*5)*0.4;ctx.fillStyle='rgba(57,255,20,'+gp+')';var g1=rodPt(hx,hy,tx,ty,rv,0.25,0),g2=rodPt(hx,hy,tx,ty,rv,0.55,0);ctx.beginPath();ctx.arc(g1.x,g1.y,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(g2.x,g2.y,1.5,0,Math.PI*2);ctx.fill()}
+}
+
+function drawTipFeature(ctx,style,tx,ty,time){
+  var f=style.tipFeature;if(!f)return;
+  if(f==='antenna'){var gl=0.5+Math.sin(time*4)*0.3;ctx.fillStyle='rgba(78,205,196,'+gl+')';ctx.beginPath();ctx.arc(tx,ty,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(tx,ty,1.5,0,Math.PI*2);ctx.fill()}
+  else if(f==='orb'){var op=0.4+Math.sin(time*2.5)*0.3;ctx.fillStyle='rgba(155,126,216,'+op+')';ctx.beginPath();ctx.arc(tx,ty,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(200,168,255,'+(op+0.3)+')';ctx.beginPath();ctx.arc(tx,ty,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.arc(tx-2,ty-2,1.5,0,Math.PI*2);ctx.fill();for(var i=0;i<3;i++){var pa=time*2+i*2.1,pr=12+Math.sin(time+i)*4;ctx.fillStyle='rgba(200,168,255,'+(0.3+Math.sin(time*3+i)*0.2)+')';ctx.beginPath();ctx.arc(tx+Math.cos(pa)*pr,ty+Math.sin(pa)*pr,1.2,0,Math.PI*2);ctx.fill()}}
+  else if(f==='bow'){ctx.fillStyle='#FF69B4';ctx.beginPath();ctx.ellipse(tx-6,ty-2,5,3,-0.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(tx+6,ty-2,5,3,0.3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e0559a';ctx.beginPath();ctx.arc(tx,ty,2.5,0,Math.PI*2);ctx.fill()}
+  else if(f==='plasma'){var pp=0.5+Math.sin(time*5)*0.4;ctx.fillStyle='rgba(57,255,20,'+(pp*0.4)+')';ctx.beginPath();ctx.arc(tx,ty,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(78,205,196,'+pp+')';ctx.beginPath();ctx.arc(tx,ty,3.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(tx,ty,1.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(57,255,20,'+(pp*0.5)+')';ctx.lineWidth=0.8;for(var i=0;i<2;i++){var aa=time*4+i*Math.PI;ctx.beginPath();ctx.arc(tx,ty,10+i*3,aa,aa+1.2);ctx.stroke()}}
+}
+
+function drawLineEffects(ctx,charName,tipX,tipY,bobberX,bobberY,sagX,sagY,time){
+  var style=CHAR_ROD_STYLES[charName];if(!style||!style.lineEffect)return;
+  if(style.lineEffect==='sparkles'){for(var i=0;i<4;i++){var t=0.15+i*0.2,mt=1-t,lx=mt*mt*tipX+2*mt*t*sagX+t*t*bobberX,ly=mt*mt*tipY+2*mt*t*sagY+t*t*bobberY,sp=0.3+Math.sin(time*5+i*1.5)*0.3;ctx.fillStyle='rgba(255,215,0,'+sp+')';ctx.beginPath();ctx.arc(lx,ly,1.5,0,Math.PI*2);ctx.fill()}}
+  else if(style.lineEffect==='energyPulse'){for(var i=0;i<3;i++){var t=((time*0.5+i*0.33)%1),mt=1-t,lx=mt*mt*tipX+2*mt*t*sagX+t*t*bobberX,ly=mt*mt*tipY+2*mt*t*sagY+t*t*bobberY,ep=0.3+Math.sin(time*3+i)*0.25;ctx.fillStyle='rgba(57,255,20,'+ep+')';ctx.beginPath();ctx.arc(lx,ly,2,0,Math.PI*2);ctx.fill()}}
+}
+
+function drawThemedRod(ctx,charName,hx,hy,tx,ty,time){
+  var style=CHAR_ROD_STYLES[charName];if(!style)return;
+  var rv=getRodVectors(hx,hy,tx,ty),pts=getRodShaftPoints(hx,hy,tx,ty);
+  ctx.lineCap='round';
+  for(var i=0;i<pts.length-1;i++){ctx.strokeStyle=style.shaftColors[i];ctx.lineWidth=style.shaftWidths[i];ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[i+1].x,pts[i+1].y);ctx.stroke()}
+  drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time);
+  drawShaftDetails(ctx,style,pts,hx,hy,tx,ty,rv,time);
+  drawRodReel(ctx,style,hx,hy,tx,ty,rv,time);
+  drawTipFeature(ctx,style,tx,ty,time);
+}
+
 function drawCharacter() {
   const s = Math.min(W, H) * 0.0014;
   const cx = personX, cy = personY;
@@ -2044,29 +2116,8 @@ function drawCharacter() {
     let effTipY = rodTipBaseY;
     if (isReeling) { effTipY += bendAmt; effTipX -= bendAmt * 0.3; }
 
-    // Draw rod
-    ctx.strokeStyle = '#A0722A'; ctx.lineWidth = 3 * s;
-    ctx.beginPath(); ctx.moveTo(rodBaseX, rodBaseY);
-    ctx.quadraticCurveTo(midRodX, midRodY + bendAmt * 0.5, effTipX, effTipY);
-    ctx.stroke();
-    ctx.strokeStyle = '#8B6214'; ctx.lineWidth = 1.5 * s;
-    ctx.beginPath();
-    ctx.moveTo(lerp(rodBaseX, effTipX, 0.5), lerp(rodBaseY, effTipY, 0.5) + bendAmt * 0.2);
-    ctx.quadraticCurveTo(effTipX - 2 * s, effTipY - 5 * s, effTipX, effTipY);
-    ctx.stroke();
-
-    // Reel circle
-    ctx.fillStyle = cc.accent;
-    ctx.beginPath(); ctx.arc(rodBaseX + 4*s, rodBaseY + 2*s, 3.5*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = cc.hat;
-    ctx.beginPath(); ctx.arc(rodBaseX + 4*s, rodBaseY + 2*s, 1.8*s, 0, Math.PI*2); ctx.fill();
-    if (isReeling && holding) {
-      const ha = globalTime * 12;
-      ctx.fillStyle = '#aaa';
-      ctx.beginPath();
-      ctx.arc(rodBaseX + 4*s + Math.cos(ha)*2.5*s, rodBaseY + 2*s + Math.sin(ha)*2.5*s, 1.2*s, 0, Math.PI*2);
-      ctx.fill();
-    }
+    // Draw themed rod (shaft, grip, reel, tip feature)
+    drawThemedRod(ctx, playerChar, rodBaseX, rodBaseY, effTipX, effTipY, Date.now() / 1000);
 
     rodTipX = effTipX;
     rodTipY = effTipY;
@@ -2103,8 +2154,13 @@ function drawFishingLine() {
   const taut = gameState === ST.REEL;
   const tip = getEffectiveRodTip();
 
-  ctx.strokeStyle = taut ? C.lineTaut : C.line;
-  ctx.lineWidth = taut ? 2 : 1.2;
+  // Themed line color
+  const _rs = CHAR_ROD_STYLES[playerChar];
+  const _lc = _rs ? _rs.lineColor : [255,255,255];
+  const _lw = _rs ? _rs.lineWidth : 1.5;
+  const _la = taut ? 0.9 : 0.6;
+  ctx.strokeStyle = 'rgba('+_lc[0]+','+_lc[1]+','+_lc[2]+','+_la+')';
+  ctx.lineWidth = taut ? _lw + 0.5 : _lw;
   ctx.setLineDash([]);
   ctx.beginPath();
   ctx.moveTo(tip.x, tip.y);
@@ -2113,7 +2169,6 @@ function drawFishingLine() {
   const midX = (tip.x + bx) / 2;
   let sagY;
   if (taut) {
-    // Taut line with vibration during fighting
     const vibrate = Math.sin(globalTime * 25) * 2 + Math.sin(globalTime * 37) * 1.5;
     sagY = Math.min(tip.y, by) - 5 + vibrate;
   } else {
@@ -2122,15 +2177,18 @@ function drawFishingLine() {
   ctx.quadraticCurveTo(midX, sagY, bx, by);
   ctx.stroke();
 
-  // During reel, draw the line below bobber into water
+  // Line below bobber into water
   if (gameState >= ST.WAIT && gameState <= ST.REEL) {
-    ctx.strokeStyle = taut ? `${C.lineTaut}88` : `${C.line}66`;
+    ctx.strokeStyle = 'rgba('+_lc[0]+','+_lc[1]+','+_lc[2]+','+(taut?0.5:0.3)+')';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(bx, by);
     ctx.lineTo(bx + Math.sin(globalTime*3)*3, by + 25);
     ctx.stroke();
   }
+
+  // Per-character line effects (sparkles, energy pulses)
+  drawLineEffects(ctx, playerChar, tip.x, tip.y, bx, by, midX, sagY, Date.now() / 1000);
 }
 
 function drawBobber() {
@@ -2150,7 +2208,8 @@ function drawBobber() {
 
   // During cast animation - just a dot
   if (gameState === ST.CAST_ANIM && castT < 0.9) {
-    ctx.fillStyle = C.bobberRed;
+    const _bsCast = CHAR_ROD_STYLES[playerChar];
+    ctx.fillStyle = _bsCast ? _bsCast.bobberMain : C.bobberRed;
     ctx.beginPath();
     ctx.arc(bx, by, 4*s, 0, Math.PI*2);
     ctx.fill();
@@ -2175,14 +2234,19 @@ function drawBobber() {
   ctx.lineTo(bx, by + 5*s);
   ctx.stroke();
 
-  // White top half (rounded cylinder shape)
-  ctx.fillStyle = C.bobberWhite;
+  // Themed bobber colors
+  const _bs = CHAR_ROD_STYLES[playerChar];
+  const _bobTop = _bs ? _bs.bobberTop : C.bobberWhite;
+  const _bobMain = _bs ? _bs.bobberMain : C.bobberRed;
+
+  // Top half (rounded cylinder shape)
+  ctx.fillStyle = _bobTop;
   ctx.beginPath();
   ctx.ellipse(bx, by - 5*s, 5.5*s, 8*s, 0, -Math.PI, 0);
   ctx.fill();
 
-  // Red bottom half
-  ctx.fillStyle = C.bobberRed;
+  // Bottom half
+  ctx.fillStyle = _bobMain;
   ctx.beginPath();
   ctx.ellipse(bx, by - 5*s, 5.5*s, 8*s, 0, 0, Math.PI);
   ctx.fill();
