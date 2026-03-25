@@ -828,7 +828,7 @@ canvas {
   <div id="pauseMenu">
     <div class="pause-title">PAUSED</div>
     <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
-    <button class="pause-btn pause-mute" id="pauseMuteBtn" onclick="toggleMuteBtn()">🔊 SOUND: ON</button>
+    <button class="pause-btn pause-mute" id="pauseMuteBtn">🔊 SOUND: ON</button>
     <button class="pause-btn pause-trophy" onclick="closePauseOpenTrophy()">🏆 TROPHIES</button>
     <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
     <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
@@ -965,9 +965,20 @@ document.getElementById('settingsBtn')?.addEventListener('touchend', (e) => {
 document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) => {
   e.preventDefault(); openTrophyRoom();
 });
-document.getElementById('pauseMuteBtn')?.addEventListener('touchend', (e) => {
-  e.preventDefault(); toggleMuteBtn();
-});
+// Pause mute button — touchend + click with debounce to prevent double-fire on iOS
+(function() {
+  var btn = document.getElementById('pauseMuteBtn');
+  if (!btn) return;
+  var lastToggle = 0;
+  function doToggle() {
+    var now = Date.now();
+    if (now - lastToggle < 300) return; // debounce 300ms
+    lastToggle = now;
+    toggleMuteBtn();
+  }
+  btn.addEventListener('click', doToggle);
+  btn.addEventListener('touchend', function(e) { e.preventDefault(); doToggle(); }, { passive: false });
+})();
 // MENU link — iOS touch fix
 document.querySelector('.char-select-menu')?.addEventListener('touchend', (e) => {
   e.preventDefault(); window.location.href = '/';
