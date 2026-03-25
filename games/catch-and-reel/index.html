@@ -484,6 +484,12 @@ canvas {
   100% { border-color: #ff0000; box-shadow: 0 0 30px #ff000044, 0 0 60px #ff000022, inset 0 0 30px #ff000011; }
 }
 
+@keyframes unlockBounce {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 /* ── Character Select Screen ── */
 #charSelect {
   position: fixed;
@@ -1320,6 +1326,46 @@ function saveTrophy(fishName, weight, length, rarity) {
   return false;
 }
 
+// --- LOCATION UNLOCK CHECK ---
+var shownUnlocks = JSON.parse(localStorage.getItem('catchreel_shown_unlocks') || '[]');
+var pendingUnlock = null;
+
+function checkLocationUnlocks() {
+  for (var i = 0; i < LOCATIONS.length; i++) {
+    var loc = LOCATIONS[i];
+    if (loc.unlock > 0 && totalCatches >= loc.unlock && shownUnlocks.indexOf(loc.id) === -1) {
+      pendingUnlock = loc;
+      shownUnlocks.push(loc.id);
+      localStorage.setItem('catchreel_shown_unlocks', JSON.stringify(shownUnlocks));
+      break; // Show one at a time
+    }
+  }
+}
+
+function showPendingUnlock() {
+  if (!pendingUnlock) return;
+  var loc = pendingUnlock;
+  pendingUnlock = null;
+  var overlay = document.getElementById('unlockOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'unlockOverlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(11,14,24,0.9);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:auto;cursor:pointer;opacity:0;transition:opacity 0.4s;';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(){ overlay.style.opacity='0'; setTimeout(function(){ overlay.style.display='none'; }, 400); });
+    overlay.addEventListener('touchend', function(e){ e.preventDefault(); overlay.style.opacity='0'; setTimeout(function(){ overlay.style.display='none'; }, 400); });
+  }
+  overlay.innerHTML = '<div style="font-size:clamp(36px,8vw,56px);animation:unlockBounce 0.6s ease-out">🔓</div>' +
+    '<div style="font-family:Luckiest Guy,cursive;font-size:clamp(20px,5vw,32px);color:#FFE135;text-shadow:0 0 20px rgba(255,225,53,0.6)">NEW LOCATION UNLOCKED!</div>' +
+    '<div style="font-size:clamp(28px,6vw,40px)">' + loc.icon + '</div>' +
+    '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(18px,4vw,26px);color:' + loc.accent + ';text-shadow:0 0 12px ' + loc.accent + '66">' + loc.name + '</div>' +
+    '<div style="font-family:Baloo 2,cursive;font-size:clamp(11px,2vw,14px);color:rgba(255,255,255,0.5);margin-top:8px">Tap to continue</div>';
+  overlay.style.display = 'flex';
+  setTimeout(function(){ overlay.style.opacity = '1'; }, 10);
+  // Auto-dismiss after 4 seconds
+  setTimeout(function(){ if (overlay.style.opacity === '1') { overlay.style.opacity = '0'; setTimeout(function(){ overlay.style.display = 'none'; }, 400); } }, 4000);
+}
+
 // ══════════════════════════════════════════════════
 // CATCH & REEL — SOUND SYSTEM (Base64 Audio)
 // ══════════════════════════════════════════════════
@@ -1673,12 +1719,24 @@ function computeLayout() {
 }
 
 function pickFish() {
-  // First pick rarity tier
-  const totalWeight = Object.values(RARITY).reduce((s,r)=>s+r.weight, 0);
+  // Get current location's fish boost multipliers
+  var loc = LOCATIONS.find(function(l){ return l.id === currentLocation; }) || LOCATIONS[0];
+  var boost = loc.fishBoost || {};
+  // Map rarity keys: COMMON→common, ULTRA_RARE→ultraRare etc
+  var boostKeyMap = {COMMON:'common',UNCOMMON:'uncommon',RARE:'rare',ULTRA_RARE:'ultraRare',EPIC:'epic',LEGENDARY:'legendary',EXOTIC:'exotic'};
+  // Build boosted weights
+  var boostedWeights = {};
+  var totalWeight = 0;
+  for (var key in RARITY) {
+    var bk = boostKeyMap[key] || key.toLowerCase();
+    var mult = boost[bk] || 1.0;
+    boostedWeights[key] = RARITY[key].weight * mult;
+    totalWeight += boostedWeights[key];
+  }
   let roll = Math.random() * totalWeight;
   let chosenRarity = 'COMMON';
   for (const [key, r] of Object.entries(RARITY)) {
-    roll -= r.weight;
+    roll -= boostedWeights[key];
     if (roll <= 0) { chosenRarity = key; break; }
   }
   // Pick a random fish of that rarity
@@ -1803,6 +1861,8 @@ function enterIdle() {
   dipAmount = 0; dipTarget = 0; castT = 0;
   showUI(false, false, false);
   setInstruction(`${actionText} to cast!`, false);
+  // Show pending location unlock notification (if any)
+  if (pendingUnlock) setTimeout(showPendingUnlock, 500);
 }
 
 function enterCastAnim() {
@@ -1985,6 +2045,8 @@ function enterCaught() {
   // Increment lifetime catch counter (for location unlock progression)
   totalCatches++;
   localStorage.setItem('catchreel_total_catches', totalCatches);
+  // Check if a new location was just unlocked
+  checkLocationUnlocks();
   // Sound: rarity-scaled catch fanfare
   var _cr = caughtFish.rarity || 'COMMON';
   if (['EXOTIC','LEGENDARY','EPIC'].includes(_cr)) playS("catchExotic");
