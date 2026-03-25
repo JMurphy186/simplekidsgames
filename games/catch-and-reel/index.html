@@ -1171,6 +1171,8 @@ function togglePauseMenu() {
 function changeCharacter() {
   gamePaused = false;
   document.getElementById('pauseMenu').classList.remove('open');
+  document.getElementById('reelUI').style.display = 'none';
+  document.getElementById('catchDisplay').style.display = 'none';
   document.getElementById('gameContainer').style.display = 'none';
   document.getElementById('charSelect').style.display = 'flex';
   document.getElementById('title').style.display = '';
