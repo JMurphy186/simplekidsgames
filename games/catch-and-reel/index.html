@@ -1291,7 +1291,7 @@ function openTrophyRoom() {
     }
 
     var tFishSvg = isCaught ? FISH_SVGS[fish.name] : null;
-    var tEmojiContent = tFishSvg ? '<img src="' + tFishSvg + '" style="width:80px;height:50px;" alt="' + fish.name + '">' : (isCaught ? fish.emoji : '❓');
+    var tEmojiContent = tFishSvg ? '<img src="' + tFishSvg + '" style="max-width:80px;max-height:50px;width:auto;height:auto;object-fit:contain;" alt="' + fish.name + '">' : (isCaught ? fish.emoji : '❓');
     card.innerHTML = `
       <div class="trophy-emoji">${tEmojiContent}</div>
       <div class="trophy-name">${isCaught ? fish.name : '???'}</div>
@@ -1716,7 +1716,7 @@ function enterCaught() {
 
   var fishSvgSrc = FISH_SVGS[caughtFish.name];
   if (fishSvgSrc) {
-    elCatchEmoji.innerHTML = '<img src="' + fishSvgSrc + '" style="width:160px;height:100px;" alt="' + caughtFish.name + '">';
+    elCatchEmoji.innerHTML = '<img src="' + fishSvgSrc + '" style="max-width:160px;max-height:100px;width:auto;height:auto;object-fit:contain;" alt="' + caughtFish.name + '">';
   } else {
     elCatchEmoji.textContent = caughtFish.emoji;
   }
