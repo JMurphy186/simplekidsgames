@@ -1050,8 +1050,8 @@ function saveTrophy(fishName, weight, length, rarity) {
 // CATCH & REEL — SOUND SYSTEM (Base64 Audio)
 // ══════════════════════════════════════════════════
 
-let sndCtx = null;
-let sndMuted = localStorage.getItem("catchreel_mute") === "1";
+var sndCtx = null;
+var sndMuted = localStorage.getItem("catchreel_mute") === "1";
 const SND_BUFFERS = {};
 
 // Base64 audio data
@@ -1117,7 +1117,7 @@ const ST = { IDLE:0, CAST_ANIM:1, WAIT:2, BITE:3, REEL:4, CAUGHT:5, FAIL:6 };
 // --- Canvas ---
 const cvs = document.getElementById('gameCanvas');
 const ctx = cvs.getContext('2d');
-let W, H, dpr;
+var W, H, dpr;
 
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
