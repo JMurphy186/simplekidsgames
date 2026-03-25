@@ -1043,6 +1043,15 @@ const RARITY = {
   EXOTIC:     { label: 'EXOTIC',      color: 'rainbow', weight: 1.5, fightMin: 1.5, fightMax: 1.8, reelMin: 9,  reelMax: 12, fallMod: 1.7, tugFreqMod: 1.7, tugStrMod: 1.6, riseMod: 0.75, greenZone: [0.88, 1.0], driftRate: 0.35, tapPush: 0.06 },
 };
 
+// Mobile-aware exotic difficulty: phone tapping is slower than spacebar
+// Desktop: greenZone 88%, driftRate 0.35, tapPush 0.06
+// Mobile:  greenZone 92%, driftRate 0.25, tapPush 0.08
+if ('ontouchstart' in window) {
+  RARITY.EXOTIC.greenZone = [0.92, 1.0];
+  RARITY.EXOTIC.driftRate = 0.25;
+  RARITY.EXOTIC.tapPush = 0.08;
+}
+
 // --- Fish catalogue ---
 const FISH = [
   // Common
