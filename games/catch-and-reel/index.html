@@ -1788,7 +1788,16 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => {
   if (e.code === 'Space' || e.key === ' ') onRelease();
 });
-document.addEventListener('touchstart', e => { e.preventDefault(); onPress(); }, { passive: false });
+document.addEventListener('touchstart', e => {
+  // Don't intercept touch inside trophy room, pause menu, or char select (they need scroll/tap)
+  var tr = document.getElementById('trophyRoom');
+  var pm = document.getElementById('pauseMenu');
+  var cs = document.getElementById('charSelect');
+  if (tr && tr.classList.contains('open') && tr.contains(e.target)) return;
+  if (pm && pm.classList.contains('open') && pm.contains(e.target)) return;
+  if (cs && cs.style.display !== 'none' && cs.contains(e.target)) return;
+  e.preventDefault(); onPress();
+}, { passive: false });
 document.addEventListener('touchend', () => onRelease());
 cvs.addEventListener('mousedown', () => onPress());
 document.addEventListener('mouseup', () => onRelease());
