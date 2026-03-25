@@ -602,6 +602,79 @@ canvas {
     height: clamp(50px, 20vw, 70px);
   }
 }
+/* ── Location Select Screen ── */
+#locationSelect {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #162847 100%);
+  z-index: 90;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: clamp(16px, 3vh, 24px);
+  padding-top: clamp(50px, 8vh, 70px);
+}
+.loc-inner {
+  max-width: 600px; margin: 0 auto; text-align: center;
+}
+.loc-title {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: clamp(24px, 5vw, 36px);
+  color: #00E5FF;
+  text-shadow: 0 0 15px rgba(0,229,255,0.4);
+  margin-bottom: 6px;
+}
+.loc-catches {
+  font-family: 'Baloo 2', cursive; font-size: clamp(12px, 2vw, 15px);
+  color: rgba(255,255,255,0.5); margin-bottom: clamp(14px, 3vh, 24px);
+}
+.loc-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: clamp(10px, 2vw, 16px);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+.loc-card {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: clamp(12px, 2vw, 18px);
+  text-align: center; cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+}
+.loc-card:not(.locked):hover { transform: scale(1.03); }
+.loc-card.selected { border-width: 3px; }
+.loc-card.locked { opacity: 0.45; cursor: default; filter: saturate(0.3); }
+.loc-card .loc-icon { font-size: clamp(28px, 6vw, 42px); margin-bottom: 6px; }
+.loc-card .loc-name {
+  font-family: 'Baloo 2', cursive; font-weight: 700;
+  font-size: clamp(13px, 2.2vw, 17px); color: #fff; margin-bottom: 3px;
+}
+.loc-card .loc-desc {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(10px, 1.6vw, 12px); color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+}
+.loc-card .loc-lock {
+  font-size: clamp(32px, 7vw, 48px); margin: 8px 0;
+}
+.loc-card .loc-unlock-text {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(10px, 1.6vw, 13px); color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+}
+.loc-progress-bar {
+  width: 100%; height: 8px; background: rgba(255,255,255,0.08);
+  border-radius: 4px; overflow: hidden; margin-top: 4px;
+}
+.loc-progress-fill {
+  height: 100%; border-radius: 4px; transition: width 0.4s;
+}
+.loc-progress-text {
+  font-family: 'Baloo 2', cursive;
+  font-size: clamp(9px, 1.4vw, 11px); color: rgba(255,255,255,0.35);
+  margin-top: 3px;
+}
+@media (max-width: 480px) {
+  .loc-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
@@ -794,6 +867,16 @@ canvas {
   </div>
 </div>
 
+<div id="locationSelect" style="display:none;">
+  <a href="/" class="char-select-menu" style="position:absolute;top:clamp(10px,2vh,20px);left:clamp(10px,2vw,20px);font-family:'Baloo 2',cursive;font-weight:700;font-size:clamp(12px,1.8vw,16px);color:rgba(255,255,255,0.7);text-decoration:none;background:rgba(255,255,255,0.1);padding:6px 14px;border-radius:8px;z-index:101;pointer-events:auto;">🏠 MENU</a>
+  <button onclick="backToCharSelect()" style="position:absolute;top:clamp(10px,2vh,20px);right:clamp(10px,2vw,20px);font-family:'Baloo 2',cursive;font-weight:700;font-size:clamp(12px,1.8vw,16px);color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:6px 14px;border-radius:8px;z-index:101;pointer-events:auto;cursor:pointer;">🔄 CHANGE FISHER</button>
+  <div class="loc-inner">
+    <h2 class="loc-title">CHOOSE YOUR SPOT</h2>
+    <div class="loc-catches" id="locCatchCount"></div>
+    <div class="loc-grid" id="locGrid"></div>
+  </div>
+</div>
+
 <div id="gameContainer" style="display:none;">
   <canvas id="gameCanvas"></canvas>
   <div id="vignette"></div>
@@ -948,13 +1031,11 @@ document.querySelectorAll('.char-option').forEach(btn => {
   function selectChar() {
     playerChar = btn.dataset.char;
     localStorage.setItem('catchReelChar', playerChar);
-    document.getElementById('charSelect').style.display = 'none';
-    document.getElementById('gameContainer').style.display = 'block';
-    gameStarted = true;
-    resize();
     initAudio();
     initSounds(); // Pre-decode audio buffers on character select (first user gesture)
-    document.getElementById('title').style.display = 'none';
+    // Go to location select (not directly to fishing)
+    document.getElementById('charSelect').style.display = 'none';
+    showLocationSelect();
   }
   btn.addEventListener('click', selectChar);
   btn.addEventListener('touchend', (e) => {
@@ -962,6 +1043,65 @@ document.querySelectorAll('.char-option').forEach(btn => {
     selectChar();
   });
 });
+
+// ══════════════════════════════════════════════════
+// LOCATION SELECT SCREEN
+// ══════════════════════════════════════════════════
+function showLocationSelect() {
+  totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
+  var ls = document.getElementById('locationSelect');
+  var grid = document.getElementById('locGrid');
+  var countEl = document.getElementById('locCatchCount');
+  grid.innerHTML = '';
+  countEl.textContent = '\uD83C\uDFA3 Total catches: ' + totalCatches;
+
+  LOCATIONS.forEach(function(loc) {
+    var unlocked = totalCatches >= loc.unlock;
+    var isSelected = loc.id === currentLocation;
+    var card = document.createElement('div');
+    card.className = 'loc-card' + (unlocked ? '' : ' locked') + (isSelected ? ' selected' : '');
+    if (unlocked) {
+      card.style.borderColor = loc.accent + '88';
+      if (isSelected) card.style.boxShadow = '0 0 16px ' + loc.accent + '44';
+    }
+
+    if (unlocked) {
+      card.innerHTML =
+        '<div class="loc-icon">' + loc.icon + '</div>' +
+        '<div class="loc-name">' + loc.name + '</div>' +
+        '<div class="loc-desc">' + loc.desc + '</div>';
+      card.addEventListener('click', function() { selectLocation(loc.id); });
+      card.addEventListener('touchend', function(e) { e.preventDefault(); selectLocation(loc.id); });
+    } else {
+      var pct = Math.min(100, Math.floor((totalCatches / loc.unlock) * 100));
+      card.innerHTML =
+        '<div class="loc-lock">\uD83D\uDD12</div>' +
+        '<div class="loc-name">' + loc.name + '</div>' +
+        '<div class="loc-unlock-text">Catch ' + loc.unlock + ' fish to unlock</div>' +
+        '<div class="loc-progress-bar"><div class="loc-progress-fill" style="width:' + pct + '%;background:' + loc.accent + '"></div></div>' +
+        '<div class="loc-progress-text">' + totalCatches + ' / ' + loc.unlock + '</div>';
+    }
+    grid.appendChild(card);
+  });
+
+  ls.style.display = 'block';
+}
+
+function selectLocation(id) {
+  currentLocation = id;
+  localStorage.setItem('catchreel_location', id);
+  document.getElementById('locationSelect').style.display = 'none';
+  document.getElementById('gameContainer').style.display = 'block';
+  document.getElementById('title').style.display = 'none';
+  gameStarted = true;
+  resize();
+}
+
+function backToCharSelect() {
+  document.getElementById('locationSelect').style.display = 'none';
+  document.getElementById('charSelect').style.display = 'flex';
+  document.getElementById('title').style.display = '';
+}
 
 // iOS Safari touchend fallbacks for buttons that use onclick
 document.getElementById('trophyBtn')?.addEventListener('touchend', (e) => {
@@ -1022,11 +1162,10 @@ function toggleMuteBtn() {
 }
 var pmb = document.getElementById('pauseMuteBtn'); if (pmb) pmb.textContent = sndMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
 
-// If they already chose before, skip the select screen
+// If they already chose before, skip char select → go to location select
 if (playerChar) {
   document.getElementById('charSelect').style.display = 'none';
-  document.getElementById('gameContainer').style.display = 'block';
-  gameStarted = true;
+  showLocationSelect();
 }
 
 // --- Colors ---
@@ -1096,6 +1235,19 @@ const FISH = [
   { name:"Poseidon's Trident",    emoji:'\uD83D\uDD31', rarity:'EXOTIC', wMin:50,   wMax:150,   lMin:60, lMax:90   },
 ];
 
+
+// ══════════════════════════════════════════════════
+// LOCATIONS — 5 unlockable fishing spots
+// ══════════════════════════════════════════════════
+var LOCATIONS = [
+  { id:'dock',    name:'Wooden Dock',   desc:'Calm waters under a starlit sky',         unlock:0,   icon:'\uD83C\uDF19', platform:'dock',  accent:'#22C1C3', fishBoost:{} },
+  { id:'pier',    name:'Sunny Pier',    desc:'Bright coastal waters with seagulls',      unlock:50,  icon:'\u2600\uFE0F', platform:'dock',  accent:'#f0c830', fishBoost:{common:1.15,uncommon:1.10} },
+  { id:'reef',    name:'Coral Reef',    desc:'Tropical sunset over shallow reef waters', unlock:100, icon:'\uD83C\uDF05', platform:'dock',  accent:'#ff8855', fishBoost:{rare:2.0,ultraRare:1.5} },
+  { id:'deepsea', name:'Deep Sea',      desc:'Open ocean under storm clouds',            unlock:200, icon:'\u26C8\uFE0F', platform:'boat',  accent:'#7ab0e0', fishBoost:{epic:2.0,legendary:1.5} },
+  { id:'volcano', name:'Volcano Cove',  desc:'A hidden cove glowing with volcanic light',unlock:300, icon:'\uD83C\uDF0B', platform:'ledge', accent:'#ff6030', fishBoost:{exotic:3.0,legendary:2.0,epic:1.5} }
+];
+var currentLocation = localStorage.getItem('catchreel_location') || 'dock';
+var totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
 
 // ══════════════════════════════════════════════════
 // CATCH & REEL — FISH SVG DATA (Base64 Data URIs)
@@ -1829,6 +1981,9 @@ function enterCaught() {
   }
   elCatchTitle.textContent = `You caught a ${caughtFish.name}!`;
   const isNewRecord = saveTrophy(caughtFish.name, caughtFish.weight, caughtFish.length, caughtFish.rarity);
+  // Increment lifetime catch counter (for location unlock progression)
+  totalCatches++;
+  localStorage.setItem('catchreel_total_catches', totalCatches);
   // Sound: rarity-scaled catch fanfare
   var _cr = caughtFish.rarity || 'COMMON';
   if (['EXOTIC','LEGENDARY','EPIC'].includes(_cr)) playS("catchExotic");
