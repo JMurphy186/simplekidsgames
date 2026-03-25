@@ -981,11 +981,16 @@ if (trophyClose) {
   }, { passive: false });
 }
 
-// Pause menu buttons — iOS touch fix
+// Pause menu buttons — iOS touch fix (call functions directly, don't rely on btn.click())
 document.querySelectorAll('#pauseMenu button, #pauseMenu .pause-btn').forEach(function(btn) {
   btn.addEventListener('touchend', function(e) {
     e.preventDefault();
-    btn.click();
+    if (btn.id === 'pauseMuteBtn') { toggleMuteBtn(); }
+    else if (btn.classList.contains('pause-resume')) { togglePauseMenu(); }
+    else if (btn.classList.contains('pause-trophy')) { closePauseOpenTrophy(); }
+    else if (btn.classList.contains('pause-char')) { changeCharacter(); }
+    else if (btn.classList.contains('pause-menu')) { window.location.href = '/'; }
+    else { btn.click(); } // fallback
   }, { passive: false });
 });
 
