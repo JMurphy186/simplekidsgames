@@ -1192,10 +1192,33 @@ function playS(key) {
   src.start(0);
 }
 
+// Ambient reel drag — looping sound during reel minigame
+var reelDragNode = null;
+var reelDragGain = null;
+function startReelDrag() {
+  if (sndMuted || !sndCtx || !SND_BUFFERS.reelDrag || reelDragNode) return;
+  reelDragNode = sndCtx.createBufferSource();
+  reelDragNode.buffer = SND_BUFFERS.reelDrag;
+  reelDragNode.loop = true;
+  reelDragGain = sndCtx.createGain();
+  reelDragGain.gain.value = 0.3; // quieter than other SFX
+  reelDragNode.connect(reelDragGain);
+  reelDragGain.connect(sndCtx.destination);
+  reelDragNode.start(0);
+}
+function stopReelDrag() {
+  if (reelDragNode) {
+    try { reelDragNode.stop(); } catch(e) {}
+    reelDragNode = null;
+    reelDragGain = null;
+  }
+}
+
 // Toggle mute
 function toggleMute() {
   sndMuted = !sndMuted;
   localStorage.setItem("catchreel_mute", sndMuted ? "1" : "0");
+  if (sndMuted) stopReelDrag();
 }
 
 // ══════════════════════════════════════════════════
@@ -1251,6 +1274,7 @@ function togglePauseMenu() {
 }
 
 function changeCharacter() {
+  stopReelDrag();
   gamePaused = false;
   document.getElementById('pauseMenu').classList.remove('open');
   document.getElementById('reelUI').style.display = 'none';
@@ -1678,11 +1702,13 @@ function enterReel() {
   showUI(true, true, false);
   const holdText = isMobile ? 'TAP to reel in the fish!' : 'TAP SPACE to reel in the fish!';
   setInstruction(holdText, false);
+  startReelDrag();
 }
 
 let caughtInputLock = 0;
 
 function enterCaught() {
+  stopReelDrag();
   gameState = ST.CAUGHT;
   stateTime = 0;
   caughtInputLock = 2.0;
@@ -1764,6 +1790,7 @@ function enterCaught() {
 }
 
 function enterFail(msg) {
+  stopReelDrag();
   playS("snap");
   gameState = ST.FAIL;
   stateTime = 0;
