@@ -865,6 +865,8 @@ canvas {
 </div>
 
 <script>
+
+var showLocationSelect, selectLocation, goBackToCharSelect;
 // =============================================
 //  CATCH & REEL — Complete Arcade Fishing Game
 //  Rewritten with rarity system & visual polish
@@ -993,7 +995,7 @@ document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) 
   e.preventDefault(); openTrophyRoom();
 
 // ── LOCATION SELECT SCREEN ──
-function showLocationSelect() {
+showLocationSelect = function() {
   totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
   var ls = document.getElementById('locationSelect');
   var grid = document.getElementById('locGrid');
@@ -1025,7 +1027,7 @@ function showLocationSelect() {
   ls.style.display = 'block';
 }
 
-function selectLocation(id) {
+selectLocation = function(id) {
   currentLocation = id;
   localStorage.setItem('catchreel_location', id);
   document.getElementById('locationSelect').style.display = 'none';
@@ -1035,7 +1037,7 @@ function selectLocation(id) {
   document.getElementById('title').style.display = 'none';
 }
 
-function goBackToCharSelect() {
+goBackToCharSelect = function() {
   document.getElementById('locationSelect').style.display = 'none';
   document.getElementById('charSelect').style.display = 'flex';
   document.getElementById('title').style.display = '';
