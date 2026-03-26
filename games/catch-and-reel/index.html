@@ -2139,6 +2139,10 @@ document.addEventListener('touchstart', e => {
   if (tr && tr.classList.contains('open') && tr.contains(e.target)) return;
   if (pm && pm.classList.contains('open') && pm.contains(e.target)) return;
   if (cs && cs.style.display !== 'none' && cs.contains(e.target)) return;
+  var ls = document.getElementById('locationSelect');
+  if (ls && ls.style.display !== 'none' && ls.contains(e.target)) return;
+  var uo = document.getElementById('unlockOverlay');
+  if (uo && uo.style.display !== 'none' && uo.contains(e.target)) return;
   e.preventDefault(); onPress();
 }, { passive: false });
 document.addEventListener('touchend', () => onRelease());
