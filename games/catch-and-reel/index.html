@@ -794,6 +794,17 @@ canvas {
   </div>
 </div>
 
+
+<div id="locationSelect" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0B0E18;background-image:radial-gradient(ellipse at 50% 30%,#0f1a2e 0%,#0B0E18 70%);z-index:99;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;padding-bottom:env(safe-area-inset-bottom,20px);">
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-family:'Luckiest Guy',cursive;font-size:clamp(22px,5vw,32px);color:#FFE135;text-shadow:0 0 10px #FFE13566;">CHOOSE YOUR SPOT</div>
+    <div id="locCatchCount" style="font-family:'Baloo 2',cursive;font-size:clamp(11px,2vw,14px);color:rgba(255,255,255,0.4);margin-top:4px;"></div>
+  </div>
+  <div id="locGrid" style="display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(8px,2vw,14px);max-width:600px;margin:0 auto;"></div>
+  <div style="text-align:center;margin-top:16px;">
+    <button id="locBackBtn" style="font-family:'Baloo 2',cursive;font-weight:700;font-size:clamp(12px,2vw,15px);color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.08);border:none;padding:8px 20px;border-radius:8px;cursor:pointer;">\u2190 Change Fisher</button>
+  </div>
+</div>
 <div id="gameContainer" style="display:none;">
   <canvas id="gameCanvas"></canvas>
   <div id="vignette"></div>
@@ -868,6 +879,18 @@ const actionText = isMobile ? 'Tap' : 'Press SPACE';
 // --- Character Selection ---
 let playerChar = null; // always show character select
 let gameStarted = false;
+
+// ── LOCATION SYSTEM ──
+var LOCATIONS = [
+  { id:'dock', name:'Wooden Dock', desc:'Calm waters under a starlit sky', unlock:0, icon:'\u{1F319}', platform:'dock', accent:'#22C1C3', fishBoost:{} },
+  { id:'pier', name:'Sunny Pier', desc:'Bright coastal waters with seagulls', unlock:50, icon:'\u2600\uFE0F', platform:'dock', accent:'#f0c830', fishBoost:{common:1.15,uncommon:1.10} },
+  { id:'reef', name:'Coral Reef', desc:'Tropical sunset over shallow reef', unlock:100, icon:'\u{1F305}', platform:'dock', accent:'#ff8855', fishBoost:{rare:2.0,ultraRare:1.5} },
+  { id:'deepsea', name:'Deep Sea', desc:'Open ocean under storm clouds', unlock:200, icon:'\u26C8\uFE0F', platform:'boat', accent:'#7ab0e0', fishBoost:{epic:2.0,legendary:1.5} },
+  { id:'volcano', name:'Volcano Cove', desc:'Hidden cove with volcanic light', unlock:300, icon:'\u{1F30B}', platform:'ledge', accent:'#ff6030', fishBoost:{exotic:3.0,legendary:2.0,epic:1.5} }
+];
+var currentLocation = localStorage.getItem('catchreel_location') || 'dock';
+var totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
+
 
 // Character color configs
 const CHAR_COLORS = {
@@ -948,13 +971,9 @@ document.querySelectorAll('.char-option').forEach(btn => {
   function selectChar() {
     playerChar = btn.dataset.char;
     localStorage.setItem('catchReelChar', playerChar);
+    try { initAudio(); initSounds(); } catch(err) {}
     document.getElementById('charSelect').style.display = 'none';
-    document.getElementById('gameContainer').style.display = 'block';
-    gameStarted = true;
-    resize();
-    initAudio();
-    initSounds(); // Pre-decode audio buffers on character select (first user gesture)
-    document.getElementById('title').style.display = 'none';
+    showLocationSelect();
   }
   btn.addEventListener('click', selectChar);
   btn.addEventListener('touchend', (e) => {
@@ -972,6 +991,61 @@ document.getElementById('settingsBtn')?.addEventListener('touchend', (e) => {
 });
 document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) => {
   e.preventDefault(); openTrophyRoom();
+
+// ── LOCATION SELECT SCREEN ──
+function showLocationSelect() {
+  totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
+  var ls = document.getElementById('locationSelect');
+  var grid = document.getElementById('locGrid');
+  var countEl = document.getElementById('locCatchCount');
+  grid.innerHTML = '';
+  countEl.textContent = '\u{1F3A3} Total catches: ' + totalCatches;
+  LOCATIONS.forEach(function(loc) {
+    var unlocked = totalCatches >= loc.unlock;
+    var isSelected = loc.id === currentLocation;
+    var card = document.createElement('div');
+    card.style.cssText = 'width:clamp(140px,28vw,170px);padding:clamp(12px,2vw,18px);border-radius:14px;text-align:center;cursor:' + (unlocked?'pointer':'default') + ';border:2px solid ' + (unlocked ? loc.accent+'88' : 'rgba(255,255,255,0.08)') + ';background:rgba(255,255,255,' + (unlocked?'0.06':'0.02') + ');opacity:' + (unlocked?'1':'0.4') + ';' + (isSelected?'box-shadow:0 0 16px '+loc.accent+'44;':'');
+    if (unlocked) {
+      card.innerHTML = '<div style="font-size:clamp(28px,6vw,40px);">' + loc.icon + '</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(12px,2vw,15px);color:#fff;margin:4px 0 2px;">' + loc.name + '</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-size:clamp(9px,1.5vw,11px);color:rgba(255,255,255,0.4);">' + loc.desc + '</div>';
+      card.addEventListener('click', function() { selectLocation(loc.id); });
+      card.addEventListener('touchend', function(e) { e.preventDefault(); selectLocation(loc.id); });
+    } else {
+      var pct = Math.min(100, Math.floor((totalCatches / loc.unlock) * 100));
+      card.innerHTML = '<div style="font-size:32px;">\u{1F512}</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(11px,1.8vw,14px);color:rgba(255,255,255,0.5);margin:4px 0 2px;">' + loc.name + '</div>' +
+        '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:8px;margin:6px 0;overflow:hidden;">' +
+          '<div style="width:'+pct+'%;height:100%;background:'+loc.accent+';border-radius:6px;"></div>' +
+        '</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-size:clamp(9px,1.3vw,11px);color:rgba(255,255,255,0.3);">' + totalCatches + ' / ' + loc.unlock + '</div>';
+    }
+    grid.appendChild(card);
+  });
+  ls.style.display = 'block';
+}
+
+function selectLocation(id) {
+  currentLocation = id;
+  localStorage.setItem('catchreel_location', id);
+  document.getElementById('locationSelect').style.display = 'none';
+  document.getElementById('gameContainer').style.display = 'block';
+  gameStarted = true;
+  resize();
+  document.getElementById('title').style.display = 'none';
+}
+
+function goBackToCharSelect() {
+  document.getElementById('locationSelect').style.display = 'none';
+  document.getElementById('charSelect').style.display = 'flex';
+  document.getElementById('title').style.display = '';
+}
+
+// Location select back button
+document.getElementById('locBackBtn')?.addEventListener('click', goBackToCharSelect);
+document.getElementById('locBackBtn')?.addEventListener('touchend', function(e) { e.preventDefault(); goBackToCharSelect(); });
+
+
 });
 // Pause mute button — touchend + click with debounce to prevent double-fire on iOS
 (function() {
@@ -1025,8 +1099,7 @@ var pmb = document.getElementById('pauseMuteBtn'); if (pmb) pmb.textContent = sn
 // If they already chose before, skip the select screen
 if (playerChar) {
   document.getElementById('charSelect').style.display = 'none';
-  document.getElementById('gameContainer').style.display = 'block';
-  gameStarted = true;
+  showLocationSelect();
 }
 
 // --- Colors ---
@@ -1787,6 +1860,8 @@ function enterCaught() {
   holding = false;
   elTensionBar.classList.remove('in-green');
   fishCount++;
+  totalCatches++;
+  localStorage.setItem('catchreel_total_catches', totalCatches);
   bucket.push(caughtFish);
   if (!bestFish || caughtFish.weight > bestFish.weight) bestFish = caughtFish;
   savePersistent();
@@ -1916,6 +1991,8 @@ document.addEventListener('touchstart', e => {
   if (tr && tr.classList.contains('open') && tr.contains(e.target)) return;
   if (pm && pm.classList.contains('open') && pm.contains(e.target)) return;
   if (cs && cs.style.display !== 'none' && cs.contains(e.target)) return;
+  var ls = document.getElementById('locationSelect');
+  if (ls && ls.style.display !== 'none' && ls.contains(e.target)) return;
   e.preventDefault(); onPress();
 }, { passive: false });
 document.addEventListener('touchend', () => onRelease());
