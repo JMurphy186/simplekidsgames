@@ -867,6 +867,57 @@ canvas {
 <script>
 
 var showLocationSelect, selectLocation, goBackToCharSelect;
+showLocationSelect = function() {
+  totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
+  var ls = document.getElementById('locationSelect');
+  var grid = document.getElementById('locGrid');
+  var countEl = document.getElementById('locCatchCount');
+  grid.innerHTML = '';
+  countEl.textContent = '\u{1F3A3} Total catches: ' + totalCatches;
+  LOCATIONS.forEach(function(loc) {
+    var unlocked = totalCatches >= loc.unlock;
+    var isSelected = loc.id === currentLocation;
+    var card = document.createElement('div');
+    card.style.cssText = 'width:clamp(140px,28vw,170px);padding:clamp(12px,2vw,18px);border-radius:14px;text-align:center;cursor:' + (unlocked?'pointer':'default') + ';border:2px solid ' + (unlocked ? loc.accent+'88' : 'rgba(255,255,255,0.08)') + ';background:rgba(255,255,255,' + (unlocked?'0.06':'0.02') + ');opacity:' + (unlocked?'1':'0.4') + ';' + (isSelected?'box-shadow:0 0 16px '+loc.accent+'44;':'');
+    if (unlocked) {
+      card.innerHTML = '<div style="font-size:clamp(28px,6vw,40px);">' + loc.icon + '</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(12px,2vw,15px);color:#fff;margin:4px 0 2px;">' + loc.name + '</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-size:clamp(9px,1.5vw,11px);color:rgba(255,255,255,0.4);">' + loc.desc + '</div>';
+      card.addEventListener('click', function() { selectLocation(loc.id); });
+      card.addEventListener('touchend', function(e) { e.preventDefault(); selectLocation(loc.id); });
+    } else {
+      var pct = Math.min(100, Math.floor((totalCatches / loc.unlock) * 100));
+      card.innerHTML = '<div style="font-size:32px;">\u{1F512}</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(11px,1.8vw,14px);color:rgba(255,255,255,0.5);margin:4px 0 2px;">' + loc.name + '</div>' +
+        '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:8px;margin:6px 0;overflow:hidden;">' +
+          '<div style="width:'+pct+'%;height:100%;background:'+loc.accent+';border-radius:6px;"></div>' +
+        '</div>' +
+        '<div style="font-family:Baloo 2,cursive;font-size:clamp(9px,1.3vw,11px);color:rgba(255,255,255,0.3);">' + totalCatches + ' / ' + loc.unlock + '</div>';
+    }
+    grid.appendChild(card);
+  });
+  ls.style.display = 'block';
+}
+
+selectLocation = function(id) {
+  currentLocation = id;
+  localStorage.setItem('catchreel_location', id);
+  document.getElementById('locationSelect').style.display = 'none';
+  document.getElementById('gameContainer').style.display = 'block';
+  gameStarted = true;
+  resize();
+  document.getElementById('title').style.display = 'none';
+}
+
+goBackToCharSelect = function() {
+  document.getElementById('locationSelect').style.display = 'none';
+  document.getElementById('charSelect').style.display = 'flex';
+  document.getElementById('title').style.display = '';
+}
+
+// Location select back button
+document.getElementById('locBackBtn')?.addEventListener('click', goBackToCharSelect);
+document.getElementById('locBackBtn')?.addEventListener('touchend', function(e) { e.preventDefault(); goBackToCharSelect(); });
 // =============================================
 //  CATCH & REEL — Complete Arcade Fishing Game
 //  Rewritten with rarity system & visual polish
@@ -995,57 +1046,7 @@ document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) 
   e.preventDefault(); openTrophyRoom();
 
 // ── LOCATION SELECT SCREEN ──
-showLocationSelect = function() {
-  totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '0');
-  var ls = document.getElementById('locationSelect');
-  var grid = document.getElementById('locGrid');
-  var countEl = document.getElementById('locCatchCount');
-  grid.innerHTML = '';
-  countEl.textContent = '\u{1F3A3} Total catches: ' + totalCatches;
-  LOCATIONS.forEach(function(loc) {
-    var unlocked = totalCatches >= loc.unlock;
-    var isSelected = loc.id === currentLocation;
-    var card = document.createElement('div');
-    card.style.cssText = 'width:clamp(140px,28vw,170px);padding:clamp(12px,2vw,18px);border-radius:14px;text-align:center;cursor:' + (unlocked?'pointer':'default') + ';border:2px solid ' + (unlocked ? loc.accent+'88' : 'rgba(255,255,255,0.08)') + ';background:rgba(255,255,255,' + (unlocked?'0.06':'0.02') + ');opacity:' + (unlocked?'1':'0.4') + ';' + (isSelected?'box-shadow:0 0 16px '+loc.accent+'44;':'');
-    if (unlocked) {
-      card.innerHTML = '<div style="font-size:clamp(28px,6vw,40px);">' + loc.icon + '</div>' +
-        '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(12px,2vw,15px);color:#fff;margin:4px 0 2px;">' + loc.name + '</div>' +
-        '<div style="font-family:Baloo 2,cursive;font-size:clamp(9px,1.5vw,11px);color:rgba(255,255,255,0.4);">' + loc.desc + '</div>';
-      card.addEventListener('click', function() { selectLocation(loc.id); });
-      card.addEventListener('touchend', function(e) { e.preventDefault(); selectLocation(loc.id); });
-    } else {
-      var pct = Math.min(100, Math.floor((totalCatches / loc.unlock) * 100));
-      card.innerHTML = '<div style="font-size:32px;">\u{1F512}</div>' +
-        '<div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(11px,1.8vw,14px);color:rgba(255,255,255,0.5);margin:4px 0 2px;">' + loc.name + '</div>' +
-        '<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:8px;margin:6px 0;overflow:hidden;">' +
-          '<div style="width:'+pct+'%;height:100%;background:'+loc.accent+';border-radius:6px;"></div>' +
-        '</div>' +
-        '<div style="font-family:Baloo 2,cursive;font-size:clamp(9px,1.3vw,11px);color:rgba(255,255,255,0.3);">' + totalCatches + ' / ' + loc.unlock + '</div>';
-    }
-    grid.appendChild(card);
-  });
-  ls.style.display = 'block';
-}
 
-selectLocation = function(id) {
-  currentLocation = id;
-  localStorage.setItem('catchreel_location', id);
-  document.getElementById('locationSelect').style.display = 'none';
-  document.getElementById('gameContainer').style.display = 'block';
-  gameStarted = true;
-  resize();
-  document.getElementById('title').style.display = 'none';
-}
-
-goBackToCharSelect = function() {
-  document.getElementById('locationSelect').style.display = 'none';
-  document.getElementById('charSelect').style.display = 'flex';
-  document.getElementById('title').style.display = '';
-}
-
-// Location select back button
-document.getElementById('locBackBtn')?.addEventListener('click', goBackToCharSelect);
-document.getElementById('locBackBtn')?.addEventListener('touchend', function(e) { e.preventDefault(); goBackToCharSelect(); });
 
 
 });
