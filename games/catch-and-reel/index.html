@@ -3016,6 +3016,8 @@ function drawBg_volcano(){bgFrame++;ctx.fillStyle=bgGrad(0,waterY,[[0,'#0e0605']
 
 function drawBackground(){switch(currentLocation){case 'pier':drawBg_pier();break;case 'reef':drawBg_reef();break;case 'deepsea':drawBg_deepsea();break;case 'volcano':drawBg_volcano();break;default:drawBg_dock();break;}}
 
+}
+
 function frame(now) {
   const dt = Math.min((now - prevT) / 1000, 0.05);
   prevT = now;
