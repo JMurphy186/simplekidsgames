@@ -1034,21 +1034,23 @@ for (const [name, src] of Object.entries(CHAR_BODY_SVGS)) {
 }
 
 document.querySelectorAll('.char-option').forEach(btn => {
-  var charSelected = false; // debounce
+  var charSelected = false;
   function selectChar(e) {
-    if (e) e.preventDefault();
+    if (e && e.type === 'touchend') e.preventDefault();
     if (charSelected) return;
     charSelected = true;
-    setTimeout(function(){ charSelected = false; }, 500);
+    setTimeout(function(){ charSelected = false; }, 600);
     playerChar = btn.dataset.char;
     localStorage.setItem('catchReelChar', playerChar);
-    initAudio();
-    initSounds();
+    // UI transition FIRST — before any audio init that might block on iOS
     document.getElementById('charSelect').style.display = 'none';
     showLocationSelect();
+    // Audio init AFTER transition — safe to fail silently
+    try { initAudio(); initSounds(); } catch(err) {}
   }
-  btn.addEventListener('click', selectChar);
-  btn.addEventListener('touchstart', selectChar, { passive: false });
+  // Use touchend (not touchstart) — iOS Safari requires touchend for reliable user gesture
+  btn.addEventListener('touchend', function(e) { selectChar(e); }, { passive: false });
+  btn.addEventListener('click', function(e) { selectChar(e); });
 });
 
 // ══════════════════════════════════════════════════
@@ -1113,6 +1115,9 @@ function backToCharSelect() {
 
 // iOS Safari touchend fallbacks for buttons that use onclick
 document.getElementById('trophyBtn')?.addEventListener('touchend', (e) => {
+  e.preventDefault(); openTrophyRoom();
+});
+document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) => {
   e.preventDefault(); openTrophyRoom();
 });
 document.getElementById('settingsBtn')?.addEventListener('touchend', (e) => {
