@@ -1034,20 +1034,21 @@ for (const [name, src] of Object.entries(CHAR_BODY_SVGS)) {
 }
 
 document.querySelectorAll('.char-option').forEach(btn => {
-  function selectChar() {
+  var charSelected = false; // debounce
+  function selectChar(e) {
+    if (e) e.preventDefault();
+    if (charSelected) return;
+    charSelected = true;
+    setTimeout(function(){ charSelected = false; }, 500);
     playerChar = btn.dataset.char;
     localStorage.setItem('catchReelChar', playerChar);
     initAudio();
-    initSounds(); // Pre-decode audio buffers on character select (first user gesture)
-    // Go to location select (not directly to fishing)
+    initSounds();
     document.getElementById('charSelect').style.display = 'none';
     showLocationSelect();
   }
   btn.addEventListener('click', selectChar);
-  btn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    selectChar();
-  });
+  btn.addEventListener('touchstart', selectChar, { passive: false });
 });
 
 // ══════════════════════════════════════════════════
