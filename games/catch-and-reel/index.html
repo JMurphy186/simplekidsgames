@@ -1589,9 +1589,9 @@ function getRarityColor(rarityKey, time) {
 
 function computeLayout() {
   waterY = H * 0.58;
-  dockEndX = W * 0.34;
-  const dockTopY = waterY - Math.max(12, H * 0.018); // dock surface
-  personX = dockEndX - Math.max(30, W * 0.04);
+  dockEndX = W * 0.42;
+  const dockTopY = waterY - 8; // dock surface
+  personX = W * 0.26;
   personY = dockTopY; // feet on dock surface
   rodBaseX = personX + Math.max(10, W*0.015);
   rodBaseY = personY - Math.max(20, H*0.04);
