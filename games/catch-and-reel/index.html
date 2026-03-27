@@ -1828,7 +1828,7 @@ function enterJunkCatch() {
   var label = JUNK_LABELS[Math.floor(Math.random() * JUNK_LABELS.length)];
   gameState = ST.CAUGHT;
   stateTime = 0;
-  caughtInputLock = 2.0; // auto-dismiss after 2 seconds
+  caughtInputLock = 2.0; // input lock before dismiss allowed
   holding = false;
   playS("catchCommon");
   sfxCatch();
