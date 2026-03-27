@@ -101,7 +101,7 @@ canvas {
   margin-top: 2px;
 }
 
-/* â”€â”€ Settings/Pause button â”€â”€ */
+/* ── Settings/Pause button ── */
 #settingsBtn {
   position: absolute;
   top: clamp(10px, 2vh, 20px);
@@ -169,7 +169,7 @@ canvas {
 .pause-menu { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
 .pause-menu:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
-/* â”€â”€ Trophy button (gameplay) â”€â”€ */
+/* ── Trophy button (gameplay) ── */
 #trophyBtn {
   position: absolute;
   top: clamp(10px, 2vh, 20px);
@@ -187,7 +187,7 @@ canvas {
 }
 #trophyBtn:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
-/* â”€â”€ Trophy button (character select) â”€â”€ */
+/* ── Trophy button (character select) ── */
 .char-select-trophy {
   position: absolute;
   top: clamp(10px, 2vh, 20px);
@@ -207,11 +207,11 @@ canvas {
 }
 .char-select-trophy:hover { background: rgba(255,255,255,0.18); }
 
-/* â”€â”€ Pause trophy button â”€â”€ */
+/* ── Pause trophy button ── */
 .pause-trophy { background: rgba(255,229,53,0.15); color: #FFE135; border: 1px solid rgba(255,229,53,0.25); }
 .pause-trophy:hover { background: rgba(255,229,53,0.25); }
 
-/* â”€â”€ Trophy Room overlay â”€â”€ */
+/* ── Trophy Room overlay ── */
 #trophyRoom {
   display: none;
   position: fixed;
@@ -309,7 +309,7 @@ canvas {
   to { transform: translateX(-50%) scale(1.12); }
 }
 
-/* Reel UI â€” both bars in one container, no text */
+/* Reel UI — both bars in one container, no text */
 #reelUI {
   position: absolute;
   bottom: clamp(60px, 14vh, 140px);
@@ -373,7 +373,7 @@ canvas {
   z-index: 2;
 }
 
-/* Progress bar â€” same width, smaller height */
+/* Progress bar — same width, smaller height */
 #progressBarOuter {
   width: 100%;
   height: clamp(10px, 2vh, 16px);
@@ -484,7 +484,7 @@ canvas {
   100% { border-color: #ff0000; box-shadow: 0 0 30px #ff000044, 0 0 60px #ff000022, inset 0 0 30px #ff000011; }
 }
 
-/* â”€â”€ Character Select Screen â”€â”€ */
+/* ── Character Select Screen ── */
 #charSelect {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -571,7 +571,7 @@ canvas {
   transform: scale(1.1);
 }
 
-/* â”€â”€ Character select MENU button â”€â”€ */
+/* ── Character select MENU button ── */
 .char-select-menu {
   position: absolute;
   top: clamp(10px, 2vh, 20px);
@@ -592,7 +592,7 @@ canvas {
   color: #fff;
 }
 
-/* â”€â”€ Responsive character select â”€â”€ */
+/* ── Responsive character select ── */
 @media (max-width: 480px) {
   .char-select-options {
     grid-template-columns: repeat(2, 1fr);
@@ -606,12 +606,12 @@ canvas {
 </head>
 <body>
 
-<!-- Game works in any orientation â€” no rotate overlay -->
+<!-- Game works in any orientation — no rotate overlay -->
 
 <!-- Character Select Screen -->
 <div id="charSelect">
-  <a href="/" class="char-select-menu">ðŸ  MENU</a>
-  <button class="char-select-trophy" onclick="openTrophyRoom()">ðŸ† TROPHIES</button>
+  <a href="/" class="char-select-menu">🏠 MENU</a>
+  <button class="char-select-trophy" onclick="openTrophyRoom()">🏆 TROPHIES</button>
   <div class="char-select-inner">
     <div class="char-select-title">CATCH & REEL</div>
     <div class="char-select-sub">Choose your fisher!</div>
@@ -729,10 +729,10 @@ canvas {
           <path d="M28 38 L50 -2 L72 38" fill="#6B35CC"/>
           <path d="M28 38 L50 -2 L72 38" fill="none" stroke="#5522aa" stroke-width="1.5"/>
           <path d="M30 36 Q50 28 70 36" stroke="#FFE135" stroke-width="3.5" fill="none"/>
-          <text x="50" y="20" text-anchor="middle" fill="#FFE135" font-size="12">â˜…</text>
-          <text x="40" y="32" text-anchor="middle" fill="#FFE135" font-size="7" opacity="0.6">â˜…</text>
-          <text x="60" y="14" text-anchor="middle" fill="#FFE135" font-size="5" opacity="0.5">â˜…</text>
-          <text x="46" y="10" text-anchor="middle" fill="#FFE135" font-size="4" opacity="0.4">â˜…</text>
+          <text x="50" y="20" text-anchor="middle" fill="#FFE135" font-size="12">★</text>
+          <text x="40" y="32" text-anchor="middle" fill="#FFE135" font-size="7" opacity="0.6">★</text>
+          <text x="60" y="14" text-anchor="middle" fill="#FFE135" font-size="5" opacity="0.5">★</text>
+          <text x="46" y="10" text-anchor="middle" fill="#FFE135" font-size="4" opacity="0.4">★</text>
           <path d="M50 -2 Q58 0 56 8 Q54 14 58 16" stroke="#6B35CC" stroke-width="3" fill="none" stroke-linecap="round"/>
           <circle cx="59" cy="17" r="2" fill="#FFE135" opacity="0.7"/>
         </svg>
@@ -812,7 +812,7 @@ canvas {
     <div id="title">CATCH & REEL</div>
     <div id="scoreBoard">
       <div><span class="hud-label">Caught</span></div>
-      <div class="hud-value">ðŸŸ <span id="fishCount">0</span></div>
+      <div class="hud-value">🐟 <span id="fishCount">0</span></div>
       <div class="hud-last" id="lastCatchRow" style="display:none;">
         <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:4px 0;">
         <span class="hud-label">Last Catch</span>
@@ -842,23 +842,23 @@ canvas {
       <div id="catchAction"></div>
     </div>
   </div>
-  <button id="trophyBtn" onclick="openTrophyRoom()">ðŸ†</button>
-  <button id="settingsBtn" onclick="togglePauseMenu()">âš™ï¸</button>
+  <button id="trophyBtn" onclick="openTrophyRoom()">🏆</button>
+  <button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
   <div id="pauseMenu">
     <div class="pause-title">PAUSED</div>
-    <button class="pause-btn pause-resume" onclick="togglePauseMenu()">â–¶ RESUME</button>
-    <button class="pause-btn pause-mute" id="pauseMuteBtn">ðŸ”Š SOUND: ON</button>
-    <button class="pause-btn pause-trophy" onclick="closePauseOpenTrophy()">ðŸ† TROPHIES</button>
-    <button class="pause-btn pause-char" onclick="changeCharacter()">ðŸ”„ CHANGE FISHER</button>
-    <a href="/" class="pause-btn pause-menu">ðŸ  MENU</a>
+    <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
+    <button class="pause-btn pause-mute" id="pauseMuteBtn">🔊 SOUND: ON</button>
+    <button class="pause-btn pause-trophy" onclick="closePauseOpenTrophy()">🏆 TROPHIES</button>
+    <button class="pause-btn pause-char" onclick="changeCharacter()">🔄 CHANGE FISHER</button>
+    <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
   </div>
 </div>
 
 <!-- Trophy Room lives outside gameContainer so it's accessible from character select too -->
 <div id="trophyRoom">
   <div class="trophy-header">
-    <button class="trophy-close" onclick="closeTrophyRoom()">âœ•</button>
-    <div class="trophy-title">ðŸ† TROPHY ROOM</div>
+    <button class="trophy-close" onclick="closeTrophyRoom()">✕</button>
+    <div class="trophy-title">🏆 TROPHY ROOM</div>
     <div class="trophy-progress" id="trophyProgress">0 / 0 species</div>
   </div>
   <div class="trophy-grid" id="trophyGrid"></div>
@@ -920,7 +920,7 @@ goBackToCharSelect = function() {
 document.getElementById('locBackBtn')?.addEventListener('click', goBackToCharSelect);
 document.getElementById('locBackBtn')?.addEventListener('touchend', function(e) { e.preventDefault(); goBackToCharSelect(); });
 // =============================================
-//  CATCH & REEL â€” Complete Arcade Fishing Game
+//  CATCH & REEL — Complete Arcade Fishing Game
 //  Rewritten with rarity system & visual polish
 // =============================================
 
@@ -928,13 +928,13 @@ document.getElementById('locBackBtn')?.addEventListener('touchend', function(e) 
 const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) || ('ontouchstart' in window);
 const actionText = isMobile ? 'Tap' : 'Press SPACE';
 
-// --- Rotate overlay removed â€” game adapts to any orientation ---
+// --- Rotate overlay removed — game adapts to any orientation ---
 
 // --- Character Selection ---
 let playerChar = null; // always show character select
 let gameStarted = false;
 
-// â”€â”€ LOCATION SYSTEM â”€â”€
+// ── LOCATION SYSTEM ──
 var LOCATIONS = [
   { id:'dock', name:'Wooden Dock', desc:'Calm waters under a starlit sky', unlock:0, icon:'\u{1F319}', platform:'dock', accent:'#22C1C3', fishBoost:{} },
   { id:'pier', name:'Sunny Pier', desc:'Bright coastal waters with seagulls', unlock:50, icon:'\u2600\uFE0F', platform:'dock', accent:'#f0c830', fishBoost:{common:1.15,uncommon:1.10} },
@@ -1005,7 +1005,7 @@ const CHAR_ROD_ANCHORS = {
   alien:    { handX: 0.96, handY: 0.68, tipX: 1.51, tipY: 0.10 },
 };
 
-// â”€â”€ CHARACTER-THEMED ROD STYLES â”€â”€
+// ── CHARACTER-THEMED ROD STYLES ──
 const CHAR_ROD_STYLES = {
   pirate: { shaftColors:['#8B6914','#6B4226','#5a3820','#4a2e18'], shaftWidths:[5,4.5,3.5,2], gripType:'rope', gripColor:'#a08040', reelColor:'#8B4513', reelAccent:'#a0522d', reelRadius:10, hasReel:true, lineColor:[180,160,120], lineWidth:1.8, bobberMain:'#c0392b', bobberTop:'#ddd', tipFeature:null, shaftDetail:'knots', lineEffect:null },
   robot: { shaftColors:['#888','#999','#aaa','#bbb'], shaftWidths:[5,4,3,1.5], gripType:'tech', gripColor:'#555', reelColor:'#777', reelAccent:'#4ecdc4', reelRadius:11, hasReel:true, lineColor:[78,205,196], lineWidth:1.5, bobberMain:'#4ecdc4', bobberTop:'#fff', tipFeature:'antenna', shaftDetail:'joints', lineEffect:null },
@@ -1049,12 +1049,12 @@ document.getElementById('settingsBtn')?.addEventListener('touchend', (e) => {
 document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) => {
   e.preventDefault(); openTrophyRoom();
 
-// â”€â”€ LOCATION SELECT SCREEN â”€â”€
+// ── LOCATION SELECT SCREEN ──
 
 
 
 });
-// Pause mute button â€” touchend + click with debounce to prevent double-fire on iOS
+// Pause mute button — touchend + click with debounce to prevent double-fire on iOS
 (function() {
   var btn = document.getElementById('pauseMuteBtn');
   if (!btn) return;
@@ -1068,12 +1068,12 @@ document.querySelector('.char-select-trophy')?.addEventListener('touchend', (e) 
   btn.addEventListener('click', doToggle);
   btn.addEventListener('touchend', function(e) { e.preventDefault(); doToggle(); }, { passive: false });
 })();
-// MENU link â€” iOS touch fix
+// MENU link — iOS touch fix
 document.querySelector('.char-select-menu')?.addEventListener('touchend', (e) => {
   e.preventDefault(); window.location.href = '/';
 });
 
-// Trophy room close button â€” iOS touch fix
+// Trophy room close button — iOS touch fix
 var trophyClose = document.querySelector('.trophy-close') || document.querySelector('#trophyRoom button');
 if (trophyClose) {
   trophyClose.addEventListener('touchend', function(e) {
@@ -1082,7 +1082,7 @@ if (trophyClose) {
   }, { passive: false });
 }
 
-// Pause menu buttons â€” iOS touch fix (call functions directly, don't rely on btn.click())
+// Pause menu buttons — iOS touch fix (call functions directly, don't rely on btn.click())
 document.querySelectorAll('#pauseMenu button, #pauseMenu .pause-btn').forEach(function(btn) {
   btn.addEventListener('touchend', function(e) {
     e.preventDefault();
@@ -1099,9 +1099,9 @@ document.querySelectorAll('#pauseMenu button, #pauseMenu .pause-btn').forEach(fu
 function toggleMuteBtn() {
   toggleMute();
   var btn = document.getElementById('pauseMuteBtn');
-  if (btn) btn.textContent = sndMuted ? 'ðŸ”‡ SOUND: OFF' : 'ðŸ”Š SOUND: ON';
+  if (btn) btn.textContent = sndMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
 }
-var pmb = document.getElementById('pauseMuteBtn'); if (pmb) pmb.textContent = sndMuted ? 'ðŸ”‡ SOUND: OFF' : 'ðŸ”Š SOUND: ON';
+var pmb = document.getElementById('pauseMuteBtn'); if (pmb) pmb.textContent = sndMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
 
 // If they already chose before, skip the select screen
 if (playerChar) {
@@ -1177,9 +1177,9 @@ const FISH = [
 ];
 
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// CATCH & REEL â€” FISH SVG DATA (Base64 Data URIs)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
+// CATCH & REEL — FISH SVG DATA (Base64 Data URIs)
+// ══════════════════════════════════════════════════
 // 22 species, each a standalone SVG encoded as base64
 // Usage: <img src="data:image/svg+xml;base64,..." />
 
@@ -1224,9 +1224,9 @@ Object.keys(FISH_SVGS).forEach(function(name) {
 
 // --- JUNK CATCH SYSTEM ---
 var JUNK_ITEMS = [
-  { key: 'junk_boot', name: 'Old Boot', emoji: 'ðŸ‘¢' },
-  { key: 'junk_seaweed', name: 'Seaweed Clump', emoji: 'ðŸŒ¿' },
-  { key: 'junk_can', name: 'Tin Can', emoji: 'ðŸ¥«' }
+  { key: 'junk_boot', name: 'Old Boot', emoji: '👢' },
+  { key: 'junk_seaweed', name: 'Seaweed Clump', emoji: '🌿' },
+  { key: 'junk_can', name: 'Tin Can', emoji: '🥫' }
 ];
 var JUNK_LABELS = ["Oh no!", "Not again!", "Better luck next time!", "Really?!", "Whoops!"];
 var JUNK_CHANCE = 0.08; // 8% chance per catch
@@ -1247,9 +1247,9 @@ function saveTrophy(fishName, weight, length, rarity) {
   return false;
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// CATCH & REEL â€” SOUND SYSTEM (Base64 Audio)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
+// CATCH & REEL — SOUND SYSTEM (Base64 Audio)
+// ══════════════════════════════════════════════════
 
 var sndCtx = null;
 var sndMuted = localStorage.getItem("catchreel_mute") === "1";
@@ -1293,7 +1293,7 @@ function playS(key) {
   src.start(0);
 }
 
-// Ambient reel drag â€” looping sound during reel minigame
+// Ambient reel drag — looping sound during reel minigame
 var reelDragNode = null;
 var reelDragGain = null;
 function startReelDrag() {
@@ -1322,14 +1322,14 @@ function toggleMute() {
   if (sndMuted) stopReelDrag();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// HOOK POINTS â€” call these in the game state machine:
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
+// HOOK POINTS — call these in the game state machine:
+// ══════════════════════════════════════════════════
 // Cast:        playS("cast")
 // Splash:      playS("splash")
 // Bite alert:  playS("bite")
-// Reel click:  playS("reelClick")   â€” call on each tap during REEL state
-// Reel drag:   playS("reelDrag")    â€” ambient reel sound during REEL state
+// Reel click:  playS("reelClick")   — call on each tap during REEL state
+// Reel drag:   playS("reelDrag")    — ambient reel sound during REEL state
 // Catch:       playS("catchCommon")  or  playS("catchRare")  or  playS("catchExotic")
 // Line snap:   playS("snap")
 // New record:  playS("record")
@@ -1366,7 +1366,7 @@ function initAudio() {
   if (ac.state === 'suspended') ac.resume();
 }
 
-// â”€â”€ Pause menu â”€â”€
+// ── Pause menu ──
 let gamePaused = false;
 
 function togglePauseMenu() {
@@ -1389,7 +1389,7 @@ function changeCharacter() {
   gameState = ST.IDLE;
 }
 
-// â”€â”€ Trophy Room â”€â”€
+// ── Trophy Room ──
 function openTrophyRoom() {
   const trophies = loadTrophies();
   const grid = document.getElementById('trophyGrid');
@@ -1427,12 +1427,12 @@ function openTrophyRoom() {
     }
 
     var tFishSvg = isCaught ? FISH_SVGS[fish.name] : null;
-    var tEmojiContent = tFishSvg ? '<img src="' + tFishSvg + '" style="max-width:80px;max-height:50px;width:auto;height:auto;object-fit:contain;" alt="' + fish.name + '">' : (isCaught ? fish.emoji : 'â“');
+    var tEmojiContent = tFishSvg ? '<img src="' + tFishSvg + '" style="max-width:80px;max-height:50px;width:auto;height:auto;object-fit:contain;" alt="' + fish.name + '">' : (isCaught ? fish.emoji : '❓');
     card.innerHTML = `
       <div class="trophy-emoji">${tEmojiContent}</div>
       <div class="trophy-name">${isCaught ? fish.name : '???'}</div>
-      <div class="trophy-rarity" style="color:${isRainbow ? '#ff6600' : rarityColor}">${isCaught ? rarityData.label : 'â€”'}</div>
-      ${isCaught ? `<div class="trophy-stats">${trophy.weight.toFixed(1)} lbs â€¢ ${trophy.length}"</div>` : '<div class="trophy-stats">Not caught yet</div>'}
+      <div class="trophy-rarity" style="color:${isRainbow ? '#ff6600' : rarityColor}">${isCaught ? rarityData.label : '—'}</div>
+      ${isCaught ? `<div class="trophy-stats">${trophy.weight.toFixed(1)} lbs • ${trophy.length}"</div>` : '<div class="trophy-stats">Not caught yet</div>'}
     `;
     grid.appendChild(card);
   }
@@ -1693,7 +1693,7 @@ function updateBestDisplay() {
     const bestIcon = bestSvg
       ? '<img src="' + bestSvg + '" style="max-width:24px;max-height:15px;width:auto;height:auto;vertical-align:middle;" alt="' + bestFish.name + '">'
       : bestFish.emoji;
-    elBestText.innerHTML = `<span style="color:${brc}">${bestIcon} ${bestFish.name}</span> Â· <span style="color:rgba(255,255,255,0.7)">${formatWeight(bestFish.weight)}</span>`;
+    elBestText.innerHTML = `<span style="color:${brc}">${bestIcon} ${bestFish.name}</span> · <span style="color:rgba(255,255,255,0.7)">${formatWeight(bestFish.weight)}</span>`;
   }
 }
 updateBestDisplay();
@@ -1715,9 +1715,9 @@ function updateTensionUI() {
   // Color based on zone: red (0-0.30), yellow (0.30-0.70), green (0.70+)
   let glow;
   const gz = caughtFish ? caughtFish.rarityData.greenZone : [0.70, 1.0];
-  if (tension >= gz[0]) glow = '#39FF14'; // green zone â€” reel in!
-  else if (tension > 0.30) glow = '#cc8800'; // yellow zone â€” push harder!
-  else glow = C.red; // danger â€” fish pulling free!
+  if (tension >= gz[0]) glow = '#39FF14'; // green zone — reel in!
+  else if (tension > 0.30) glow = '#cc8800'; // yellow zone — push harder!
+  else glow = C.red; // danger — fish pulling free!
   elTensionInd.style.borderColor = glow;
   elTensionInd.style.boxShadow = `0 0 8px ${glow}, 0 0 18px ${glow}88, 0 0 3px #000`;
 }
@@ -1779,7 +1779,7 @@ function enterBite() {
 function enterReel() {
   gameState = ST.REEL;
   stateTime = 0;
-  tension = 0.45; // start in the middle â€” player taps to push right toward green
+  tension = 0.45; // start in the middle — player taps to push right toward green
   tensionVel = 0;
   reelProg = 0;
   fightTimer = rng(1, 2);
@@ -1790,7 +1790,7 @@ function enterReel() {
   const rd = caughtFish.rarityData;
   reelLen = rng(rd.reelMin, rd.reelMax);
 
-  // Update the tension bar zones based on rarity â€” red | yellow | green (at right end)
+  // Update the tension bar zones based on rarity — red | yellow | green (at right end)
   const gz = rd.greenZone;
   const greenStart = (gz[0]*100).toFixed(0);
   const yellowStart = Math.max(10, gz[0]*50).toFixed(0); // yellow starts halfway to green
@@ -1849,7 +1849,7 @@ function enterJunkCatch() {
   if (elDetails) elDetails.textContent = '0 points';
   if (elAction) elAction.textContent = '';
 
-  // Auto-dismiss after 2 seconds â€” go back to idle
+  // Auto-dismiss after 2 seconds — go back to idle
   setTimeout(function() {
     if (gameState === ST.CAUGHT && caughtInputLock <= 0.1) {
       enterIdle();
@@ -1918,7 +1918,7 @@ function enterCaught() {
   else playS("catchCommon");
   if (isNewRecord) playS("record");
   elCatchDetail.innerHTML = `Weight: ${formatWeight(caughtFish.weight)} &nbsp;|&nbsp; Length: ${formatLength(caughtFish.length)}`
-    + (isNewRecord ? '<br><span style="color:#FFE135;font-size:clamp(12px,2vw,16px)">ðŸ† NEW RECORD!</span>' : '');
+    + (isNewRecord ? '<br><span style="color:#FFE135;font-size:clamp(12px,2vw,16px)">🏆 NEW RECORD!</span>' : '');
   elCatchAction.textContent = '';
 
   elFishCount.textContent = fishCount;
@@ -2060,7 +2060,7 @@ function updateReel(dt) {
     sfxReel();
   }
 
-  // Fish fight bursts â€” sudden pulls leftward
+  // Fish fight bursts — sudden pulls leftward
   fightTimer -= dt;
   if (fightTimer <= 0) {
     const baseInterval = rng(0.8, 2.0);
@@ -2417,9 +2417,9 @@ function drawDock() {
   ctx.fill();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
 // CHARACTER-THEMED ROD DRAWING SYSTEM
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
 function getRodShaftPoints(hx,hy,tx,ty){var dx=tx-hx,dy=ty-hy;return[{x:hx,y:hy},{x:hx+dx*0.16,y:hy+dy*0.16},{x:hx+dx*0.53,y:hy+dy*0.53},{x:tx,y:ty}]}
 function getRodVectors(hx,hy,tx,ty){var dx=tx-hx,dy=ty-hy,len=Math.sqrt(dx*dx+dy*dy)||1;return{nx:dx/len,ny:dy/len,px:-dy/len,py:dx/len,len:len}}
 function rodPt(hx,hy,tx,ty,rv,t,perp){perp=perp||0;return{x:hx+(tx-hx)*t+rv.px*perp,y:hy+(ty-hy)*t+rv.py*perp}}
@@ -2784,9 +2784,9 @@ function drawFoam() {
 // ================== MAIN LOOP ==================
 let prevT = performance.now();
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
 // BACKGROUND RENDERING SYSTEM
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ══════════════════════════════════════════════════
 bgGrad=function(y0,y1,stops){var g=ctx.createLinearGradient(0,y0,0,y1);stops.forEach(function(s){g.addColorStop(s[0],s[1]);});return g;};
 bgRadGrad=function(x,y,r0,r1,stops){var g=ctx.createRadialGradient(x,y,r0,x,y,r1);stops.forEach(function(s){g.addColorStop(s[0],s[1]);});return g;};
 bgWave=function(yBase,count,amp,freq,speed,color,lw){for(var i=0;i<count;i++){var y=yBase+i*(H*0.045);ctx.beginPath();ctx.moveTo(-5,y);for(var x=-5;x<=W+5;x+=3)ctx.lineTo(x,y+Math.sin(x*freq+bgFrame*speed+i*1.1)*amp+Math.sin(x*freq*0.4+bgFrame*speed*0.7)*amp*0.5);ctx.strokeStyle=color.replace("A",Math.max(0,(0.08-i*0.007)).toFixed(3));ctx.lineWidth=lw||1;ctx.stroke();}};
