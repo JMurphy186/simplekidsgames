@@ -1856,13 +1856,7 @@ function enterJunkCatch() {
   if (elName) elName.textContent = 'You caught a ' + junk.name + '!';
   if (elDetails) elDetails.textContent = '0 points';
   if (elAction) elAction.textContent = '';
-
-  // Auto-dismiss after 2 seconds — go back to idle
-  setTimeout(function() {
-    if (gameState === ST.CAUGHT && caughtInputLock <= 0.1) {
-      enterIdle();
-    }
-  }, 2200);
+  // Junk stays on screen until player taps (same as fish catches)
 
   setInstruction('', false);
 }
