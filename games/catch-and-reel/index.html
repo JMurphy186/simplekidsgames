@@ -2439,7 +2439,8 @@ function drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time,rodScale){
 function drawRodReel(ctx,style,hx,hy,tx,ty,rv,time,rodScale){
   if(!style.hasReel)return;
   var sc=rodScale||1;
-  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius*sc;
+  var mobileReelScale=isMobile?0.5:1;
+  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius*sc*mobileReelScale;
   ctx.fillStyle=style.reelColor;ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
   ctx.strokeStyle=style.reelAccent||'#999';ctx.lineWidth=1.5;ctx.stroke();
   var a=time*3;ctx.fillStyle=style.reelAccent||'#999';ctx.beginPath();ctx.arc(rx+Math.cos(a)*(rr-2*sc),ry+Math.sin(a)*(rr-2*sc),3*sc,0,Math.PI*2);ctx.fill();
