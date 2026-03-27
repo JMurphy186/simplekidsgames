@@ -2439,13 +2439,12 @@ function drawRodGrip(ctx,style,hx,hy,tx,ty,rv,time,rodScale){
 function drawRodReel(ctx,style,hx,hy,tx,ty,rv,time,rodScale){
   if(!style.hasReel)return;
   var sc=rodScale||1;
-  var mobileReelScale=isMobile?0.5:1;
-  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius*sc*mobileReelScale;
+  var rp=rodPt(hx,hy,tx,ty,rv,0.09,rv.len*0.04),rx=rp.x,ry=rp.y,rr=style.reelRadius*sc;
   ctx.fillStyle=style.reelColor;ctx.beginPath();ctx.arc(rx,ry,rr,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle=style.reelAccent||'#999';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.strokeStyle=style.reelAccent||'#999';ctx.lineWidth=1.5*sc;ctx.stroke();
   var a=time*3;ctx.fillStyle=style.reelAccent||'#999';ctx.beginPath();ctx.arc(rx+Math.cos(a)*(rr-2*sc),ry+Math.sin(a)*(rr-2*sc),3*sc,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=style.gripType==='tech'?'#bbb':style.gripType==='energy'?'#207040':'#aaa';ctx.beginPath();ctx.arc(rx,ry,2.5*sc,0,Math.PI*2);ctx.fill();
-  if(style.gripType==='rope'){ctx.fillStyle='rgba(139,90,43,0.4)';ctx.beginPath();ctx.arc(rx-3,ry+2,1.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(rx+4,ry-1,1,0,Math.PI*2);ctx.fill()}
+  if(style.gripType==='rope'){ctx.fillStyle='rgba(139,90,43,0.4)';ctx.beginPath();ctx.arc(rx-3*sc,ry+2*sc,1.5*sc,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(rx+4*sc,ry-1*sc,1*sc,0,Math.PI*2);ctx.fill()}
   var gt=rodPt(hx,hy,tx,ty,rv,0.2,0),lc=style.lineColor;ctx.strokeStyle='rgba('+lc[0]+','+lc[1]+','+lc[2]+',0.4)';ctx.lineWidth=style.lineWidth*0.7;ctx.beginPath();ctx.moveTo(rx,ry-rr);ctx.lineTo(gt.x,gt.y);ctx.stroke()
 }
 
