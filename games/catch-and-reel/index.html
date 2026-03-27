@@ -823,6 +823,10 @@ canvas {
         <span class="hud-label">Best</span>
         <div id="bestCatchText"></div>
       </div>
+      <div id="unlockProgressRow" style="display:none;font-size:clamp(11px,1.5vw,15px);margin-top:2px;">
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:4px 0;">
+        <div id="unlockProgressContent"></div>
+      </div>
     </div>
     <div id="bestCatch" style="display:none;"></div>
     <div id="instruction"></div>
@@ -947,7 +951,7 @@ var totalCatches = parseInt(localStorage.getItem('catchreel_total_catches') || '
 var shownUnlocks=JSON.parse(localStorage.getItem('catchreel_shown_unlocks')||'[]');
 var pendingUnlock=null;
 function checkLocationUnlocks(){for(var i=0;i<LOCATIONS.length;i++){var loc=LOCATIONS[i];if(loc.unlock>0&&totalCatches>=loc.unlock&&shownUnlocks.indexOf(loc.id)===-1){pendingUnlock=loc;shownUnlocks.push(loc.id);localStorage.setItem('catchreel_shown_unlocks',JSON.stringify(shownUnlocks));break;}}}
-function showPendingUnlock(){if(!pendingUnlock)return;var loc=pendingUnlock;pendingUnlock=null;var ov=document.getElementById('unlockOverlay');if(!ov){ov=document.createElement('div');ov.id='unlockOverlay';ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(11,14,24,0.9);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;opacity:0;transition:opacity 0.4s;';document.body.appendChild(ov);ov.addEventListener('click',function(){ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},400);});ov.addEventListener('touchend',function(e){e.preventDefault();ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},400);});}ov.innerHTML='<div style="font-size:clamp(36px,8vw,56px)">🔓</div><div style="font-family:Luckiest Guy,cursive;font-size:clamp(20px,5vw,32px);color:#FFE135;text-shadow:0 0 20px rgba(255,225,53,0.6)">NEW LOCATION UNLOCKED!</div><div style="font-size:clamp(28px,6vw,40px)">'+loc.icon+'</div><div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(18px,4vw,26px);color:'+loc.accent+';text-shadow:0 0 12px '+loc.accent+'66">'+loc.name+'</div><div style="font-family:Baloo 2,cursive;font-size:clamp(11px,2vw,14px);color:rgba(255,255,255,0.5);margin-top:8px">Tap to continue</div>';ov.style.display='flex';setTimeout(function(){ov.style.opacity='1';},10);setTimeout(function(){if(ov.style.opacity==='1'){ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},400);}},4000);}
+function showPendingUnlock(){if(!pendingUnlock)return;var loc=pendingUnlock;pendingUnlock=null;flash(0.3,[255,215,0]);var ov=document.getElementById('unlockOverlay');if(!ov){ov=document.createElement('div');ov.id='unlockOverlay';ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(11,14,24,0.9);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;opacity:0;transition:opacity 0.4s;';document.body.appendChild(ov);ov.addEventListener('click',function(){ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},400);});ov.addEventListener('touchend',function(e){e.preventDefault();ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},400);});}ov.innerHTML='<div style="font-size:clamp(36px,8vw,56px)">🔓</div><div style="font-family:Luckiest Guy,cursive;font-size:clamp(20px,5vw,32px);color:#FFE135;text-shadow:0 0 20px rgba(255,225,53,0.6)">NEW LOCATION UNLOCKED!</div><div style="font-size:clamp(28px,6vw,40px)">'+loc.icon+'</div><div style="font-family:Baloo 2,cursive;font-weight:700;font-size:clamp(18px,4vw,26px);color:'+loc.accent+';text-shadow:0 0 12px '+loc.accent+'66">'+loc.name+'</div><div style="font-family:Baloo 2,cursive;font-size:clamp(11px,2vw,14px);color:rgba(255,255,255,0.5);margin-top:8px">Tap to continue</div>';ov.style.display='flex';setTimeout(function(){ov.style.opacity='1';},10);setTimeout(function(){if(ov.style.opacity==='1'){ov.style.opacity='0';setTimeout(function(){ov.style.display='none';},400);}},4000);}
 
 var bgParticles=[],bgFrame=0;
 var drawBackground,initBgParticles,bgGrad,bgRadGrad,bgWave,drawEnhancedDock,drawBg_dock,drawBg_pier,drawBg_reef,drawBg_deepsea,drawBg_volcano;
@@ -1705,6 +1709,34 @@ function updateBestDisplay() {
 }
 updateBestDisplay();
 
+function updateUnlockProgress() {
+  var row = document.getElementById('unlockProgressRow');
+  var content = document.getElementById('unlockProgressContent');
+  if (!row || !content) return;
+  if (fishCount < 1) { row.style.display = 'none'; return; }
+  var nextLoc = null;
+  for (var i = 0; i < LOCATIONS.length; i++) {
+    if (LOCATIONS[i].unlock > 0 && totalCatches < LOCATIONS[i].unlock) { nextLoc = LOCATIONS[i]; break; }
+  }
+  row.style.display = 'block';
+  if (!nextLoc) {
+    content.innerHTML = '<span style="font-size:clamp(9px,1.2vw,11px);color:rgba(255,255,255,0.6);">\u2705 All spots unlocked!</span>';
+    return;
+  }
+  var pct = Math.min(100, Math.floor((totalCatches / nextLoc.unlock) * 100));
+  content.innerHTML =
+    '<div style="display:flex;align-items:center;gap:4px;">' +
+      '<span style="font-size:clamp(10px,1.4vw,13px);">' + nextLoc.icon + '</span>' +
+      '<span class="hud-label">Next Unlock</span>' +
+    '</div>' +
+    '<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">' +
+      '<div style="flex:1;height:5px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden;">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + nextLoc.accent + ';border-radius:3px;"></div>' +
+      '</div>' +
+      '<span style="font-size:clamp(8px,1vw,11px);color:rgba(255,255,255,0.5);white-space:nowrap;">' + totalCatches + ' / ' + nextLoc.unlock + '</span>' +
+    '</div>';
+}
+
 function setInstruction(text, urgent) {
   elInstruction.textContent = text;
   elInstruction.className = urgent ? 'urgent' : '';
@@ -1937,6 +1969,8 @@ function enterCaught() {
     lastText.innerHTML = lastIcon + ' <span style="color:' + lastColor + '">' + caughtFish.name + '</span>';
   }
   updateBestDisplay();
+  checkLocationUnlocks();
+  updateUnlockProgress();
 
   if (isLegendaryPlus) {
     sfxLegendary();
