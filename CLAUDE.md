@@ -309,12 +309,6 @@ simplekidsgames/
 - Grid display with rarity glow, locked cards for undiscovered species
 - Accessible from gameplay, pause menu, and character select
 
-### localStorage Keys
-- `catchreel_best` — best single catch points
-- `catchreel_total` — total score across sessions
-- `catchreel_char` — selected character index
-- `catchreel_trophies` — JSON object of best catch per species
-
 ### Fish Roster (25 SVG Fish)
 
 All fish rendered as detailed SVG artwork, base64 encoded in `FISH_SVGS` constant. Preloaded via `FISH_IMAGES` object. Emoji kept as fallback if SVG not found.
@@ -393,10 +387,53 @@ All sounds are real audio clips (not Web Audio API synthesis), embedded as base6
 
 **Implementation:** `initSounds()` on first cast. `playS(key)` triggers playback. Mute toggle in pause menu with `localStorage` persistence (`catchreel_mute`). Variables use `var` (fixes temporal dead zone). Unlike Monster Rally and Space Dodge (Web Audio API synthesis), Catch & Reel uses real recorded audio clips.
 
+### Fishing Locations (5 unlockable)
+
+| # | Location | Unlock | Platform | Fish Boost |
+|---|----------|--------|----------|------------|
+| 0 | Wooden Dock | Default | Enhanced dock + lantern | Base rates |
+| 1 | Sunny Pier | 50 catches | Daytime dock | Common 1.15×, Uncommon 1.1× |
+| 2 | Coral Reef | 100 catches | Sunset dock + palms | Rare 2×, Ultra Rare 1.5× |
+| 3 | Deep Sea | 200 catches | Rocking fishing boat | Epic 2×, Legendary 1.5× |
+| 4 | Volcano Cove | 300 catches | Obsidian ledge | Exotic 3×, Legendary 2×, Epic 1.5× |
+
+**Architecture:**
+- `drawBackground()` dispatcher switches on `currentLocation`
+- `bgParticles[]` array with `initBgParticles(location)` for per-scene particles
+- Helper functions: `bgGrad()`, `bgRadGrad()`, `bgWave()` for compact gradient/wave creation
+- `drawEnhancedDock()` shared across dock/pier/reef scenes with color params
+- All bg functions use `var` assignments for global scope hoisting (unclosed block workaround)
+- Deep Sea boat: character position uses `boatRockY`/`boatRockR` sinusoidal offset + rotation
+- Volcano ledge: character stands on static ledge surface
+
+**Flow:** Character Select → Location Select → Fishing → (play again) → Character Select
+
+**Unlock celebrations:** Gold overlay with location icon + name, auto-dismiss 4s or tap, shows once per unlock
+
+### Junk Catches
+
+- 8% chance per catch (rolled before rarity selection)
+- 3 items: Old Boot (`junk_boot`), Seaweed Clump (`junk_seaweed`), Tin Can (`junk_can`)
+- SVGs in `FISH_SVGS`, gradient IDs prefixed `jb_`, `js_`, `jc_`
+- 0 points, no trophy, no stats, no totalCatches increment
+- Funny label rotation: "Oh no!", "Not again!", "Better luck next time!", "Really?!", "Whoops!"
+- Dismisses on player input (same as fish catches)
+
+### localStorage Keys (updated)
+- `catchreel_best` — best single catch points
+- `catchreel_total` — total score across sessions
+- `catchreel_char` — selected character index
+- `catchreel_trophies` — JSON object of best catch per species
+- `catchreel_total_catches` — lifetime fish count (for location unlocks)
+- `catchreel_location` — last selected location ID
+- `catchreel_shown_unlocks` — JSON array of shown unlock notification IDs
+- `catchreel_mute` — mute state ("1" = muted)
+
 ### Queued (Not Built)
+- Deep Sea + Volcano character platform polish (boat size tuning, ledge alignment)
 - Self-host Google Fonts or explore adding fonts to other games
-- Rod position fine-tuning (values may need visual adjustment)
 - Additional fish species
-- Seasonal themes
+- Seasonal themes / event locations
 - Captain Angler (7th character — designed, parked)
-- Integration with SKG coin economy (future)
+- Cross-game coin economy with Monster Rally
+- PWA manifest for fullscreen on Add to Home Screen
