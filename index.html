@@ -782,9 +782,9 @@ a { text-decoration: none; color: inherit; }
 
       <!-- 3. Catch & Reel — LIVE -->
       <a href="games/catch-and-reel/" class="game-card live">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #0a2a3e, #0a3a5e); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <div class="card-thumb" style="position:relative;overflow:hidden;height:90px;padding:0;">
+          <canvas id="crCanvas" width="200" height="90" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
           <div class="play-badge">PLAY!</div>
-          <div style="font-size:52px; filter:drop-shadow(0 0 8px rgba(0,150,255,0.4)); animation: fishBob 2s ease-in-out infinite;">🎣</div>
         </div>
         <div class="card-bottom">
           <div class="card-name">Catch & Reel</div>
@@ -943,6 +943,237 @@ a { text-decoration: none; color: inherit; }
     ctx.globalAlpha=1;
 
     ctx.restore();
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// Animated Catch & Reel card — Robot on dock
+(function() {
+  const c = document.getElementById('crCanvas');
+  if (!c) return;
+  // Match canvas pixel width to actual display width — prevents horizontal stretch squish
+  const displayW = Math.round(c.getBoundingClientRect().width);
+  if (displayW > 0) c.width = displayW;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  let frame = 0;
+  const Rnd = () => Math.random();
+  const stars = Array.from({length:55}, () => ({x:Rnd()*W,y:Rnd()*H*0.55,r:Rnd()*1.2+0.3,tw:Rnd()*6.28,sp:0.015+Rnd()*0.025,hue:190+Rnd()*40}));
+  const fireflies = Array.from({length:4}, () => ({x:W*0.05+Rnd()*W*0.3,y:H*0.28+Rnd()*H*0.18,vx:(Rnd()-0.5)*0.3,vy:(Rnd()-0.5)*0.2,tw:Rnd()*6.28}));
+  const shoot = {x:-20,y:Rnd()*H*0.2+5,vx:2,vy:0.6,life:0,ml:40,del:80+Rnd()*150};
+
+  function draw() {
+    frame++;
+    const WL = H*0.58;
+
+    // Sky
+    let g = ctx.createLinearGradient(0,0,0,WL);
+    g.addColorStop(0,'#030810'); g.addColorStop(0.4,'#081020'); g.addColorStop(0.8,'#0c1830'); g.addColorStop(1,'#122448');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,WL);
+
+    // Moon
+    let mx=W*0.82, my=H*0.13;
+    ctx.beginPath(); ctx.arc(mx,my,W*0.04,0,6.28);
+    let mg=ctx.createRadialGradient(mx,my,W*0.008,mx,my,W*0.04);
+    mg.addColorStop(0,'rgba(255,252,235,0.9)'); mg.addColorStop(1,'rgba(180,200,220,0)');
+    ctx.fillStyle=mg; ctx.fill();
+    ctx.beginPath(); ctx.arc(mx,my,W*0.08,0,6.28);
+    mg=ctx.createRadialGradient(mx,my,W*0.02,mx,my,W*0.08);
+    mg.addColorStop(0,'rgba(180,200,240,0.05)'); mg.addColorStop(1,'rgba(180,200,240,0)');
+    ctx.fillStyle=mg; ctx.fill();
+
+    // Stars
+    stars.forEach(s => {
+      s.tw += s.sp;
+      let a = 0.2+Math.sin(s.tw)*0.4;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28);
+      ctx.fillStyle=`hsla(${s.hue},40%,85%,${a})`; ctx.fill();
+      if (s.r>1.1) {
+        ctx.save(); ctx.globalAlpha=a*0.25;
+        ctx.strokeStyle=`hsla(${s.hue},40%,85%,0.4)`; ctx.lineWidth=0.4;
+        ctx.beginPath(); ctx.moveTo(s.x-s.r*2,s.y); ctx.lineTo(s.x+s.r*2,s.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s.x,s.y-s.r*2); ctx.lineTo(s.x,s.y+s.r*2); ctx.stroke();
+        ctx.restore();
+      }
+    });
+
+    // Shooting star
+    if (shoot.del>0) shoot.del--;
+    else {
+      shoot.life++;
+      if (shoot.life>shoot.ml) { shoot.x=-20; shoot.y=Rnd()*H*0.2+5; shoot.life=0; shoot.del=100+Rnd()*200; }
+      else {
+        shoot.x+=shoot.vx; shoot.y+=shoot.vy;
+        let a=1-shoot.life/shoot.ml;
+        ctx.beginPath(); ctx.moveTo(shoot.x,shoot.y); ctx.lineTo(shoot.x-shoot.vx*8,shoot.y-shoot.vy*8);
+        let tg=ctx.createLinearGradient(shoot.x,shoot.y,shoot.x-shoot.vx*8,shoot.y-shoot.vy*8);
+        tg.addColorStop(0,`rgba(220,240,255,${a*0.7})`); tg.addColorStop(1,'rgba(220,240,255,0)');
+        ctx.strokeStyle=tg; ctx.lineWidth=1.2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(shoot.x,shoot.y,1.2,0,6.28); ctx.fillStyle=`rgba(255,255,255,${a})`; ctx.fill();
+      }
+    }
+
+    // Water
+    g = ctx.createLinearGradient(0,WL,0,H);
+    g.addColorStop(0,'#0c1a30'); g.addColorStop(0.5,'#081428'); g.addColorStop(1,'#040c18');
+    ctx.fillStyle=g; ctx.fillRect(0,WL,W,H-WL);
+
+    // Moon reflection ripples
+    ctx.save(); ctx.globalAlpha=0.06;
+    for (let i=0;i<6;i++) {
+      let ry=WL+2+i*H*0.012, rw=1+Math.sin(frame*0.02+i*0.5)*1.2;
+      ctx.fillStyle='rgba(200,220,255,0.3)';
+      ctx.fillRect(mx-rw+Math.sin(frame*0.012+i)*1.5,ry,rw*2,1);
+    }
+    ctx.restore();
+
+    // Water wave lines
+    for (let i=0;i<4;i++) {
+      let ry=WL+H*0.02+i*H*0.05;
+      ctx.beginPath(); ctx.moveTo(0,ry);
+      for (let x=0;x<W;x+=3) ctx.lineTo(x,ry+Math.sin(x*0.025+frame*0.02+i*1.1)*1.2);
+      ctx.strokeStyle=`rgba(80,130,200,${0.06-i*0.01})`; ctx.lineWidth=0.7; ctx.stroke();
+    }
+
+    // Distant treeline
+    ctx.fillStyle='#0a1018';
+    ctx.beginPath(); ctx.moveTo(W*0.5,WL);
+    for (let x=W*0.5;x<=W;x+=3) ctx.lineTo(x,WL-H*0.02-Math.sin(x*0.04)*H*0.015-Math.sin(x*0.09)*H*0.008);
+    ctx.lineTo(W,WL); ctx.fill();
+
+    // Dock
+    let dockY = WL - H*0.015;
+    let dockW = W*0.5;
+    ctx.fillStyle='#1c1208'; ctx.fillRect(0,dockY,dockW,H*0.018);
+    [0.08,0.2,0.33].forEach(px => {
+      ctx.fillStyle='#2a1e12'; ctx.fillRect(W*px-1.5,dockY,3,H*0.07);
+    });
+    ctx.fillStyle='#2a1e12'; ctx.fillRect(0,dockY,dockW,1);
+
+    // Lantern post + arm
+    let lpX = dockW + 2;
+    ctx.fillStyle='#2a1e12'; ctx.fillRect(lpX-1.5,dockY-H*0.07,3,H*0.07+H*0.018);
+    ctx.strokeStyle='#3a3028'; ctx.lineWidth=1.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(lpX,dockY-H*0.065);
+    ctx.quadraticCurveTo(lpX+W*0.03,dockY-H*0.075,lpX+W*0.04,dockY-H*0.06); ctx.stroke();
+    let lx=lpX+W*0.04+Math.sin(frame*0.012)*1.2, ly=dockY-H*0.045;
+    ctx.strokeStyle='#5a5040'; ctx.lineWidth=0.6;
+    ctx.beginPath(); ctx.moveTo(lpX+W*0.04,dockY-H*0.06); ctx.lineTo(lx,ly); ctx.stroke();
+    // Lantern body
+    let flicker=Math.sin(frame*0.08)*0.3+Math.sin(frame*0.13)*0.2;
+    ctx.fillStyle=`rgba(255,200,60,${0.7+flicker*0.15})`; ctx.fillRect(lx-W*0.01,ly,W*0.02,H*0.028);
+    ctx.fillStyle='#4a4035';
+    ctx.fillRect(lx-W*0.012,ly-H*0.005,W*0.024,H*0.005);
+    ctx.fillRect(lx-W*0.012,ly+H*0.028,W*0.024,H*0.005);
+    // Lantern glow
+    let glowR=W*0.09+Math.sin(frame*0.06)*W*0.008;
+    ctx.beginPath(); ctx.arc(lx,ly+H*0.014,glowR,0,6.28);
+    let lg=ctx.createRadialGradient(lx,ly+H*0.014,2,lx,ly+H*0.014,glowR);
+    lg.addColorStop(0,'rgba(255,190,60,0.1)'); lg.addColorStop(0.4,'rgba(255,160,40,0.04)'); lg.addColorStop(1,'rgba(255,100,10,0)');
+    ctx.fillStyle=lg; ctx.fill();
+    // Lantern water reflection
+    ctx.save(); ctx.globalAlpha=0.04;
+    for (let i=0;i<4;i++) {
+      let ry=WL+2+i*H*0.012, rw=1+Math.sin(frame*0.02+i)*0.8;
+      ctx.fillStyle='rgba(255,180,60,0.4)'; ctx.fillRect(lx-rw+Math.sin(frame*0.015+i)*0.8,ry,rw*2,1);
+    }
+    ctx.restore();
+
+    // Robot
+    let robX=W*0.3, robY=dockY, rs=H*0.0048;
+    // Shadow
+    ctx.save(); ctx.globalAlpha=0.18;
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(robX,robY+1,10*rs,2.5*rs,0,0,6.28); ctx.fill();
+    ctx.restore();
+    // Feet
+    ctx.fillStyle='#6a8aaa';
+    ctx.beginPath(); ctx.arc(robX-7*rs,robY-2*rs,3.5*rs,0,6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(robX+7*rs,robY-2*rs,3.5*rs,0,6.28); ctx.fill();
+    // Body
+    ctx.fillStyle='#7a9ab8'; ctx.beginPath(); ctx.roundRect(robX-14*rs,robY-38*rs,28*rs,34*rs,3.5*rs); ctx.fill();
+    let bg2=ctx.createLinearGradient(robX-14*rs,robY-38*rs,robX+14*rs,robY-4*rs);
+    bg2.addColorStop(0,'rgba(255,255,255,0.07)'); bg2.addColorStop(1,'rgba(0,0,0,0.07)');
+    ctx.fillStyle=bg2; ctx.beginPath(); ctx.roundRect(robX-14*rs,robY-38*rs,28*rs,34*rs,3.5*rs); ctx.fill();
+    // Chest panel
+    ctx.fillStyle='#5a7a98'; ctx.beginPath(); ctx.roundRect(robX-9*rs,robY-32*rs,18*rs,11*rs,2*rs); ctx.fill();
+    ctx.fillStyle='#ff4444'; ctx.beginPath(); ctx.arc(robX-4.5*rs,robY-26.5*rs,1.8*rs,0,6.28); ctx.fill();
+    ctx.fillStyle='#ffcc00'; ctx.beginPath(); ctx.arc(robX,robY-26.5*rs,1.8*rs,0,6.28); ctx.fill();
+    ctx.fillStyle='#44cc44'; ctx.beginPath(); ctx.arc(robX+4.5*rs,robY-26.5*rs,1.8*rs,0,6.28); ctx.fill();
+    // Belly
+    ctx.fillStyle='#e07020'; ctx.beginPath(); ctx.arc(robX,robY-16*rs,2.5*rs,0,6.28); ctx.fill();
+    // Arms
+    ctx.fillStyle='#6a8aaa'; ctx.beginPath(); ctx.roundRect(robX-20*rs,robY-32*rs,6*rs,20*rs,2.5*rs); ctx.fill();
+    ctx.fillStyle='#88c840'; ctx.beginPath(); ctx.arc(robX-17*rs,robY-12*rs,3.5*rs,0,6.28); ctx.fill();
+    ctx.save(); ctx.translate(robX+16*rs,robY-32*rs); ctx.rotate(0.15);
+    ctx.fillStyle='#6a8aaa'; ctx.beginPath(); ctx.roundRect(-3*rs,0,6*rs,20*rs,2.5*rs); ctx.fill();
+    ctx.fillStyle='#88c840'; ctx.beginPath(); ctx.arc(0,20*rs,3.5*rs,0,6.28); ctx.fill();
+    ctx.restore();
+    // Head
+    ctx.fillStyle='#8aaabe'; ctx.beginPath(); ctx.roundRect(robX-12*rs,robY-56*rs,24*rs,20*rs,3.5*rs); ctx.fill();
+    let hg2=ctx.createLinearGradient(robX-12*rs,robY-56*rs,robX+12*rs,robY-36*rs);
+    hg2.addColorStop(0,'rgba(255,255,255,0.05)'); hg2.addColorStop(1,'rgba(0,0,0,0.05)');
+    ctx.fillStyle=hg2; ctx.beginPath(); ctx.roundRect(robX-12*rs,robY-56*rs,24*rs,20*rs,3.5*rs); ctx.fill();
+    // Eyes
+    ctx.fillStyle='#22C1C3';
+    ctx.beginPath(); ctx.arc(robX-5.5*rs,robY-47*rs,3*rs,0,6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(robX+5.5*rs,robY-47*rs,3*rs,0,6.28); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.beginPath(); ctx.arc(robX-6.5*rs,robY-48*rs,0.9*rs,0,6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(robX+4.5*rs,robY-48*rs,0.9*rs,0,6.28); ctx.fill();
+    ctx.save(); ctx.globalAlpha=0.07; ctx.fillStyle='#22C1C3';
+    ctx.beginPath(); ctx.arc(robX-5.5*rs,robY-47*rs,7*rs,0,6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(robX+5.5*rs,robY-47*rs,7*rs,0,6.28); ctx.fill();
+    ctx.restore();
+    // Mouth
+    ctx.fillStyle='#5a7a90'; ctx.beginPath(); ctx.roundRect(robX-3.5*rs,robY-41*rs,7*rs,2.5*rs,1*rs); ctx.fill();
+    // Antenna
+    ctx.strokeStyle='#6a8aaa'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(robX,robY-56*rs); ctx.lineTo(robX,robY-65*rs); ctx.stroke();
+    let antPulse=0.5+Math.sin(frame*0.06)*0.3;
+    ctx.fillStyle=`rgba(255,120,30,${antPulse})`; ctx.beginPath(); ctx.arc(robX,robY-65*rs,2.2*rs,0,6.28); ctx.fill();
+    ctx.fillStyle=`rgba(255,120,30,${antPulse*0.2})`; ctx.beginPath(); ctx.arc(robX,robY-65*rs,5*rs,0,6.28); ctx.fill();
+    // Ear bolts
+    ctx.fillStyle='#5a7a90';
+    ctx.beginPath(); ctx.arc(robX-12*rs,robY-46*rs,1.8*rs,0,6.28); ctx.fill();
+    ctx.beginPath(); ctx.arc(robX+12*rs,robY-46*rs,1.8*rs,0,6.28); ctx.fill();
+
+    // Fishing rod
+    let rodBaseX=robX+19*rs, rodBaseY=robY-12*rs;
+    let rodTipX=robX+W*0.22, rodTipY=dockY-H*0.15;
+    ctx.strokeStyle='#8aaabe'; ctx.lineWidth=1.8; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(rodBaseX,rodBaseY);
+    ctx.quadraticCurveTo(rodTipX-W*0.05,rodTipY-H*0.04,rodTipX,rodTipY); ctx.stroke();
+    ctx.fillStyle='#22C1C3'; ctx.beginPath(); ctx.arc(rodTipX,rodTipY,1.8,0,6.28); ctx.fill();
+
+    // Fishing line + bobber
+    let bobX=W*0.66, bobY=WL+H*0.025+Math.sin(frame*0.025)*H*0.01;
+    ctx.strokeStyle='rgba(100,200,220,0.2)'; ctx.lineWidth=0.6;
+    ctx.beginPath(); ctx.moveTo(rodTipX,rodTipY);
+    ctx.quadraticCurveTo((rodTipX+bobX)*0.5,rodTipY+H*0.04,bobX,bobY); ctx.stroke();
+    ctx.fillStyle='#ff4444'; ctx.beginPath(); ctx.arc(bobX,bobY,W*0.012,0,6.28); ctx.fill();
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(bobX,bobY+W*0.012,W*0.012,0,6.28); ctx.fill();
+    ctx.save(); ctx.globalAlpha=0.12+Math.sin(frame*0.03)*0.05;
+    ctx.strokeStyle='rgba(200,220,255,0.3)'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.ellipse(bobX,bobY+W*0.015,W*0.025+Math.sin(frame*0.02)*W*0.005,H*0.005,0,0,6.28); ctx.stroke();
+    ctx.restore();
+
+    // Fireflies
+    fireflies.forEach(f => {
+      f.tw += 0.03;
+      f.x += f.vx+Math.sin(f.tw*2)*0.12;
+      f.y += f.vy+Math.cos(f.tw*1.5)*0.08;
+      if (f.x<W*0.02) f.vx=Math.abs(f.vx);
+      if (f.x>W*0.42) f.vx=-Math.abs(f.vx);
+      if (f.y<H*0.28) f.vy=Math.abs(f.vy);
+      if (f.y>WL-H*0.04) f.vy=-Math.abs(f.vy);
+      let a=0.3+Math.sin(f.tw)*0.4;
+      if (a>0) {
+        ctx.beginPath(); ctx.arc(f.x,f.y,W*0.013,0,6.28); ctx.fillStyle=`rgba(255,230,80,${a*0.06})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(f.x,f.y,W*0.004,0,6.28); ctx.fillStyle=`rgba(255,240,120,${a*0.5})`; ctx.fill();
+      }
+    });
+
     requestAnimationFrame(draw);
   }
   draw();
