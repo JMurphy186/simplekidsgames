@@ -254,11 +254,28 @@ canvas {
   margin-top: 4px;
 }
 .trophy-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(8px, 1.5vw, 14px);
+  display: block;
   width: 100%; max-width: 600px;
   padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+.trophy-tier {
+  margin-bottom: clamp(16px, 3vw, 24px);
+  width: 100%;
+}
+.trophy-tier-header {
+  font-family: 'Luckiest Guy', cursive;
+  font-size: clamp(13px, 2.2vw, 18px);
+  text-align: center;
+  letter-spacing: 1.5px;
+  padding: 6px 0 8px;
+  margin-bottom: clamp(8px, 1.5vw, 12px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  text-shadow: 0 0 10px currentColor;
+}
+.trophy-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(8px, 1.5vw, 14px);
 }
 .trophy-card {
   background: rgba(255,255,255,0.05);
@@ -275,7 +292,7 @@ canvas {
 .trophy-rarity { font-family: 'Baloo 2', cursive; font-weight: 600; font-size: clamp(8px, 1.3vw, 11px); letter-spacing: 1px; }
 .trophy-stats { font-family: 'Baloo 2', cursive; font-size: clamp(9px, 1.4vw, 12px); color: rgba(255,255,255,0.5); }
 .trophy-card.locked .trophy-emoji { filter: brightness(0) invert(0.2); }
-@media (max-width: 480px) { .trophy-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 480px) { .trophy-tier-grid { grid-template-columns: repeat(3, 1fr); } }
 
 #bestCatch { display: none !important; /* merged into scoreBoard */ }
 .hud-divider { display: none; /* not used */ font-size: clamp(11px, 1.6vw, 16px);
@@ -1397,45 +1414,74 @@ function openTrophyRoom() {
   const progress = document.getElementById('trophyProgress');
   grid.innerHTML = '';
 
-  let caught = 0;
   const total = FISH.length;
-  const rarityOrder = ['COMMON','UNCOMMON','RARE','ULTRA_RARE','EPIC','LEGENDARY','EXOTIC'];
+  let caught = 0;
+  for (const fish of FISH) { if (trophies[fish.name]) caught++; }
 
-  const sorted = [...FISH].sort((a, b) => {
-    const aT = trophies[a.name], bT = trophies[b.name];
-    if (aT && !bT) return -1;
-    if (!aT && bT) return 1;
-    return rarityOrder.indexOf(b.rarity) - rarityOrder.indexOf(a.rarity);
-  });
+  const tierOrder = ['EXOTIC','LEGENDARY','EPIC','ULTRA_RARE','RARE','UNCOMMON','COMMON'];
+  const tierMeta = {
+    EXOTIC:     { label: '★ EXOTIC ★',     headerColor: '#ff44aa' },
+    LEGENDARY:  { label: '★ LEGENDARY ★',  headerColor: '#FFD700' },
+    EPIC:       { label: '★ EPIC ★',        headerColor: '#FF6B35' },
+    ULTRA_RARE: { label: '★ ULTRA RARE ★',  headerColor: '#B24BF3' },
+    RARE:       { label: '★ RARE ★',        headerColor: '#00E5FF' },
+    UNCOMMON:   { label: 'UNCOMMON',        headerColor: '#39FF14' },
+    COMMON:     { label: 'COMMON',          headerColor: '#9CA3AF' },
+  };
 
-  for (const fish of sorted) {
-    const trophy = trophies[fish.name];
-    const isCaught = !!trophy;
-    if (isCaught) caught++;
-    const rarityData = RARITY[fish.rarity];
+  for (const tierKey of tierOrder) {
+    const tierFish = FISH.filter(f => f.rarity === tierKey);
+    if (tierFish.length === 0) continue;
+
+    const meta = tierMeta[tierKey];
+    const rarityData = RARITY[tierKey];
     const rarityColor = rarityData ? rarityData.color : '#9CA3AF';
     const isRainbow = rarityColor === 'rainbow';
+    const displayColor = isRainbow ? '#ff44aa' : rarityColor;
 
-    const card = document.createElement('div');
-    card.className = `trophy-card ${isCaught ? 'caught' : 'locked'}`;
-    if (isCaught && !isRainbow) {
-      card.style.setProperty('--rarity-color', rarityColor + '44');
-      card.style.setProperty('--rarity-color-glow', rarityColor + '22');
-      card.style.borderColor = rarityColor + '66';
-    }
-    if (isCaught && isRainbow) {
-      card.style.animation = 'rainbowBorder 3s linear infinite';
+    const section = document.createElement('div');
+    section.className = 'trophy-tier';
+
+    const header = document.createElement('div');
+    header.className = 'trophy-tier-header';
+    header.style.color = meta.headerColor;
+    header.textContent = meta.label;
+    section.appendChild(header);
+
+    const tierGrid = document.createElement('div');
+    tierGrid.className = 'trophy-tier-grid';
+
+    for (const fish of tierFish) {
+      const trophy = trophies[fish.name];
+      const isCaught = !!trophy;
+
+      const card = document.createElement('div');
+      card.className = `trophy-card ${isCaught ? 'caught' : 'locked'}`;
+      if (isCaught && !isRainbow) {
+        card.style.setProperty('--rarity-color', displayColor + '44');
+        card.style.setProperty('--rarity-color-glow', displayColor + '22');
+        card.style.borderColor = displayColor + '66';
+      }
+      if (isCaught && isRainbow) {
+        card.style.animation = 'rainbowBorder 3s linear infinite';
+      }
+
+      var tFishSvg = isCaught ? FISH_SVGS[fish.name] : null;
+      var tEmojiContent = tFishSvg
+        ? '<img src="' + tFishSvg + '" style="max-width:80px;max-height:50px;width:auto;height:auto;object-fit:contain;" alt="' + fish.name + '">'
+        : (isCaught ? fish.emoji : '❓');
+
+      card.innerHTML = `
+        <div class="trophy-emoji">${tEmojiContent}</div>
+        <div class="trophy-name" style="${isCaught ? '' : 'color:rgba(255,255,255,0.35)'}">${fish.name}</div>
+        ${isCaught ? `<div class="trophy-rarity" style="color:${displayColor}">${rarityData.label}</div>` : ''}
+        ${isCaught ? `<div class="trophy-stats">${trophy.weight.toFixed(1)} lbs • ${trophy.length}"</div>` : ''}
+      `;
+      tierGrid.appendChild(card);
     }
 
-    var tFishSvg = isCaught ? FISH_SVGS[fish.name] : null;
-    var tEmojiContent = tFishSvg ? '<img src="' + tFishSvg + '" style="max-width:80px;max-height:50px;width:auto;height:auto;object-fit:contain;" alt="' + fish.name + '">' : (isCaught ? fish.emoji : '❓');
-    card.innerHTML = `
-      <div class="trophy-emoji">${tEmojiContent}</div>
-      <div class="trophy-name">${isCaught ? fish.name : '???'}</div>
-      <div class="trophy-rarity" style="color:${isRainbow ? '#ff6600' : rarityColor}">${isCaught ? rarityData.label : '—'}</div>
-      ${isCaught ? `<div class="trophy-stats">${trophy.weight.toFixed(1)} lbs • ${trophy.length}"</div>` : '<div class="trophy-stats">Not caught yet</div>'}
-    `;
-    grid.appendChild(card);
+    section.appendChild(tierGrid);
+    grid.appendChild(section);
   }
 
   progress.textContent = `${caught} / ${total} species discovered`;
