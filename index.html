@@ -784,10 +784,8 @@ a { text-decoration: none; color: inherit; }
       <a href="games/catch-and-reel/" class="game-card live">
         <div class="card-thumb" style="position:relative;overflow:hidden;height:90px;padding:0;">
           <canvas id="crCanvas" width="200" height="90" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
-          <div style="position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);z-index:2;text-align:center;">
-            <div style="background:rgba(0,0,0,0.45);border-radius:12px;padding:2px 10px;display:inline-block;line-height:1;">
-              <span style="font-size:2.2rem;">🎣</span>
-            </div>
+          <div style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+            <div style="font-size:52px;filter:drop-shadow(0 0 8px rgba(0,150,255,0.4));animation:fishBob 2s ease-in-out infinite;">🎣</div>
           </div>
           <div class="play-badge">PLAY!</div>
         </div>
@@ -953,7 +951,7 @@ a { text-decoration: none; color: inherit; }
   draw();
 })();
 
-// Animated Catch & Reel card — Robot on dock
+// Animated Catch & Reel card — Night dock scene
 (function() {
   const c = document.getElementById('crCanvas');
   if (!c) return;
@@ -1083,84 +1081,6 @@ a { text-decoration: none; color: inherit; }
       let ry=WL+2+i*H*0.012, rw=1+Math.sin(frame*0.02+i)*0.8;
       ctx.fillStyle='rgba(255,180,60,0.4)'; ctx.fillRect(lx-rw+Math.sin(frame*0.015+i)*0.8,ry,rw*2,1);
     }
-    ctx.restore();
-
-    // Robot
-    let robX=W*0.3, robY=dockY, rs=H*0.0048;
-    // Shadow
-    ctx.save(); ctx.globalAlpha=0.18;
-    ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(robX,robY+1,10*rs,2.5*rs,0,0,6.28); ctx.fill();
-    ctx.restore();
-    // Feet
-    ctx.fillStyle='#6a8aaa';
-    ctx.beginPath(); ctx.arc(robX-7*rs,robY-2*rs,3.5*rs,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(robX+7*rs,robY-2*rs,3.5*rs,0,6.28); ctx.fill();
-    // Body
-    ctx.fillStyle='#7a9ab8'; ctx.beginPath(); ctx.roundRect(robX-14*rs,robY-38*rs,28*rs,34*rs,3.5*rs); ctx.fill();
-    let bg2=ctx.createLinearGradient(robX-14*rs,robY-38*rs,robX+14*rs,robY-4*rs);
-    bg2.addColorStop(0,'rgba(255,255,255,0.07)'); bg2.addColorStop(1,'rgba(0,0,0,0.07)');
-    ctx.fillStyle=bg2; ctx.beginPath(); ctx.roundRect(robX-14*rs,robY-38*rs,28*rs,34*rs,3.5*rs); ctx.fill();
-    // Chest panel
-    ctx.fillStyle='#5a7a98'; ctx.beginPath(); ctx.roundRect(robX-9*rs,robY-32*rs,18*rs,11*rs,2*rs); ctx.fill();
-    ctx.fillStyle='#ff4444'; ctx.beginPath(); ctx.arc(robX-4.5*rs,robY-26.5*rs,1.8*rs,0,6.28); ctx.fill();
-    ctx.fillStyle='#ffcc00'; ctx.beginPath(); ctx.arc(robX,robY-26.5*rs,1.8*rs,0,6.28); ctx.fill();
-    ctx.fillStyle='#44cc44'; ctx.beginPath(); ctx.arc(robX+4.5*rs,robY-26.5*rs,1.8*rs,0,6.28); ctx.fill();
-    // Belly
-    ctx.fillStyle='#e07020'; ctx.beginPath(); ctx.arc(robX,robY-16*rs,2.5*rs,0,6.28); ctx.fill();
-    // Arms
-    ctx.fillStyle='#6a8aaa'; ctx.beginPath(); ctx.roundRect(robX-20*rs,robY-32*rs,6*rs,20*rs,2.5*rs); ctx.fill();
-    ctx.fillStyle='#88c840'; ctx.beginPath(); ctx.arc(robX-17*rs,robY-12*rs,3.5*rs,0,6.28); ctx.fill();
-    ctx.save(); ctx.translate(robX+16*rs,robY-32*rs); ctx.rotate(0.15);
-    ctx.fillStyle='#6a8aaa'; ctx.beginPath(); ctx.roundRect(-3*rs,0,6*rs,20*rs,2.5*rs); ctx.fill();
-    ctx.fillStyle='#88c840'; ctx.beginPath(); ctx.arc(0,20*rs,3.5*rs,0,6.28); ctx.fill();
-    ctx.restore();
-    // Head
-    ctx.fillStyle='#8aaabe'; ctx.beginPath(); ctx.roundRect(robX-12*rs,robY-56*rs,24*rs,20*rs,3.5*rs); ctx.fill();
-    let hg2=ctx.createLinearGradient(robX-12*rs,robY-56*rs,robX+12*rs,robY-36*rs);
-    hg2.addColorStop(0,'rgba(255,255,255,0.05)'); hg2.addColorStop(1,'rgba(0,0,0,0.05)');
-    ctx.fillStyle=hg2; ctx.beginPath(); ctx.roundRect(robX-12*rs,robY-56*rs,24*rs,20*rs,3.5*rs); ctx.fill();
-    // Eyes
-    ctx.fillStyle='#22C1C3';
-    ctx.beginPath(); ctx.arc(robX-5.5*rs,robY-47*rs,3*rs,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(robX+5.5*rs,robY-47*rs,3*rs,0,6.28); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.4)';
-    ctx.beginPath(); ctx.arc(robX-6.5*rs,robY-48*rs,0.9*rs,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(robX+4.5*rs,robY-48*rs,0.9*rs,0,6.28); ctx.fill();
-    ctx.save(); ctx.globalAlpha=0.07; ctx.fillStyle='#22C1C3';
-    ctx.beginPath(); ctx.arc(robX-5.5*rs,robY-47*rs,7*rs,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(robX+5.5*rs,robY-47*rs,7*rs,0,6.28); ctx.fill();
-    ctx.restore();
-    // Mouth
-    ctx.fillStyle='#5a7a90'; ctx.beginPath(); ctx.roundRect(robX-3.5*rs,robY-41*rs,7*rs,2.5*rs,1*rs); ctx.fill();
-    // Antenna
-    ctx.strokeStyle='#6a8aaa'; ctx.lineWidth=1.2;
-    ctx.beginPath(); ctx.moveTo(robX,robY-56*rs); ctx.lineTo(robX,robY-65*rs); ctx.stroke();
-    let antPulse=0.5+Math.sin(frame*0.06)*0.3;
-    ctx.fillStyle=`rgba(255,120,30,${antPulse})`; ctx.beginPath(); ctx.arc(robX,robY-65*rs,2.2*rs,0,6.28); ctx.fill();
-    ctx.fillStyle=`rgba(255,120,30,${antPulse*0.2})`; ctx.beginPath(); ctx.arc(robX,robY-65*rs,5*rs,0,6.28); ctx.fill();
-    // Ear bolts
-    ctx.fillStyle='#5a7a90';
-    ctx.beginPath(); ctx.arc(robX-12*rs,robY-46*rs,1.8*rs,0,6.28); ctx.fill();
-    ctx.beginPath(); ctx.arc(robX+12*rs,robY-46*rs,1.8*rs,0,6.28); ctx.fill();
-
-    // Fishing rod
-    let rodBaseX=robX+19*rs, rodBaseY=robY-12*rs;
-    let rodTipX=robX+W*0.22, rodTipY=dockY-H*0.15;
-    ctx.strokeStyle='#8aaabe'; ctx.lineWidth=1.8; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(rodBaseX,rodBaseY);
-    ctx.quadraticCurveTo(rodTipX-W*0.05,rodTipY-H*0.04,rodTipX,rodTipY); ctx.stroke();
-    ctx.fillStyle='#22C1C3'; ctx.beginPath(); ctx.arc(rodTipX,rodTipY,1.8,0,6.28); ctx.fill();
-
-    // Fishing line + bobber
-    let bobX=W*0.66, bobY=WL+H*0.025+Math.sin(frame*0.025)*H*0.01;
-    ctx.strokeStyle='rgba(100,200,220,0.2)'; ctx.lineWidth=0.6;
-    ctx.beginPath(); ctx.moveTo(rodTipX,rodTipY);
-    ctx.quadraticCurveTo((rodTipX+bobX)*0.5,rodTipY+H*0.04,bobX,bobY); ctx.stroke();
-    ctx.fillStyle='#ff4444'; ctx.beginPath(); ctx.arc(bobX,bobY,W*0.012,0,6.28); ctx.fill();
-    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(bobX,bobY+W*0.012,W*0.012,0,6.28); ctx.fill();
-    ctx.save(); ctx.globalAlpha=0.12+Math.sin(frame*0.03)*0.05;
-    ctx.strokeStyle='rgba(200,220,255,0.3)'; ctx.lineWidth=0.5;
-    ctx.beginPath(); ctx.ellipse(bobX,bobY+W*0.015,W*0.025+Math.sin(frame*0.02)*W*0.005,H*0.005,0,0,6.28); ctx.stroke();
     ctx.restore();
 
     // Fireflies
