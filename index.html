@@ -304,65 +304,10 @@ a { text-decoration: none; color: inherit; }
   opacity: 0.35;
 }
 
-/* Space Dodge animated rocket */
-.rocket-wrap {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: rocketBob 2s ease-in-out infinite;
-}
-.rocket-body {
-  font-size: 52px;
-  filter: drop-shadow(0 0 8px rgba(255,100,50,0.4));
-  position: relative;
-  z-index: 2;
-}
-.rocket-flame {
-  width: 12px; height: 20px;
-  background: radial-gradient(ellipse at top, #ff6600 0%, #ffcc00 40%, transparent 100%);
-  border-radius: 0 0 50% 50%;
-  position: absolute;
-  bottom: 6px; left: 10px;
-  transform: rotate(-135deg);
-  transform-origin: top center;
-  animation: flicker 0.15s ease-in-out infinite alternate;
-  z-index: 1;
-  opacity: 0.9;
-}
-.rocket-flame.f2 {
-  width: 8px; height: 16px;
-  background: radial-gradient(ellipse at top, #ffcc00 0%, #ff4400 60%, transparent 100%);
-  bottom: 3px; left: 7px;
-  animation-delay: 0.08s;
-  opacity: 0.7;
-}
-.rocket-stars {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  pointer-events: none;
-}
-.rocket-stars span {
-  position: absolute;
-  color: rgba(255,255,255,0.4);
-  font-size: 8px;
-  animation: starTwinkle 1.5s ease-in-out infinite alternate;
-}
-@keyframes rocketBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
+
 @keyframes fishBob {
   0%, 100% { transform: translateY(0) rotate(-5deg); }
   50% { transform: translateY(-8px) rotate(5deg); }
-}
-@keyframes flicker {
-  0% { transform: rotate(-135deg) scaleY(1); opacity: 0.9; }
-  100% { transform: rotate(-135deg) scaleY(1.4) scaleX(0.7); opacity: 0.6; }
-}
-@keyframes starTwinkle {
-  0% { opacity: 0.2; transform: scale(0.8); }
-  100% { opacity: 0.6; transform: scale(1.2); }
 }
 
 /* Coming soon cards */
@@ -760,19 +705,9 @@ a { text-decoration: none; color: inherit; }
 
       <!-- 2. Space Dodge — LIVE -->
       <a href="games/space-dodge/" class="game-card live">
-        <div class="card-thumb" style="background: linear-gradient(135deg, #0a0a2e, #1a0a3e); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <div class="card-thumb" style="position:relative;overflow:hidden;height:90px;padding:0;">
+          <canvas id="sdCanvas" width="200" height="90" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
           <div class="play-badge">PLAY!</div>
-          <div class="rocket-wrap">
-            <div class="rocket-body">🚀</div>
-            <div class="rocket-flame"></div>
-            <div class="rocket-flame f2"></div>
-          </div>
-          <div class="rocket-stars">
-            <span style="left:20%;top:15%;animation-delay:0s;">✦</span>
-            <span style="left:70%;top:25%;animation-delay:0.3s;">✦</span>
-            <span style="left:40%;top:70%;animation-delay:0.6s;">✦</span>
-            <span style="left:85%;top:55%;animation-delay:0.9s;">✦</span>
-          </div>
         </div>
         <div class="card-bottom">
           <div class="card-name">Space Dodge</div>
@@ -1098,6 +1033,128 @@ a { text-decoration: none; color: inherit; }
         ctx.beginPath(); ctx.arc(f.x,f.y,W*0.004,0,6.28); ctx.fillStyle=`rgba(255,240,120,${a*0.5})`; ctx.fill();
       }
     });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// Animated Space Dodge card — scrolling stars, asteroids, spaceship
+(function() {
+  const c = document.getElementById('sdCanvas');
+  if (!c) return;
+  const displayW = Math.round(c.getBoundingClientRect().width);
+  if (displayW > 0) c.width = displayW;
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  let frame = 0;
+  const Rnd = () => Math.random();
+
+  // 60 stars with varying speed/size for parallax depth
+  const stars = Array.from({length:60}, () => ({
+    x: Rnd()*W, y: Rnd()*H,
+    r: Rnd()*1.4+0.2,
+    speed: 0.15+Rnd()*0.7,
+    a: 0.25+Rnd()*0.75
+  }));
+
+  // 5 irregular-polygon asteroids
+  const roids = Array.from({length:5}, () => {
+    const sides = 6+Math.floor(Rnd()*3);
+    const pts = Array.from({length:sides}, (_,i) => {
+      const ang = (i/sides)*Math.PI*2;
+      return {a:ang, r:0.65+Rnd()*0.35};
+    });
+    return {
+      x:Rnd()*W, y:-10-Rnd()*H*0.8,
+      sz:5+Rnd()*7, spd:0.25+Rnd()*0.4,
+      rot:Rnd()*Math.PI*2, rs:(Rnd()-0.5)*0.025,
+      pts
+    };
+  });
+
+  function drawRoid(r) {
+    ctx.save(); ctx.translate(r.x,r.y); ctx.rotate(r.rot);
+    ctx.beginPath();
+    r.pts.forEach((p,i) => {
+      const x=Math.cos(p.a)*r.sz*p.r, y=Math.sin(p.a)*r.sz*p.r;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle='#2e2e2e'; ctx.fill();
+    ctx.strokeStyle='#555'; ctx.lineWidth=0.7; ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw() {
+    frame++;
+
+    // Deep space background
+    const bg = ctx.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,'#020412'); bg.addColorStop(0.5,'#060820'); bg.addColorStop(1,'#0e0622');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    // Nebula glow
+    const nx=W*0.62, ny=H*0.38;
+    const neb=ctx.createRadialGradient(nx,ny,0,nx,ny,W*0.55);
+    neb.addColorStop(0,'rgba(90,20,160,0.14)');
+    neb.addColorStop(0.5,'rgba(50,10,100,0.06)');
+    neb.addColorStop(1,'rgba(20,5,50,0)');
+    ctx.fillStyle=neb; ctx.fillRect(0,0,W,H);
+
+    // Stars scrolling downward
+    stars.forEach(s => {
+      s.y += s.speed;
+      if (s.y>H+2) { s.y=-2; s.x=Rnd()*W; }
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,6.28);
+      ctx.fillStyle=`rgba(200,215,255,${s.a})`; ctx.fill();
+    });
+
+    // Asteroids drifting down and rotating
+    roids.forEach(r => {
+      r.y+=r.spd; r.rot+=r.rs;
+      if (r.y>H+r.sz+5) { r.y=-r.sz-5; r.x=Rnd()*W; }
+      drawRoid(r);
+    });
+
+    // Ship bobbing sinusoidally
+    const bobY=Math.sin(frame*0.045)*4;
+    const sx=W*0.5, sy=H*0.5+bobY;
+    const sw=14, sh=20;
+
+    // Engine glow halo
+    const ep=0.5+Math.sin(frame*0.09)*0.2;
+    const eg=ctx.createRadialGradient(sx,sy+sh*0.55,0,sx,sy+sh*0.55,sw*1.6);
+    eg.addColorStop(0,`rgba(40,120,255,${ep*0.55})`);
+    eg.addColorStop(1,'rgba(20,60,200,0)');
+    ctx.fillStyle=eg;
+    ctx.beginPath(); ctx.ellipse(sx,sy+sh*0.55,sw*1.6,sh*0.65,0,0,6.28); ctx.fill();
+
+    // Ship body — triangle pointing up
+    ctx.beginPath();
+    ctx.moveTo(sx, sy-sh*0.52);
+    ctx.lineTo(sx-sw*0.52, sy+sh*0.42);
+    ctx.lineTo(sx+sw*0.52, sy+sh*0.42);
+    ctx.closePath();
+    ctx.fillStyle='#1a58cc'; ctx.fill();
+    ctx.strokeStyle='#4488ff'; ctx.lineWidth=0.9; ctx.stroke();
+
+    // Wing panel lines
+    ctx.strokeStyle='#2266cc'; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(sx,sy-sh*0.28); ctx.lineTo(sx-sw*0.42,sy+sh*0.42); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx,sy-sh*0.28); ctx.lineTo(sx+sw*0.42,sy+sh*0.42); ctx.stroke();
+
+    // Cockpit — light blue oval
+    ctx.beginPath(); ctx.ellipse(sx,sy-sh*0.05,sw*0.24,sh*0.21,0,0,6.28);
+    ctx.fillStyle='#7bc8f8'; ctx.fill();
+    ctx.strokeStyle='#b0e0ff'; ctx.lineWidth=0.5; ctx.stroke();
+
+    // Engine exhaust — pulsing blue
+    const ex=0.55+Math.sin(frame*0.11)*0.3;
+    ctx.beginPath(); ctx.ellipse(sx,sy+sh*0.44,sw*0.18,sh*0.11*ex,0,0,6.28);
+    ctx.fillStyle=`rgba(80,160,255,${ex})`; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sx,sy+sh*0.44,sw*0.08,sh*0.06,0,0,6.28);
+    ctx.fillStyle=`rgba(200,230,255,${ex})`; ctx.fill();
 
     requestAnimationFrame(draw);
   }
