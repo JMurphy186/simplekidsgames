@@ -1514,7 +1514,7 @@ function openTrophyRoom() {
 
       var tFishSvg = isCaught ? FISH_SVGS[fish.name] : null;
       var tEmojiContent = tFishSvg
-        ? '<img src="' + tFishSvg + '" style="max-width:80px;max-height:50px;width:auto;height:auto;object-fit:contain;" alt="' + fish.name + '">'
+        ? '<img src="' + tFishSvg + '" style="width:80px;height:50px;object-fit:contain;" alt="' + fish.name + '">'
         : (isCaught ? fish.emoji : '❓');
 
       card.innerHTML = `
@@ -1964,7 +1964,7 @@ function enterJunkCatch() {
   var junkSvg = FISH_SVGS[junk.key];
   if (elEmoji) {
     elEmoji.innerHTML = junkSvg
-      ? '<img src="' + junkSvg + '" style="max-width:160px;max-height:100px;width:auto;height:auto;object-fit:contain;" alt="' + junk.name + '">'
+      ? '<img src="' + junkSvg + '" style="width:160px;height:100px;object-fit:contain;" alt="' + junk.name + '">'
       : junk.emoji;
   }
   if (elRarity) { elRarity.textContent = label; elRarity.style.color = '#888'; }
@@ -2022,7 +2022,7 @@ function enterCaught() {
 
   var fishSvgSrc = FISH_SVGS[caughtFish.name];
   if (fishSvgSrc) {
-    elCatchEmoji.innerHTML = '<img src="' + fishSvgSrc + '" style="max-width:160px;max-height:100px;width:auto;height:auto;object-fit:contain;" alt="' + caughtFish.name + '">';
+    elCatchEmoji.innerHTML = '<img src="' + fishSvgSrc + '" style="width:160px;height:100px;object-fit:contain;" alt="' + caughtFish.name + '">';
   } else {
     elCatchEmoji.textContent = caughtFish.emoji;
   }
