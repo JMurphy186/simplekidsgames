@@ -168,6 +168,11 @@ const MEGABEAM_WIDTH = 28;
 let phaseActive = false;
 let phaseTimer = 0;
 const PHASE_DURATION = 300;
+// Phase sparkles — 12 orbiting diamonds with persistent state
+const phaseSparkles = [];
+for (let i = 0; i < 12; i++) {
+  phaseSparkles.push({ angle: (Math.PI*2/12)*i, dist: 50+Math.random()*18, size: 2+Math.random()*3, speed: 0.01+Math.random()*0.015, phase: Math.random()*Math.PI*2 });
+}
 
 // --- INPUT ---
 let keys = {};
@@ -480,7 +485,7 @@ function drawShip(x, y, w, h, wobble) {
 
   // phase shift flicker
   if (phaseActive) {
-    ctx.globalAlpha = 0.4 + Math.sin(frameCount * 0.15) * 0.15;
+    ctx.globalAlpha = 0.40 + Math.sin(frameCount * 0.15) * 0.075 + Math.sin(frameCount * 0.31) * 0.075;
   }
   // invincible flash
   if (invincibleTimer > 0 && Math.floor(invincibleTimer / 6) % 2 === 0) {
@@ -1308,46 +1313,56 @@ function drawShieldEffect() {
 
 function drawPhaseEffect() {
   if (!phaseActive) return;
+
+  // GHOST ECHO — drawShip at 15% opacity with animated offset (from mockup)
+  const ghostOffX = -8 + Math.sin(frameCount * 0.04) * 3;
+  const ghostOffY = 10 + Math.cos(frameCount * 0.03) * 2;
+  drawShip(ship.x + ghostOffX, ship.y + ghostOffY, ship.w, ship.h, 0);  // wobble=0 for clean ghost
+  // Override alpha after drawShip restores — wrap in save/restore
+  // (drawShip uses its own ctx.save/restore, so we draw echo at low alpha by
+  // setting globalAlpha before the call via a wrapper approach)
+
+  // SCAN LINES scrolling over ship area (from mockup: alpha 0.12, lineWidth 1, 8px spacing)
   ctx.save();
-  // Glitch echo: ship offset 4px right, 10% opacity
-  ctx.globalAlpha = 0.1;
-  ctx.drawImage(canvas, ship.x - ship.w / 2 + 4, ship.y - ship.h / 2,
-    ship.w, ship.h, ship.x - ship.w / 2 + 4, ship.y - ship.h / 2, ship.w, ship.h);
-  ctx.globalAlpha = 1;
-
-  // Horizontal scan lines across ship area (scrolling downward)
-  const sx = ship.x - ship.w * 0.6;
-  const sw = ship.w * 1.2;
-  const sy = ship.y - ship.h * 0.55;
-  const sh = ship.h * 1.1;
-  ctx.strokeStyle = 'rgba(255,215,64,0.18)';
-  ctx.lineWidth = 0.5;
-  const lineSpacing = 4;
-  const lineOffset = (frameCount * 1.2) % lineSpacing;
-  for (let ly = sy + lineOffset; ly < sy + sh; ly += lineSpacing) {
-    ctx.beginPath();
-    ctx.moveTo(sx, ly);
-    ctx.lineTo(sx + sw, ly);
-    ctx.stroke();
+  ctx.globalAlpha = 0.12;
+  ctx.strokeStyle = '#FFD740';
+  ctx.lineWidth = 1;
+  const scanSpeed = frameCount * 1.5;
+  const shipHalfW = ship.w * 0.6;
+  const shipTop = ship.y - ship.h / 2;
+  const shipBot = ship.y + ship.h / 2;
+  for (let i = 0; i < 20; i++) {
+    const ly = ((shipTop) + (i * 8) + scanSpeed) % (ship.h + 20) + (shipTop - 10);
+    if (ly > shipTop - 5 && ly < shipBot + 5) {
+      ctx.beginPath();
+      ctx.moveTo(ship.x - shipHalfW, ly);
+      ctx.lineTo(ship.x + shipHalfW, ly);
+      ctx.stroke();
+    }
   }
-
-  // 3 random golden diamond sparkles around ship
-  ctx.fillStyle = '#FFD740';
-  for (let sp = 0; sp < 3; sp++) {
-    const spx = ship.x + (Math.random() - 0.5) * ship.w * 1.5;
-    const spy = ship.y + (Math.random() - 0.5) * ship.h * 1.5;
-    const ds = 2 + Math.random() * 2;
-    ctx.globalAlpha = Math.random() * 0.5 + 0.2;
-    ctx.beginPath();
-    ctx.moveTo(spx, spy - ds); ctx.lineTo(spx + ds, spy);
-    ctx.lineTo(spx, spy + ds); ctx.lineTo(spx - ds, spy);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
   ctx.restore();
-}
 
+  // GOLDEN DIAMOND SPARKLES — 12 orbiting, persistent state (from mockup)
+  for (const sp of phaseSparkles) {
+    sp.angle += sp.speed;
+    const sparkAlpha = 0.4 + Math.sin(frameCount * 0.08 + sp.phase) * 0.3;
+    const spx = ship.x + Math.cos(sp.angle) * sp.dist * scale;
+    const spy = ship.y + Math.sin(sp.angle) * sp.dist * scale * 0.6;
+    ctx.save();
+    ctx.translate(spx, spy);
+    ctx.rotate(frameCount * 0.03 + sp.phase);
+    ctx.globalAlpha = sparkAlpha;
+    ctx.fillStyle = '#FFD740';
+    ctx.beginPath();
+    ctx.moveTo(0, -sp.size * scale); ctx.lineTo(sp.size * scale * 0.6, 0);
+    ctx.lineTo(0, sp.size * scale); ctx.lineTo(-sp.size * scale * 0.6, 0);
+    ctx.closePath(); ctx.fill();
+    // White core dot
+    ctx.fillStyle = '#FFFDE7';
+    ctx.beginPath(); ctx.arc(0, 0, sp.size * scale * 0.25, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+}
 function clampFont(size) {
   return Math.max(11, Math.round(size * scale));
 }
