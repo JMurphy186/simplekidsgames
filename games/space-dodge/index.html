@@ -113,7 +113,7 @@ function allAsteroidsReady() { return asteroidsLoaded > 0; }
 // --- GAME STATE ---
 let W, H, scale;
 let gameState = 'title'; // title | shippicker | worldtitle | countdown | playing | levelcomplete | victory | gameover
-let gameMode = 'campaign'; // campaign | endless
+let gameMode = 'campaign';
 let ship = {};
 let asteroids = [];
 let blasters = [];
@@ -129,7 +129,6 @@ let spawnInterval = 55;
 let currentSpeed = 2.0;
 let frameCount = 0;
 let bestScore = parseInt(localStorage.getItem('sd_best') || '0');
-let endlessUnlocked = localStorage.getItem('sd_endless') === 'true';
 let lastTime = 0;
 let accumulator = 0;
 
@@ -462,8 +461,7 @@ function drawStars() {
     const alpha = 0.4 + 0.3 * Math.sin(s.twinkle);
     let sc = [255,255,255];
     if (gameState === 'playing' || gameState === 'countdown' || gameState === 'levelcomplete') {
-      const w = gameMode === 'campaign' ? WORLDS[currentWorld] : null;
-      if (w) sc = w.starColor;
+      sc = WORLDS[currentWorld].starColor;
     }
     ctx.fillStyle = `rgba(${sc[0]},${sc[1]},${sc[2]},${alpha})`;
     ctx.beginPath();
@@ -711,7 +709,7 @@ function updateBlasters() {
         score++;
         levelScore++;
         levelBlasted++;
-        if (gameMode === 'campaign') worldProgress += BLAST_PROGRESS;
+        worldProgress += BLAST_PROGRESS;
         if (score % 50 === 0) playSound('score');
         asteroids.splice(j, 1);
         // Plasma pierces — don't destroy the bolt
@@ -1535,16 +1533,8 @@ function drawHUD() {
   ctx.textAlign = 'right';
   ctx.fillText(score, W - 56 * scale, 30 * scale);
 
-  // Best (endless only)
-  if (gameMode === 'endless' && bestScore > 0) {
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `${clampFont(11)}px Arial, sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText('BEST ' + bestScore, W - 56 * scale, 44 * scale);
-  }
-
-  // Campaign: world name + progress bar (Monster Rally style)
-  if (gameMode === 'campaign') {
+  // World name + progress bar
+  {
     const w = WORLDS[currentWorld];
     const barW = Math.max(120, Math.min(260, W * 0.35) * scale);
     const barH = 10 * scale;
@@ -1603,7 +1593,7 @@ function drawHUD() {
 
 // --- TITLE SCREEN ---
 let titleShipBob = 0;
-let titleBtns = { campaign: {}, endless: {}, prevShip: {}, nextShip: {} };
+let titleBtns = { campaign: {}, prevShip: {}, nextShip: {} };
 
 function drawTitle() {
   ctx.fillStyle = '#0a0a2e';
@@ -1777,40 +1767,20 @@ function drawTitle() {
   }
 
   // Mode buttons
-  const btnW = 170 * scale;
+  const btnW = 200 * scale;
   const btnH = 42 * scale;
-  const gap = 14 * scale;
   const btnY = H * 0.82;
 
-  // Campaign button
-  const cX = W / 2 - btnW - gap / 2;
+  // Campaign button (centered)
+  const cX = W / 2 - btnW / 2;
   ctx.fillStyle = '#2E7D32';
   ctx.beginPath();
   ctx.roundRect(cX, btnY, btnW, btnH, 8);
   ctx.fill();
   ctx.fillStyle = '#fff';
   ctx.font = `bold ${Math.round(15 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('🚀 CAMPAIGN', cX + btnW / 2, btnY + btnH / 2 + 5 * scale);
+  ctx.fillText('🚀 PLAY', cX + btnW / 2, btnY + btnH / 2 + 5 * scale);
   titleBtns.campaign = { x: cX, y: btnY, w: btnW, h: btnH };
-
-  // Endless button
-  const eX = W / 2 + gap / 2;
-  if (endlessUnlocked) {
-    ctx.fillStyle = '#1565C0';
-    ctx.beginPath();
-    ctx.roundRect(eX, btnY, btnW, btnH, 8);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.fillText('♾️ ENDLESS', eX + btnW / 2, btnY + btnH / 2 + 5 * scale);
-  } else {
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    ctx.beginPath();
-    ctx.roundRect(eX, btnY, btnW, btnH, 8);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
-    ctx.fillText('🔒 ENDLESS', eX + btnW / 2, btnY + btnH / 2 + 5 * scale);
-  }
-  titleBtns.endless = { x: eX, y: btnY, w: btnW, h: btnH };
 
   // Best score
   if (bestScore > 0) {
@@ -1942,7 +1912,6 @@ function drawShipPicker() {
 
 // --- GAME OVER SCREEN ---
 function drawGameOver() {
-  const bg = gameMode === 'campaign' ? WORLDS[currentWorld].bg : '#0a0a2e';
   drawWorldBackground();
   drawParticles();
 
@@ -1957,12 +1926,10 @@ function drawGameOver() {
     drawStar5(W / 2 + (i - 1) * 50 * scale, starY, 16 * scale, '#ffcc00');
   }
 
-  // World reached (campaign)
-  if (gameMode === 'campaign') {
-    ctx.fillStyle = WORLDS[currentWorld].accent;
-    ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
-    ctx.fillText(`World ${currentWorld + 1}: ${WORLDS[currentWorld].name}`, W / 2, H * 0.37);
-  }
+  // World reached
+  ctx.fillStyle = WORLDS[currentWorld].accent;
+  ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+  ctx.fillText(`World ${currentWorld + 1}: ${WORLDS[currentWorld].name}`, W / 2, H * 0.37);
 
   // Score
   ctx.fillStyle = '#fff';
@@ -2055,7 +2022,7 @@ function drawWorldTitle() {
 
 // --- COUNTDOWN ---
 function drawCountdown() {
-  const w = gameMode === 'campaign' ? WORLDS[currentWorld] : WORLDS[0];
+  const w = WORLDS[currentWorld];
   drawWorldBackground();
 
   // Ship is visible during countdown
@@ -2191,7 +2158,7 @@ function drawVictory() {
   } else {
     ctx.fillStyle = '#69F0AE';
     ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.fillText('♾️ ENDLESS MODE UNLOCKED!', W / 2, H * 0.86);
+    ctx.fillText('⭐ CHAMPION PILOT! ⭐', W / 2, H * 0.86);
   }
 
   const blink = Math.sin(Date.now() / 400) > 0;
@@ -2213,17 +2180,6 @@ function startCampaign() {
   score = 0;
   lives = MAX_LIVES;
   showWorldTitle();
-}
-
-function startEndless() {
-  initAudio();
-  gameMode = 'endless';
-  currentWorld = 0;
-  playSound('start');
-  gameState = 'playing';
-  resetPlayState();
-  generateWorldDecor();
-  restartMusic();
 }
 
 function showWorldTitle() {
@@ -2266,20 +2222,17 @@ function resetPlayState() {
   levelScore = 0;
   levelBlasted = 0;
   frameCount = 0;
-  const w = gameMode === 'campaign' ? WORLDS[currentWorld] : WORLDS[0];
+  const w = WORLDS[currentWorld];
   currentSpeed = w.baseSpeed;
   spawnInterval = w.spawnStart;
 }
 
 function getWorldBg() {
-  if (gameMode === 'campaign') return WORLDS[currentWorld].bg;
-  const worldIdx = Math.min(Math.floor(frameCount / 3600), WORLDS.length - 1);
-  return WORLDS[worldIdx].bg;
+  return WORLDS[currentWorld].bg;
 }
 
 function getWorldIdx() {
-  if (gameMode === 'campaign') return currentWorld;
-  return Math.min(Math.floor(frameCount / 3600), WORLDS.length - 1);
+  return currentWorld;
 }
 
 // --- WORLD DECORATION DATA ---
@@ -2979,8 +2932,6 @@ function update() {
         gameState = 'victory';
         stopMusic();
         playSound('victory');
-        endlessUnlocked = true;
-        localStorage.setItem('sd_endless', 'true');
         // Unlock next ship
         const nextShip = selectedShip + 1;
         if (nextShip < SHIPS.length && !unlockedShips.includes(nextShip)) {
@@ -3031,7 +2982,7 @@ function update() {
   if (wobbleTimer > 0) wobbleTimer--;
 
   // Speed ramp (per-world values for campaign, escalating for endless)
-  const w = gameMode === 'campaign' ? WORLDS[currentWorld] : WORLDS[Math.min(Math.floor(frameCount / 3600), WORLDS.length - 1)];
+  const w = WORLDS[currentWorld];
   currentSpeed = w.baseSpeed + worldFrameCount * w.speedInc;
   spawnInterval = Math.max(w.spawnMin, w.spawnStart - worldFrameCount * w.spawnDec);
 
@@ -3054,7 +3005,7 @@ function update() {
         score++;
         levelScore++;
         levelBlasted++;
-        if (gameMode === 'campaign') worldProgress += BLAST_PROGRESS;
+        worldProgress += BLAST_PROGRESS;
         asteroids.splice(j, 1);
       }
     }
@@ -3071,7 +3022,7 @@ function update() {
       a.scored = true;
       score++;
       levelScore++;
-      if (gameMode === 'campaign') worldProgress += DODGE_PROGRESS;
+      worldProgress += DODGE_PROGRESS;
       if (score % 50 === 0) playSound('score');
     }
 
@@ -3335,10 +3286,6 @@ function handleTitleClick(tx, ty) {
   if (hitTest(tx, ty, titleBtns.campaign)) {
     if (!unlockedShips.includes(selectedShip)) return false; // can't play locked ship
     startCampaign(); return true;
-  }
-  if (hitTest(tx, ty, titleBtns.endless) && endlessUnlocked) {
-    if (!unlockedShips.includes(selectedShip)) return false;
-    startEndless(); return true;
   }
   return false;
 }
