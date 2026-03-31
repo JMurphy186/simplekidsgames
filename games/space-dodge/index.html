@@ -1401,7 +1401,7 @@ function drawPhaseEffect() {
   }
 }
 function clampFont(size) {
-  return Math.max(11, Math.round(size * scale));
+  return Math.max(13, Math.round(size * scale));
 }
 
 function drawPowerupBar(x, y, label, pct, color) {
@@ -2084,7 +2084,6 @@ function drawGameOver() {
   }
 
   drawMenuButton();
-  drawMuteButton();
 }
 
 function drawStar5(cx, cy, r, color) {
@@ -2143,7 +2142,6 @@ function drawWorldTitle() {
   ctx.textAlign = 'center';
 
   drawMenuButton();
-  drawMuteButton();
 }
 
 // --- COUNTDOWN ---
@@ -2295,7 +2293,6 @@ function drawVictory() {
   }
 
   drawMenuButton();
-  drawMuteButton();
 }
 
 // --- GAME INIT ---
@@ -3235,101 +3232,104 @@ function draw() {
 // --- PAUSE ---
 let paused = false;
 let pauseBtn = {};
-let pauseMenuBtns = { resume: {}, restart: {}, menu: {} };
+let pauseMenuBtns = { resume: {}, sound: {}, trophies: {}, menu: {} };
 
 let muteBtn = {};
 
-function drawMuteButton() {
-  const sz = 30 * scale;
-  const x = W - sz - 52 * scale;
-  const y = 13;
-  muteBtn = { x, y, w: sz, h: sz };
-  ctx.fillStyle = 'rgba(255,255,255,0.07)';
-  ctx.beginPath();
-  ctx.roundRect(x, y, sz, sz, 5);
-  ctx.fill();
-  ctx.fillStyle = muted ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.6)';
-  ctx.font = `${Math.round(14 * scale)}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.fillText(muted ? '🔇' : '🔊', x + sz / 2, y + sz / 2 + 4 * scale);
-}
-
 function drawPauseButton() {
-  const sz = 36 * scale;
+  // Min 50×50 tap target, styled like C&R pause button
+  const sz = Math.max(50, Math.round(50 * scale));
   const x = W - sz - 10;
   const y = 10;
   pauseBtn = { x, y, w: sz, h: sz };
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.roundRect(x, y, sz, sz, 6);
+  ctx.roundRect(x, y, sz, sz, 10);
   ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.font = `${Math.round(18 * scale)}px Arial`;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = `${Math.max(20, Math.round(22 * scale))}px Arial`;
   ctx.textAlign = 'center';
-  ctx.fillText(paused ? '▶' : '⏸', x + sz / 2, y + sz / 2 + 5 * scale);
-  drawMuteButton();
+  ctx.fillText('⏸', x + sz / 2, y + sz / 2 + Math.round(7 * scale));
 }
 
 function drawPauseOverlay() {
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  // Dark scrim
+  ctx.fillStyle = 'rgba(0,0,12,0.84)';
   ctx.fillRect(0, 0, W, H);
 
-  // Title
+  // PAUSED title
   ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.round(36 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.font = `bold ${Math.max(28, Math.round(36 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('PAUSED', W / 2, H * 0.3);
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PAUSED', W / 2, H * 0.22);
+  ctx.textBaseline = 'alphabetic';
 
-  // Buttons
-  const btnW = 180 * scale;
-  const btnH = 44 * scale;
-  const gap = 14 * scale;
-  const startY = H * 0.4;
+  // Button dimensions — min 220×50 per spec
+  const btnW = Math.max(220, Math.round(240 * scale));
+  const btnH = Math.max(50, Math.round(54 * scale));
+  const gap  = Math.max(12, Math.round(14 * scale));
+  const totalH = 4 * btnH + 3 * gap;
+  const startY = H / 2 - totalH / 2 + Math.round(10 * scale);
+  const bx = W / 2 - btnW / 2;
+  const fs2 = Math.max(15, Math.round(17 * scale));
 
-  // Resume
+  // Helper: draw one styled button
+  function pBtn(y, bg, border, textColor, label) {
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.roundRect(bx, y, btnW, btnH, 10);
+    ctx.fill();
+    if (border) {
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(bx, y, btnW, btnH, 10);
+      ctx.stroke();
+    }
+    ctx.fillStyle = textColor;
+    ctx.font = `bold ${fs2}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, W / 2, y + btnH / 2 + fs2 * 0.37);
+  }
+
+  // ▶ RESUME — green
   const rY = startY;
-  ctx.fillStyle = '#2E7D32';
-  ctx.beginPath(); ctx.roundRect(W / 2 - btnW / 2, rY, btnW, btnH, 8); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.round(16 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText('▶  RESUME', W / 2, rY + btnH / 2 + 5 * scale);
-  pauseMenuBtns.resume = { x: W / 2 - btnW / 2, y: rY, w: btnW, h: btnH };
+  pBtn(rY, '#2E7D32', '#43A047', '#fff', '▶  RESUME');
+  pauseMenuBtns.resume = { x: bx, y: rY, w: btnW, h: btnH };
 
-  // Restart
-  const rsY = startY + btnH + gap;
-  ctx.fillStyle = '#1565C0';
-  ctx.beginPath(); ctx.roundRect(W / 2 - btnW / 2, rsY, btnW, btnH, 8); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText('🔄  RESTART', W / 2, rsY + btnH / 2 + 5 * scale);
-  pauseMenuBtns.restart = { x: W / 2 - btnW / 2, y: rsY, w: btnW, h: btnH };
+  // 🔊/🔇 SOUND — blue, shows current state
+  const sY = startY + btnH + gap;
+  const soundLabel = muted ? '🔇  SOUND OFF' : '🔊  SOUND ON';
+  pBtn(sY, '#1565C0', '#1976D2', '#fff', soundLabel);
+  pauseMenuBtns.sound = { x: bx, y: sY, w: btnW, h: btnH };
 
-  // Menu
-  const mY = startY + (btnH + gap) * 2;
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.beginPath(); ctx.roundRect(W / 2 - btnW / 2, mY, btnW, btnH, 8); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('🏠  MENU', W / 2, mY + btnH / 2 + 5 * scale);
-  pauseMenuBtns.menu = { x: W / 2 - btnW / 2, y: mY, w: btnW, h: btnH };
+  // 🏆 TROPHIES — gold
+  const tY = startY + (btnH + gap) * 2;
+  pBtn(tY, 'rgba(255,202,40,0.18)', 'rgba(255,202,40,0.5)', '#FFCA28', '🏆  TROPHIES');
+  pauseMenuBtns.trophies = { x: bx, y: tY, w: btnW, h: btnH };
 
-  // Mute button on pause screen
-  drawMuteButton();
+  // 🏠 MENU — gray/dark
+  const mY = startY + (btnH + gap) * 3;
+  pBtn(mY, 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.18)', 'rgba(255,255,255,0.8)', '🏠  MENU');
+  pauseMenuBtns.menu = { x: bx, y: mY, w: btnW, h: btnH };
+
+  // Trophy Coming Soon overlay (reused from title screen)
+  if (showTrophyOverlay) drawTrophyOverlay();
 }
 
 function handlePauseClick(tx, ty) {
+  // If trophy overlay open, any tap closes it
+  if (showTrophyOverlay) { showTrophyOverlay = false; return; }
   if (hitTest(tx, ty, pauseMenuBtns.resume)) { paused = false; return; }
-  if (hitTest(tx, ty, pauseMenuBtns.restart)) {
-    paused = false;
-    if (gameMode === 'campaign') {
-      showWorldTitle();
-    } else {
-      gameState = 'playing';
-      resetPlayState();
-      generateWorldDecor();
-    }
-    return;
-  }
+  if (hitTest(tx, ty, pauseMenuBtns.sound)) { initAudio(); toggleMute(); return; }
+  if (hitTest(tx, ty, pauseMenuBtns.trophies)) { showTrophyOverlay = true; return; }
   if (hitTest(tx, ty, pauseMenuBtns.menu)) {
     paused = false;
+    showTrophyOverlay = false;
     stopMusic();
     gameState = 'title';
     return;
