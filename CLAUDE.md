@@ -267,173 +267,195 @@ simplekidsgames/
 
 # Catch & Reel (`games/catch-and-reel/index.html`)
 
-**Status:** v1.5 — Arcade fishing game with trophy room, full-body SVG characters, rebalanced reel. **Note:** Originally built by a friend, now heavily modified.
+**Single HTML file (~7.4MB). No external assets. All SVGs and PNGs are base64 data URIs embedded in the file.**
 
-### Architecture
-- Single HTML file (~2,100+ lines) — Canvas + DOM hybrid
-- **External dependency:** Google Fonts (Luckiest Guy, Baloo 2) — requires internet
-- Canvas for scene rendering (sky, water, dock, character, fish, particles)
-- DOM overlays for UI (scoreboard, reel bars, catch display, character select, trophy room)
+#### Game Overview
+Kids fishing game with 6 themed characters, 5 locations, 77 catchable fish across 7 rarity tiers, 5 Sunken Treasure paintings, 3 junk items, reel minigame, trophy room, and sound system.
 
-### Game Flow (State Machine)
+#### Characters (6)
+| Character | Rod Theme | Key Visual |
+|-----------|-----------|-----------|
+| Captain Hook Jr. (Pirate) | Driftwood + rusty reel | Gold name glow |
+| Robo-Fisher 3000 (Robot) | Chrome segmented + LEDs | Teal name glow |
+| Merlin the Caster (Wizard) | Purple staff + glowing orb | Purple name glow |
+| Shadow Ninja | Matte black bamboo + red cord | Red name glow |
+| Princess Pearl | Pink crystal + ribbon | Pink name glow |
+| Zork the Angler (Alien) | Green plasma + energy field | Green name glow |
+
+Per-character rod anchor points in `CHAR_ROD_ANCHORS`. Rod styles in `CHAR_ROD_STYLES`. Rod rendering: `drawThemedRod()` with helpers `drawRodGrip()`, `drawRodReel()`, `drawShaftDetails()`, `drawTipFeature()`, `drawLineEffects()`.
+
+#### Locations (5)
+| Location | Unlock | Visual |
+|----------|--------|--------|
+| Wooden Dock | Start | Night sky, lighthouse silhouette with sweeping beam |
+| Sunny Pier | 5 fish | Daytime, lighthouse on hilltop |
+| Coral Reef | 15 fish | Underwater reef backdrop |
+| Deep Sea | 30 fish | Dark ocean, oversized boat with red/green nav lights |
+| Volcano Cove | 50 fish | Volcanic setting |
+
+Auto-navigation to newly unlocked locations on unlock celebration dismiss. HUD progress bar shows next unlock threshold with location icon + accent color.
+
+#### Fish Roster (77 total)
+| Tier | Count | Gradient Prefix Range |
+|------|-------|-----------------------|
+| Common | ~20 | `c0_` – `c9_` (originals: `f0_`+) |
+| Uncommon | ~20 | `u0_` – `u10_` (originals: `f0_`+) |
+| Rare | 10 | `r0_` – `r9_` |
+| Ultra Rare | 8 | `ur0_` – `ur7_` |
+| Epic | 5 | `e0_` – `e4_` |
+| Legendary | 6 | `l0_` – `l3_`, `lx0_` – `lx1_` |
+| Exotic | 6 | originals + `ex0_` – `ex2_` |
+
+**Location-exclusive fish** (5 total) have a `location` field in the FISH array. `pickFish()` filters these out if the player isn't at the matching location. Fish without a `location` field are available everywhere.
+
+| Fish | Location | Rarity |
+|------|----------|--------|
+| Dock Cat | Wooden Dock | Legendary |
+| Sunbeam Dolphin | Sunny Pier | Legendary |
+| Reef Guardian | Coral Reef | Exotic |
+| Storm Leviathan | Deep Sea | Exotic |
+| Magma Serpent | Volcano Cove | Exotic |
+
+Plus 3 junk items (Old Boot `jb_`, Seaweed Clump `js_`, Tin Can `jc_`).
+
+#### SVG Art Principles (FOLLOW FOR ALL FISH)
+1. **Layer order:** Dorsal/anal fins drawn FIRST → body ON TOP → body hides fin bases naturally
+2. **Patterns clipped:** All stripes, spots, markings use `<clipPath>` bounded to body shape
+3. **Gradient IDs uniquified** per fish (prefix per tier) to prevent SVG conflicts in base64
+4. **Species-accurate details:** ear flaps, barbels, adipose fins, egg spots, thread feelers — research each fish
+5. **`width="160" height="100"`** must be on every SVG root tag — browser can't determine intrinsic size without them
+6. **Epic + Legendary tiers** use SVG filter effects (`feGaussianBlur`, `feColorMatrix`, `feMerge`) for aura/glow
+7. **Pufferfish spines:** 2.5px stroke width for small-size visibility
+
+#### Sunken Treasures — Paintings System
+- 0.75% chance per cast, rolled before fish selection
+- Only triggers if current location's painting hasn't been found yet
+- Gold shimmer particles rise from bobber + magical chime
+- No reel minigame — auto-catch straight to catch card
+- One-time discovery per location, saved to `catchreel_paintings` localStorage
+- 5 paintings (1 per location), embedded as base64 PNG data URIs
+- Catch card: gold-themed `✦ SUNKEN TREASURE ✦` with ornate frame
+- Trophy room: Sunken Treasures section above Exotic tier, 5 painting slots
+- **Do NOT show drop rates to players** — trophy room shows only "X / 5 paintings discovered"
+
+#### Reel Minigame Difficulty (Linear Progression)
+| Rarity | Green Zone | Drift Rate | Tap Push |
+|--------|-----------|------------|----------|
+| Common | 65% | 0.12 | 0.08 |
+| Uncommon | 55% | 0.13 | 0.08 |
+| Rare | 48% | 0.14 | 0.09 |
+| Ultra Rare | 42% | 0.15 | 0.09 |
+| Epic | 38% | 0.16 | 0.10 |
+| Legendary | 34% | 0.17 | 0.10 |
+| Exotic | 30% | 0.18 | 0.10 |
+
+Start position: 0.5 (center) for all tiers. One set of values for all devices.
+
+#### Game Flow (State Machine)
 1. **CHAR_SELECT** — Character picker (6 characters, 2x3 grid). MENU + TROPHIES buttons.
-2. **IDLE** — Character on dock, rod out, waiting. Tap to cast.
-3. **CAST** — Bobber flies out and splashes down.
-4. **WAIT** — Bobber floating, ambient fish silhouettes. Random bite timer.
-5. **BITE** — Bobber dips! Tap to hook.
-6. **REEL** — Tension bar mini-game. Tap to push indicator right toward green zone. Gold pulse when in green.
-7. **CAUGHT** — Catch display with trophy tracking.
-8. **FAIL** — Line snapped or missed bite.
+2. **LOCATION_SELECT** — Location picker (first play or Change Level). Unlocked locations selectable.
+3. **IDLE** — Character on dock/boat/ledge, rod out, waiting. Tap to cast.
+4. **CAST** — Bobber flies out and splashes down.
+5. **WAIT** — Bobber floating, ambient fish silhouettes. Random bite timer. 0.75% shimmer check per cast.
+6. **BITE** — Bobber dips! Tap to hook.
+7. **REEL** — Tension bar mini-game. Tap to push indicator right toward green zone.
+8. **CAUGHT** — Catch display with trophy tracking (fish or painting).
+9. **FAIL** — Line snapped or missed bite.
 
-### Reel Mechanic
-- Tap = pushes indicator RIGHT, no input = drifts LEFT
-- Green zone at END (right side) — difficulty scales by rarity
-- Gold pulse visual feedback when in green zone
-- Common fish: large green zone, slow drift. Exotic: tiny zone, fast drift.
+**Change Fisher flow:** Pause → Change Fisher → character picker → pick character → returns directly to same location (no location picker shown again).
 
-### Characters (6, full-body SVG)
+**Change Level flow:** Pause → Change Level → location picker → pick location → 3-2-1 canvas countdown → game resumes at new location. Stats carry over.
 
-| # | Character | Theme |
-|---|-----------|-------|
-| 1 | Captain Hook Jr. | Pirate — red coat, hook hand, tricorn hat |
-| 2 | Robo-Fisher 3000 | Robot — metal chassis, glowing cyan eyes |
-| 3 | Merlin the Caster | Wizard — purple robes, Gandalf beard |
-| 4 | Shadow Ninja | Ninja — dark outfit, red sash, shuriken |
-| 5 | Princess Pearl | Princess — pink dress, tiara, glass slippers |
-| 6 | Zork the Angler | Alien — space suit, sucker hands, antennae |
-
-**Rendering:** Full-body SVGs via `CHAR_BODY_SVGS` base64 data URIs + Canvas fishing rod with per-character `CHAR_ROD_ANCHORS`.
-
-### Trophy Room
-- Best catch per species saved to localStorage
-- Grid display with rarity glow, locked cards for undiscovered species
+#### Trophy Room
+- Fish organized by rarity tier, rarest (Exotic) on top, Common at bottom
+- Each tier has bold colored header
+- Caught fish: SVG thumbnail, name, rarity label, weight/length stats, rarity-colored border
+- Uncaught fish: dimmed "???" cards with fish name visible
+- "X / 77 species discovered" counter at top
+- Sunken Treasures section above Exotic tier with 5 painting slots
+- 2-column grid, scrollable on mobile
 - Accessible from gameplay, pause menu, and character select
 
-### Fish Roster (25 SVG Fish)
+#### Pause Menu
+Buttons in order:
+1. ▶ RESUME (green)
+2. 🔊 SOUND: ON/OFF (gray)
+3. 🏆 TROPHIES (gold)
+4. 🗺️ CHANGE LEVEL (orange — `#E67E22` to `#D35400`)
+5. 🎣 CHANGE FISHER (blue/purple)
+6. 🏠 MENU (dark)
 
-All fish rendered as detailed SVG artwork, base64 encoded in `FISH_SVGS` constant. Preloaded via `FISH_IMAGES` object. Emoji kept as fallback if SVG not found.
-
-**Display sizes:**
-- Catch display: 160×100px
-- Trophy room: 80×50px
-- HUD fallback: 24×15px
-
-**Gradient ID convention:** Each fish uses uniquified gradient IDs prefixed `f0_`, `f1_`, etc. to prevent SVG gradient conflicts when multiple fish render simultaneously.
-
-#### Active Fish (24 catchable)
-
-| # | Name | Emoji | Rarity | Notes |
-|---|------|-------|--------|-------|
-| 1 | Bluegill | 🐟 | Common | Ear flap detail |
-| 2 | Perch | 🐠 | Common | Vertical bar markings |
-| 3 | Bass | 🐟 | Common | Red eye, bucket mouth |
-| 4 | Catfish | 🐡 | Uncommon | Whiskers, scaleless skin |
-| 5 | Trout | 🐟 | Uncommon | Pink stripe, adipose fin |
-| 6 | Salmon | 🐠 | Uncommon | Species-accurate markings |
-| 7 | Walleye | 🐟 | Uncommon | — |
-| 8 | Pike | 🐊 | Rare | — |
-| 9 | Muskie | 🐟 | Rare | — |
-| 10 | Sturgeon | 🐠 | Rare | — |
-| 11 | Swordfish | ⚔️ | Ultra Rare | — |
-| 12 | Marlin | 🐟 | Ultra Rare | — |
-| 13 | Tuna | 🐟 | Ultra Rare | — |
-| 14 | Shark | 🦈 | Epic | — |
-| 15 | Narwhal | 🦄 | Epic | Spiral tusk detail |
-| 16 | Manta Ray | 🦅 | Epic | — |
-| 17 | Giant Squid | 🦑 | Legendary | — |
-| 18 | Anglerfish | 💡 | Legendary | — |
-| 19 | Golden Koi | ✨ | Legendary | — |
-| 20 | Loch Ness Monster | 🦕 | Exotic | Water mist effect |
-| 21 | Kraken | 🐙 | Exotic | Ink wisp effect |
-| 22 | Mermaid's Ring | 💍 | Exotic | Gem refraction effect |
-| 23 | Phantom Jellyfish | 🪼 | Exotic | Translucent bell, trailing tentacles, bioluminescent spots |
-| 24 | Ancient Treasure Chest | 🧰 | Exotic | Open lid, gold coins, gems, barnacles, seaweed |
-| 25 | Poseidon's Trident | 🔱 | Exotic | Three-pronged, gold shaft, aqua gem, energy glow |
-
-#### Inactive Fish (SVG preserved, not in FISH array)
-
-| Name | Emoji | Notes |
-|------|-------|-------|
-| Old Boot | 👢 | SVG exists in `FISH_SVGS`. Reserved for future junk catch mechanic. |
-
-#### Exotic Difficulty Settings
-
-Exotics use a tighter catch minigame:
-- Green zone: 88% of bar (was 92%)
-- Drift rate: 0.35/sec (was 0.55/sec)
-- Result: still challenging but actually catchable for kids
-
-### Sound System (10 Audio Clips)
-
+#### Sound System (10 Audio Clips)
 All sounds are real audio clips (not Web Audio API synthesis), embedded as base64 WAV data URIs (~1.85MB total). Sourced from Pixabay (free, no attribution required).
 
-| Key | Trigger | Description |
-|-----|---------|-------------|
-| cast | Line cast | Casting whoosh |
-| splash | Line hits water | Water splash |
-| bite | Fish bites | Alert tone |
-| reelClick | Reeling in | Click/ratchet |
-| reelDrag | Drag tension | Tension sound |
-| catchCommon | Catch common/uncommon | Simple fanfare |
-| catchRare | Catch rare/ultra rare | Elevated fanfare |
-| catchExotic | Catch epic/legendary/exotic | Grand fanfare |
-| lineSnap | Line breaks | Snap sound |
-| newRecord | New best fish | Record fanfare |
+| Key | Trigger |
+|-----|---------|
+| cast | Line cast |
+| splash | Line hits water |
+| bite | Fish bites |
+| reelClick | Reeling in |
+| reelDrag | Drag tension |
+| catchCommon | Catch common/uncommon |
+| catchRare | Catch rare/ultra rare |
+| catchExotic | Catch epic/legendary/exotic |
+| lineSnap | Line breaks |
+| newRecord | New best fish |
 
-**Rarity → Sound Mapping:**
-- Common, Uncommon → `catchCommon`
-- Rare, Ultra Rare → `catchRare`
-- Epic, Legendary, Exotic → `catchExotic`
+`initSounds()` on first cast. `playS(key)` triggers playback. Mute persisted to `catchreel_mute`.
 
-**Implementation:** `initSounds()` on first cast. `playS(key)` triggers playback. Mute toggle in pause menu with `localStorage` persistence (`catchreel_mute`). Variables use `var` (fixes temporal dead zone). Unlike Monster Rally and Space Dodge (Web Audio API synthesis), Catch & Reel uses real recorded audio clips.
+#### Key Constants & Data Structures
+- `FISH_SVGS` — object mapping fish names to base64 SVG data URIs
+- `FISH` — array of fish objects: `{ name, emoji, rarity, wMin, wMax, lMin, lMax, location? }`
+- `FISH_IMAGES` — preloaded Image objects built from FISH_SVGS on load
+- `PAINTING_IMAGES` — base64 PNG data URIs for 5 Sunken Treasure paintings
+- `PAINTINGS` — array of `{ name, location, locationName, color }`
+- `CHAR_ROD_STYLES` — per-character rod visual definitions
+- `CHAR_ROD_ANCHORS` — per-character rod attachment coordinates
+- `LOCATIONS` — array of location configs with id, name, unlock threshold, fishBoost
 
-### Fishing Locations (5 unlockable)
-
-| # | Location | Unlock | Platform | Fish Boost |
-|---|----------|--------|----------|------------|
-| 0 | Wooden Dock | Default | Enhanced dock + lantern | Base rates |
-| 1 | Sunny Pier | 50 catches | Daytime dock | Common 1.15×, Uncommon 1.1× |
-| 2 | Coral Reef | 100 catches | Sunset dock + palms | Rare 2×, Ultra Rare 1.5× |
-| 3 | Deep Sea | 200 catches | Rocking fishing boat | Epic 2×, Legendary 1.5× |
-| 4 | Volcano Cove | 300 catches | Obsidian ledge | Exotic 3×, Legendary 2×, Epic 1.5× |
-
-**Architecture:**
-- `drawBackground()` dispatcher switches on `currentLocation`
-- `bgParticles[]` array with `initBgParticles(location)` for per-scene particles
-- Helper functions: `bgGrad()`, `bgRadGrad()`, `bgWave()` for compact gradient/wave creation
-- `drawEnhancedDock()` shared across dock/pier/reef scenes with color params
-- All bg functions use `var` assignments for global scope hoisting (unclosed block workaround)
-- Deep Sea boat: character position uses `boatRockY`/`boatRockR` sinusoidal offset + rotation
-- Volcano ledge: character stands on static ledge surface
-
-**Flow:** Character Select → Location Select → Fishing → (play again) → Character Select
-
-**Unlock celebrations:** Gold overlay with location icon + name, auto-dismiss 4s or tap, shows once per unlock
-
-### Junk Catches
-
-- 8% chance per catch (rolled before rarity selection)
-- 3 items: Old Boot (`junk_boot`), Seaweed Clump (`junk_seaweed`), Tin Can (`junk_can`)
-- SVGs in `FISH_SVGS`, gradient IDs prefixed `jb_`, `js_`, `jc_`
-- 0 points, no trophy, no stats, no totalCatches increment
-- Funny label rotation: "Oh no!", "Not again!", "Better luck next time!", "Really?!", "Whoops!"
-- Dismisses on player input (same as fish catches)
-
-### localStorage Keys (updated)
-- `catchreel_best` — best single catch points
-- `catchreel_total` — total score across sessions
-- `catchreel_char` — selected character index
+#### localStorage Keys
 - `catchreel_trophies` — JSON object of best catch per species
-- `catchreel_total_catches` — lifetime fish count (for location unlocks)
+- `catchreel_total_catches` — lifetime fish count (drives location unlocks)
 - `catchreel_location` — last selected location ID
 - `catchreel_shown_unlocks` — JSON array of shown unlock notification IDs
+- `catchreel_paintings` — JSON object of discovered paintings `{ "Location Name": true }`
 - `catchreel_mute` — mute state ("1" = muted)
+- `catchreel_char` — selected character index
 
-### Queued (Not Built)
-- Deep Sea + Volcano character platform polish (boat size tuning, ledge alignment)
-- Self-host Google Fonts or explore adding fonts to other games
-- Additional fish species
-- Seasonal themes / event locations
+#### Known Issues / Parked Items
+- Rod reel size on mobile (parked — multiple attempts, still looks large)
+- Stingray SVG flagged as not looking like a stingray — revisit/redesign or swap Ultra Rare later
+- Rod curve deferred (straight rods look clean)
 - Captain Angler (7th character — designed, parked)
 - Cross-game coin economy with Monster Rally
 - PWA manifest for fullscreen on Add to Home Screen
+
+---
+
+## Implementation Patterns
+
+### Trailing Comma Check (CRITICAL)
+Always verify the trailing comma on the last entry in `FISH_SVGS` before adding new fish. A missing comma causes a **silent JS syntax error** that kills all `onclick` handlers while HTML `<a href>` links still work. This is easy to miss and has caused real bugs.
+
+### SVG Root Dimensions (REQUIRED)
+Every fish SVG must have `width="160" height="100"` on the root `<svg>` tag before base64 encoding. Without them, the browser renders the image at 0px — the SVG is present but invisible.
+
+### Base64 PNG Data URIs
+Acceptable for Sunken Treasures tier collectibles (paintings, future shells/chests). Monitor file size — each PNG category adds several MB. The game file is currently ~7.4MB.
+
+### Syntax Check After Every Commit
+```bash
+node -e "try { new (require('vm').Script)(require('fs').readFileSync('games/catch-and-reel/index.html','utf8')); console.log('SYNTAX OK'); } catch(e) { console.log('ERROR:', e.message); }"
+```
+The `Unexpected token '<'` error is a **known false positive** from the HTML `<` characters — ignore it. Any OTHER error message is a real JS syntax error that will break the game.
+
+### Patch Script Pattern (Node.js)
+When adding fish in batches, use Node.js patch scripts saved in the repo root (not committed). Key steps:
+1. Read mockup HTML, extract SVGs with regex
+2. Fix dimensions (`320x200` → `160x100`)
+3. Base64 encode: `Buffer.from(svg).toString('base64')`
+4. Insert into `FISH_SVGS` using string replacement with reliable anchor
+5. Insert into `FISH` array before closing `];`
+6. Normalize CRLF↔LF before/after editing
+7. Verify prefix IDs by decoding b64 back to text
+8. Run syntax check on script block only (not full HTML)
