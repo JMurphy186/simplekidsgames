@@ -1806,14 +1806,6 @@ function drawTitle() {
   ctx.fillText('🚀 PLAY', W / 2, playY + playH / 2 + 6);
   titleBtns.campaign = { x: playX, y: playY, w: playW, h: playH };
 
-  // ── BEST SCORE ────────────────────────────────────────────
-  if (bestScore > 0) {
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = `${Math.max(13, Math.round(14 * scale))}px Arial, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('BEST: ' + bestScore, W / 2, playY - 8);
-  }
-
   // ── TROPHY OVERLAY (on top of everything) ─────────────────
   if (showTrophyOverlay) drawTrophyOverlay();
 }
