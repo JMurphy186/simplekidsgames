@@ -3018,10 +3018,10 @@ function update() {
   // Clamp
   ship.x = Math.max(ship.w / 2, Math.min(W - ship.w / 2, ship.x));
 
-  // Auto-fire blasters
+  // Auto-fire blasters (suppressed while Mega Beam is active)
   blasterTimer++;
   const fireRate = plasmaActive ? PLASMA_FIRE_RATE : BLASTER_FIRE_RATE;
-  if (blasterTimer >= fireRate) {
+  if (blasterTimer >= fireRate && !megabeamActive) {
     spawnBlaster();
     blasterTimer = 0;
   }
