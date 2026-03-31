@@ -161,6 +161,9 @@ let megabeamActive = false;
 let megabeamTimer = 0;
 const MEGABEAM_DURATION = 360;
 const MEGABEAM_SCALE = 2.0;
+// Mobile scale boost: ships are 1.5× larger on narrow screens (< 600px)
+// Stacks with MEGABEAM_SCALE — all ship.w/h assignments must use this
+function mobileBoost() { return W < 600 ? 1.5 : 1.0; }
 const MEGABEAM_WIDTH = 28;
 
 // Phase Shift
@@ -826,8 +829,8 @@ function updatePowerups() {
     megabeamTimer--;
     if (megabeamTimer <= 0) {
       megabeamActive = false;
-      ship.w = SHIP_WIDTH * scale;
-      ship.h = SHIP_HEIGHT * scale;
+      ship.w = SHIP_WIDTH * scale * mobileBoost();
+      ship.h = SHIP_HEIGHT * scale * mobileBoost();
     }
   }
 
@@ -861,8 +864,8 @@ function updatePowerups() {
       } else if (p.type === 'megabeam') {
         megabeamActive = true;
         megabeamTimer = MEGABEAM_DURATION;
-        ship.w = SHIP_WIDTH * scale * MEGABEAM_SCALE;
-        ship.h = SHIP_HEIGHT * scale * MEGABEAM_SCALE;
+        ship.w = SHIP_WIDTH * scale * MEGABEAM_SCALE * mobileBoost();
+        ship.h = SHIP_HEIGHT * scale * MEGABEAM_SCALE * mobileBoost();
       } else if (p.type === 'phase') {
         phaseActive = true;
         phaseTimer = PHASE_DURATION;
@@ -2367,7 +2370,7 @@ function startCountdown() {
 }
 
 function resetPlayState() {
-  ship = { x: W / 2, y: H * 0.8, w: SHIP_WIDTH * scale, h: SHIP_HEIGHT * scale, speed: 4.5 };
+  ship = { x: W / 2, y: H * 0.8, w: SHIP_WIDTH * scale * mobileBoost(), h: SHIP_HEIGHT * scale * mobileBoost(), speed: 4.5 };
   asteroids = [];
   blasters = [];
   blasterTimer = 0;
