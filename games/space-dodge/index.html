@@ -163,7 +163,7 @@ const MEGABEAM_DURATION = 360;
 const MEGABEAM_SCALE = 2.0;
 // Mobile scale boost: ships are 1.7× larger on narrow screens (< 600px)
 // Stacks with MEGABEAM_SCALE — all ship.w/h assignments must use this
-function mobileBoost() { return W < 600 ? 1.7 : 1.0; }
+function mobileBoost() { return W < 600 ? 2.0 : 1.0; }
 const MEGABEAM_WIDTH = 28;
 
 // Phase Shift
@@ -687,8 +687,8 @@ function spawnBlaster() {
   blasters.push({
     x: ship.x,
     y: ship.y - ship.h / 2,
-    w: (isPlasma ? PLASMA_WIDTH : BLASTER_WIDTH) * scale * (W < 600 ? 1.5 : 1.0),
-    h: (isPlasma ? PLASMA_HEIGHT : BLASTER_HEIGHT) * scale * (W < 600 ? 1.5 : 1.0),
+    w: (isPlasma ? PLASMA_WIDTH : BLASTER_WIDTH) * scale * (W < 600 ? 2.0 : 1.0),
+    h: (isPlasma ? PLASMA_HEIGHT : BLASTER_HEIGHT) * scale * (W < 600 ? 1.8 : 1.0),
     plasma: isPlasma
   });
   playSound('blaster');
@@ -751,7 +751,7 @@ function drawBlasters() {
       ctx.globalAlpha = 1;
       // Pointed oval core — bezier shape
       ctx.shadowColor = '#00E5FF';
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = W < 600 ? 20 : 10;
       const coreGrad = ctx.createLinearGradient(b.x, b.y - b.h / 2, b.x, b.y + b.h / 2);
       coreGrad.addColorStop(0, '#FFFFFF');
       coreGrad.addColorStop(0.4, '#80F0FF');
@@ -774,7 +774,7 @@ function drawBlasters() {
     } else {
       // Standard blaster
       ctx.shadowColor = '#42A5F5';
-      ctx.shadowBlur = 8;
+      ctx.shadowBlur = W < 600 ? 16 : 8;
       const grad = ctx.createLinearGradient(b.x, b.y - b.h / 2, b.x, b.y + b.h / 2);
       grad.addColorStop(0, '#90caf9');
       grad.addColorStop(0.5, '#42A5F5');
@@ -798,7 +798,7 @@ const POWERUP_TYPES = [
 
 function spawnPowerup() {
   const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
-  const r = POWERUP_RADIUS * scale * (W < 600 ? 1.5 : 1.0);
+  const r = POWERUP_RADIUS * scale * (W < 600 ? 2.0 : 1.0);
   powerups.push({
     x: r + Math.random() * (W - r * 2),
     y: -r * 2,
@@ -1407,11 +1407,12 @@ function clampFont(size) {
   return Math.max(13, Math.round(size * scale));
 }
 
-function drawPowerupBar(x, y, label, pct, color) {
-  const barW = 70 * scale;
+function drawPowerupBar(x, y, label, pct, color, mobile) {
+  const barW = (mobile ? 50 : 70) * scale;
   const barH = 5 * scale;
   ctx.fillStyle = color;
-  ctx.font = `bold ${clampFont(9)}px Arial, sans-serif`;
+  ctx.font = mobile ? `bold ${Math.max(11, Math.round(11 * scale))}px Arial, sans-serif`
+                    : `bold ${clampFont(9)}px Arial, sans-serif`;
   ctx.textAlign = 'left';
   ctx.fillText(label, x, y);
   const by = y + 3 * scale;
@@ -1433,30 +1434,38 @@ function drawPowerupHUD() {
   const livesShipH = Math.max(19, 22 * scale);
   let hudY = 14 + Math.round(8 * scale) + livesShipH + 10;
   const hudX = 14;
+  const mobile = W < 600;
+  // Short labels on mobile so left column stays under 35% screen width
+  const pLabel  = mobile ? '⚡ PLASMA'  : '⚡ PLASMA';
+  const bLabel  = mobile ? '🔴 BEAM'    : '🔴 MEGA BEAM';
+  const sLabel  = mobile ? '🛡 SHIELD'  : '🛡 SHIELD ACTIVE';
+  const phLabel = mobile ? '👻 PHASE'   : '👻 PHASE SHIFT';
+  const indFont = mobile ? `bold ${Math.max(11, Math.round(11 * scale))}px Arial, sans-serif`
+                         : `bold ${clampFont(9)}px Arial, sans-serif`;
 
   if (plasmaActive) {
-    drawPowerupBar(hudX, hudY, '⚡ PLASMA', plasmaTimer / PLASMA_DURATION, '#00E5FF');
-    hudY += 18 * scale;
+    drawPowerupBar(hudX, hudY, pLabel, plasmaTimer / PLASMA_DURATION, '#00E5FF', mobile);
+    hudY += mobile ? 16 * scale : 18 * scale;
   }
 
   if (megabeamActive) {
-    drawPowerupBar(hudX, hudY, '🔴 MEGA BEAM', megabeamTimer / MEGABEAM_DURATION, '#FF1744');
-    hudY += 18 * scale;
+    drawPowerupBar(hudX, hudY, bLabel, megabeamTimer / MEGABEAM_DURATION, '#FF1744', mobile);
+    hudY += mobile ? 16 * scale : 18 * scale;
   }
 
   if (shieldActive) {
     ctx.fillStyle = '#69F0AE';
-    ctx.font = `bold ${clampFont(9)}px Arial, sans-serif`;
+    ctx.font = indFont;
     ctx.textAlign = 'left';
-    ctx.fillText('🛡 SHIELD ACTIVE', hudX, hudY);
-    hudY += 14 * scale;
+    ctx.fillText(sLabel, hudX, hudY);
+    hudY += mobile ? 13 * scale : 14 * scale;
   }
 
   if (phaseActive) {
     ctx.fillStyle = '#FFD740';
-    ctx.font = `bold ${clampFont(9)}px Arial, sans-serif`;
+    ctx.font = indFont;
     ctx.textAlign = 'left';
-    ctx.fillText('👻 PHASE SHIFT', hudX, hudY);
+    ctx.fillText(phLabel, hudX, hudY);
   }
 }
 
