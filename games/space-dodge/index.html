@@ -161,9 +161,9 @@ let megabeamActive = false;
 let megabeamTimer = 0;
 const MEGABEAM_DURATION = 360;
 const MEGABEAM_SCALE = 2.0;
-// Mobile scale boost: ships are 1.5× larger on narrow screens (< 600px)
+// Mobile scale boost: ships are 1.7× larger on narrow screens (< 600px)
 // Stacks with MEGABEAM_SCALE — all ship.w/h assignments must use this
-function mobileBoost() { return W < 600 ? 1.5 : 1.0; }
+function mobileBoost() { return W < 600 ? 1.7 : 1.0; }
 const MEGABEAM_WIDTH = 28;
 
 // Phase Shift
@@ -687,8 +687,8 @@ function spawnBlaster() {
   blasters.push({
     x: ship.x,
     y: ship.y - ship.h / 2,
-    w: (isPlasma ? PLASMA_WIDTH : BLASTER_WIDTH) * scale,
-    h: (isPlasma ? PLASMA_HEIGHT : BLASTER_HEIGHT) * scale,
+    w: (isPlasma ? PLASMA_WIDTH : BLASTER_WIDTH) * scale * (W < 600 ? 1.5 : 1.0),
+    h: (isPlasma ? PLASMA_HEIGHT : BLASTER_HEIGHT) * scale * (W < 600 ? 1.5 : 1.0),
     plasma: isPlasma
   });
   playSound('blaster');
@@ -798,7 +798,7 @@ const POWERUP_TYPES = [
 
 function spawnPowerup() {
   const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
-  const r = POWERUP_RADIUS * scale;
+  const r = POWERUP_RADIUS * scale * (W < 600 ? 1.5 : 1.0);
   powerups.push({
     x: r + Math.random() * (W - r * 2),
     y: -r * 2,
@@ -1429,7 +1429,9 @@ function drawPowerupBar(x, y, label, pct, color) {
 }
 
 function drawPowerupHUD() {
-  let hudY = 60 * scale;
+  // Start below the lives display: 14(startY) + 8*scale(gap) + livesShipH + 10(padding)
+  const livesShipH = Math.max(19, 22 * scale);
+  let hudY = 14 + Math.round(8 * scale) + livesShipH + 10;
   const hudX = 14;
 
   if (plasmaActive) {
@@ -1569,13 +1571,7 @@ function drawMiniShip(x, y, w, h, alive) {
 function drawHUD() {
   drawLives();
 
-  // Score (left of pause button)
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${clampFont(22)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.textAlign = 'right';
-  ctx.fillText(score, W - 56 * scale, 30 * scale);
-
-  // World name + progress bar
+  // Progress bar + world name + score — all centered at top
   {
     const w = WORLDS[currentWorld];
     const barW = Math.max(120, Math.min(260, W * 0.35) * scale);
@@ -1583,12 +1579,6 @@ function drawHUD() {
     const barX = (W - barW) / 2;
     const barY = 10;
     const progress = Math.min(worldProgress / w.threshold, 1);
-
-    // World label — accent colored, bold, like Monster Rally level titles
-    ctx.fillStyle = w.accent;
-    ctx.font = `bold ${clampFont(13)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(`WORLD ${currentWorld + 1}: ${w.name}`, W / 2, barY + barH + 18 * scale);
 
     // Bar container with subtle border
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
@@ -1615,8 +1605,10 @@ function drawHUD() {
     }
 
     // Percentage text inside bar
+    ctx.shadowBlur = 0;
     ctx.fillStyle = progress > 0.15 ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.4)';
     ctx.font = `bold ${clampFont(7)}px Arial, sans-serif`;
+    ctx.textAlign = 'center';
     ctx.fillText(Math.round(progress * 100) + '%', W / 2, barY + barH - 2);
 
     // Bar glow pulse when nearly full
@@ -1630,6 +1622,26 @@ function drawHUD() {
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
+
+    // World name — extra spacing below bar, shadow for contrast on bright worlds
+    const worldNameY = barY + barH + Math.max(22, Math.round(26 * scale));
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = w.accent;
+    ctx.font = `bold ${Math.max(15, Math.round(15 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`WORLD ${currentWorld + 1}: ${w.name}`, W / 2, worldNameY);
+    ctx.shadowBlur = 0;
+
+    // Score — centered below world name, clear of gear button
+    const scoreY = worldNameY + Math.max(18, Math.round(20 * scale));
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 3;
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = `bold ${Math.max(14, Math.round(14 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`Score: ${score}`, W / 2, scoreY);
+    ctx.shadowBlur = 0;
   }
 }
 
@@ -3303,9 +3315,9 @@ function drawPauseButton() {
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = `${Math.max(20, Math.round(22 * scale))}px Arial`;
+  ctx.font = `${Math.max(32, Math.round(34 * scale))}px Arial`;
   ctx.textAlign = 'center';
-  ctx.fillText('⚙️', x + sz / 2, y + sz / 2 + Math.round(7 * scale));
+  ctx.fillText('⚙️', x + sz / 2, y + sz / 2 + Math.round(9 * scale));
 }
 
 function drawPauseOverlay() {
