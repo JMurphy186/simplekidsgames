@@ -2207,27 +2207,33 @@ function drawLevelComplete() {
     drawShip(ship.x, bobY, ship.w, ship.h, 0);
   }
 
+  ctx.shadowColor = w.accent;
+  ctx.shadowBlur = 18;
   ctx.fillStyle = w.accent;
-  ctx.font = `bold ${Math.round(36 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.font = `bold ${Math.max(32, Math.round(48 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.fillText('WORLD COMPLETE!', W / 2, H * 0.25);
+  ctx.shadowBlur = 0;
+
+  // World name
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${Math.max(36, Math.round(52 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillText(w.name, W / 2, H * 0.4);
 
   // Stats
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.round(28 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
-  ctx.fillText(w.name, W / 2, H * 0.38);
-
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = `${Math.round(16 * scale)}px Arial, sans-serif`;
-  ctx.fillText(`Blasted: ${levelBlasted}  |  Score: +${levelScore}`, W / 2, H * 0.5);
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = `bold ${Math.max(18, Math.round(22 * scale))}px Arial, sans-serif`;
+  ctx.fillText(`Blasted: ${levelBlasted}  |  Score: +${levelScore}`, W / 2, H * 0.52);
 
   // Next world preview
   if (currentWorld + 1 < WORLDS.length) {
     const next = WORLDS[currentWorld + 1];
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = `${Math.max(16, Math.round(20 * scale))}px Arial, sans-serif`;
     ctx.fillText(`Next: ${next.name}`, W / 2, H * 0.62);
   }
+  ctx.textBaseline = 'alphabetic';
 }
 
 // --- VICTORY SCREEN ---
