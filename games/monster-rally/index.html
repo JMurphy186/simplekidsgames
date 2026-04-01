@@ -4592,7 +4592,7 @@ function draw() {
           const secs = Math.ceil(campaignCountdown / 60);
           const urgent = secs <= 10;
           ctx.fillStyle = urgent ? '#ff4400' : '#ffd700';
-          ctx.font = 'bold ' + (urgent ? '22' : '18') + 'px 'Luckiest Guy', cursive';
+          ctx.font = "bold " + (urgent ? '22' : '18') + "px 'Luckiest Guy', cursive";
           const timerY = urgent ? 100 + Math.sin(Date.now() * 0.01) * 2 : 100;
           ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
           ctx.strokeText('0:' + (secs < 10 ? '0' : '') + secs, W / 2, timerY);
