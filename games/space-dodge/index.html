@@ -3326,7 +3326,9 @@ function drawPauseButton() {
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.font = `${Math.max(32, Math.round(34 * scale))}px Arial`;
   ctx.textAlign = 'center';
-  ctx.fillText('⚙️', x + sz / 2, y + sz / 2 + Math.round(9 * scale));
+  ctx.textBaseline = 'middle';
+  ctx.fillText('⚙️', x + sz / 2, y + sz / 2);
+  ctx.textBaseline = 'alphabetic';
 }
 
 function drawPauseOverlay() {
