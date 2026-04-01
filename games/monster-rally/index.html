@@ -1333,7 +1333,7 @@ function drawPauseOverlay() {
 
   // "PAUSED" title
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 44px 'Luckiest Guy', cursive';
+  ctx.font = "bold 44px 'Luckiest Guy', cursive";
   ctx.strokeText('PAUSED', W / 2, 100);
   ctx.fillText('PAUSED', W / 2, 100);
 
@@ -1345,7 +1345,7 @@ function drawPauseOverlay() {
   // Resume (green)
   ctx.fillStyle = '#22cc44';
   ctx.beginPath(); ctx.roundRect(bx, baseY, btnW, btnH, 12); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 22px 'Luckiest Guy', cursive';
+  ctx.fillStyle = '#fff'; ctx.font = "bold 22px 'Luckiest Guy', cursive";
   ctx.fillText('\u25B6  RESUME', W / 2, baseY + 33);
 
   // Restart (orange)
@@ -1370,7 +1370,7 @@ function drawPauseOverlay() {
   ctx.fillText('\uD83C\uDFE0  MENU', W / 2, my + 33);
 
   // Keyboard hints
-  ctx.fillStyle = '#888'; ctx.font = '12px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#888'; ctx.font = "12px 'Baloo 2', sans-serif";
   ctx.fillText('ESC/P = Resume  \u2022  R = Restart  \u2022  Q = Quit', W / 2, my + btnH + 25);
   ctx.textAlign = 'left';
 }
@@ -1388,7 +1388,7 @@ function drawGamesButton(x, y) {
   ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.stroke();
   // Text
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px 'Luckiest Guy', cursive';
+  ctx.fillStyle = '#fff'; ctx.font = "bold 18px 'Luckiest Guy', cursive";
   ctx.textAlign = 'center';
   ctx.fillText('\uD83C\uDFE0 MENU', x + 65, y + 30);
   ctx.restore();
@@ -1402,7 +1402,7 @@ function drawChangeTruckButton(x, y) {
   ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px 'Luckiest Guy', cursive';
+  ctx.fillStyle = '#fff'; ctx.font = "bold 16px 'Luckiest Guy', cursive";
   ctx.textAlign = 'center';
   ctx.fillText('\uD83D\uDE9B TRUCKS', x + 65, y + 30);
   ctx.restore();
@@ -1434,14 +1434,14 @@ function drawPickerScreen() {
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffcc00';
-  ctx.font = 'bold 30px 'Luckiest Guy', cursive';
+  ctx.font = "bold 30px 'Luckiest Guy', cursive";
   ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
   const title = pickerPlayer === 1 ? 'CHOOSE YOUR RIDE!' : 'PLAYER 2 — PICK YOUR RIDE!';
   ctx.strokeText(title, W / 2, 55); ctx.fillText(title, W / 2, 55);
 
   // Category label
   const pageStart = pickerPage * PICKER_PER_PAGE;
-  ctx.fillStyle = '#aaa'; ctx.font = '14px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#aaa'; ctx.font = "14px 'Baloo 2', sans-serif";
 
   const rects = getPickerTruckRects();
   const activeTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
@@ -1464,7 +1464,7 @@ function drawPickerScreen() {
     if (isP1Pick) {
       ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 10); ctx.stroke();
-      ctx.fillStyle = '#ff4400'; ctx.font = '11px 'Baloo 2', sans-serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff4400'; ctx.font = "11px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
       ctx.fillText('P1', r.x + r.w / 2, r.y + r.h + 14);
     }
 
@@ -1477,7 +1477,7 @@ function drawPickerScreen() {
     ctx.restore();
 
     // Name
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px 'Luckiest Guy', cursive';
+    ctx.fillStyle = '#fff'; ctx.font = "bold 12px 'Luckiest Guy', cursive";
     ctx.textAlign = 'center';
     ctx.fillText(t.name, r.x + r.w / 2, r.y + r.h - 18);
 
@@ -1486,14 +1486,14 @@ function drawPickerScreen() {
     // Per-truck best score
     const best = getBestScore(r.idx);
     if (best > 0) {
-      ctx.fillStyle = '#ffd700'; ctx.font = '11px 'Baloo 2', sans-serif';
+      ctx.fillStyle = '#ffd700'; ctx.font = "11px 'Baloo 2', sans-serif";
       ctx.fillText('Best: ⭐ ' + best, r.x + r.w / 2, r.y + r.h - 5);
     }
   }
 
   // Page arrows
   if (PICKER_PAGES > 1) {
-    ctx.font = '700 36px 'Baloo 2', sans-serif'; ctx.textAlign = 'center';
+    ctx.font = "700 36px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
     if (pickerPage > 0) {
       ctx.fillStyle = '#fff';
       ctx.fillText('◀', 40, 240);
@@ -1515,10 +1515,10 @@ function drawPickerScreen() {
     }
   }
 
-  ctx.fillStyle = '#aaa'; ctx.font = '13px 'Baloo 2', sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#aaa'; ctx.font = "13px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
   const blink = Math.sin(Date.now() * 0.004) > 0;
   if (blink) { ctx.fillStyle = '#fff'; ctx.fillText('TAP a vehicle, then TAP again to confirm!', W / 2, H - 50); }
-  ctx.fillStyle = '#666'; ctx.font = '12px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#666'; ctx.font = "12px 'Baloo 2', sans-serif";
   ctx.fillText('◀ ▶ to browse pages  •  Arrow keys to pick  •  Space/Enter to confirm', W / 2, H - 30);
   ctx.textAlign = 'left';
 }
@@ -1537,7 +1537,7 @@ function drawModeSelectScreen() {
 
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffcc00';
-  ctx.font = 'bold 34px 'Luckiest Guy', cursive';
+  ctx.font = "bold 34px 'Luckiest Guy', cursive";
   ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
   ctx.strokeText('CHOOSE A MODE!', W / 2, 80);
   ctx.fillText('CHOOSE A MODE!', W / 2, 80);
@@ -1574,7 +1574,7 @@ function drawModeSelectScreen() {
   // Truck name + style badge below
   ctx.textAlign = 'center';
   ctx.fillStyle = truckInfo.accent || '#fff';
-  ctx.font = 'bold 11px 'Luckiest Guy', cursive';
+  ctx.font = "bold 11px 'Luckiest Guy', cursive";
   ctx.fillText(truckInfo.name, showcaseX, showcaseY + 36);
 
   const btnW = 220, btnH = 52, gap = 10;
@@ -1590,7 +1590,7 @@ function drawModeSelectScreen() {
   const coins = parseInt(localStorage.getItem('mr_coins') || '0');
   if (coins > 0) {
     ctx.save(); ctx.translate(W / 2 + 80, 90); drawStarCoin(8); ctx.restore();
-    ctx.fillStyle = '#ffd700'; ctx.font = '700 14px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#ffd700'; ctx.font = "700 14px 'Baloo 2', sans-serif";
     ctx.fillText('x ' + coins, W / 2 + 92, 94);
   }
 
@@ -1608,19 +1608,19 @@ function drawModeSelectScreen() {
     ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 15); ctx.stroke();
 
     // Label
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px 'Luckiest Guy', cursive';
+    ctx.fillStyle = '#fff'; ctx.font = "bold 20px 'Luckiest Guy', cursive";
     ctx.fillText(m.label, W / 2, btnY + 24);
 
     // Description
-    ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = '11px 'Baloo 2', sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.font = "11px 'Baloo 2', sans-serif";
     ctx.fillText(m.desc, W / 2, btnY + 42);
 
     // Key hint
-    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = '11px 'Baloo 2', sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = "11px 'Baloo 2', sans-serif";
     ctx.fillText('[' + m.key + ']', bx + btnW - 20, btnY + 18);
   }
 
-  ctx.fillStyle = '#666'; ctx.font = '12px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#666'; ctx.font = "12px 'Baloo 2', sans-serif";
   ctx.fillText('Press 1, 2, or 3 \u2022 or tap a button', W / 2, H - 25);
 
   // Back to games (top-left — prominent orange button)
@@ -1645,14 +1645,14 @@ function drawLevelTransitionScreen() {
 
   // Level number
   ctx.fillStyle = '#ffcc00';
-  ctx.font = 'bold 44px 'Luckiest Guy', cursive';
+  ctx.font = "bold 44px 'Luckiest Guy', cursive";
   const lvlText = 'LEVEL ' + (campaignLevel + 1);
   ctx.strokeText(lvlText, W / 2, H / 2 - 20);
   ctx.fillText(lvlText, W / 2, H / 2 - 20);
 
   // Level name
   ctx.fillStyle = '#fff';
-  ctx.font = '700 22px 'Baloo 2', sans-serif';
+  ctx.font = "700 22px 'Baloo 2', sans-serif";
   ctx.fillText(lvl.name, W / 2, H / 2 + 20);
 
   ctx.textAlign = 'left';
@@ -1668,13 +1668,13 @@ function drawLevelCompleteScreen() {
   // "LEVEL COMPLETE!"
   const bounce = Math.sin(Date.now() * 0.005) * 5;
   ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 40px 'Luckiest Guy', cursive';
+  ctx.font = "bold 40px 'Luckiest Guy', cursive";
   ctx.strokeText('LEVEL COMPLETE!', W / 2, 100 + bounce);
   ctx.fillText('LEVEL COMPLETE!', W / 2, 100 + bounce);
 
   // Level name — styled title card
   const lvl = campaignSequence[campaignLevel] || campaignSequence[0];
-  ctx.font = 'bold italic 26px 'Luckiest Guy', cursive';
+  ctx.font = "bold italic 26px 'Luckiest Guy', cursive";
   if (lvl.nameColor === 'rainbow') {
     // Rainbow gradient text
     const hue = (Date.now() * 0.1) % 360;
@@ -1695,19 +1695,19 @@ function drawLevelCompleteScreen() {
   ctx.shadowBlur = 0;
 
   // Stats
-  ctx.fillStyle = '#fff'; ctx.font = '700 20px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#fff'; ctx.font = "700 20px 'Baloo 2', sans-serif";
   const sx = W / 2, sy = 175;
   ctx.fillText('\u2B50 Stars: ' + levelStats.stars, sx, sy);
   ctx.fillText('\uD83D\uDCA5 Crushes: ' + levelStats.crushes, sx, sy + 32);
   ctx.fillText('\uD83D\uDD04 Flips: ' + levelStats.flips, sx, sy + 64);
-  ctx.fillStyle = '#ffcc00'; ctx.font = 'bold 24px 'Luckiest Guy', cursive';
+  ctx.fillStyle = '#ffcc00'; ctx.font = "bold 24px 'Luckiest Guy', cursive";
   ctx.strokeText('Score: ' + levelStats.score, sx, sy + 105);
   ctx.fillText('Score: ' + levelStats.score, sx, sy + 105);
 
   // Tap to continue
   const blink = Math.sin(Date.now() * 0.004) > 0;
   if (blink) {
-    ctx.fillStyle = '#fff'; ctx.font = '700 18px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = "700 18px 'Baloo 2', sans-serif";
     if (campaignLevel < campaignSequence.length - 1) {
       ctx.fillText('TAP FOR NEXT LEVEL!', W / 2, H - 45);
     } else {
@@ -1774,19 +1774,19 @@ function drawCampaignWinScreen() {
   // Trophy text
   const bounce = Math.sin(Date.now() * 0.005) * 6;
   ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 42px 'Luckiest Guy', cursive';
+  ctx.font = "bold 42px 'Luckiest Guy', cursive";
   ctx.strokeText('YOU WIN!', W / 2, 80 + bounce);
   ctx.fillText('YOU WIN!', W / 2, 80 + bounce);
   ctx.fillStyle = '#fff';
-  ctx.font = '700 18px 'Baloo 2', sans-serif';
+  ctx.font = "700 18px 'Baloo 2', sans-serif";
   ctx.fillText('CAMPAIGN COMPLETE!', W / 2, 110);
 
   // Total stats
-  ctx.fillStyle = '#fff'; ctx.font = '700 16px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#fff'; ctx.font = "700 16px 'Baloo 2', sans-serif";
   ctx.fillText('Total Stars: ' + campaignTotals.stars, W / 2, 155);
   ctx.fillText('Total Crushes: ' + campaignTotals.crushes, W / 2, 178);
   ctx.fillText('Total Flips: ' + campaignTotals.flips, W / 2, 201);
-  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 22px 'Luckiest Guy', cursive';
+  ctx.fillStyle = '#ffd700'; ctx.font = "bold 22px 'Luckiest Guy', cursive";
   ctx.strokeText('Total Score: ' + campaignTotals.score, W / 2, 235);
   ctx.fillText('Total Score: ' + campaignTotals.score, W / 2, 235);
 
@@ -1795,7 +1795,7 @@ function drawCampaignWinScreen() {
   ctx.save(); ctx.translate(W / 2, coinY);
   drawStarCoin(20);
   ctx.restore();
-  ctx.fillStyle = '#ffd700'; ctx.font = 'bold 20px 'Luckiest Guy', cursive';
+  ctx.fillStyle = '#ffd700'; ctx.font = "bold 20px 'Luckiest Guy', cursive";
   ctx.strokeText('COIN EARNED!', W / 2, coinY + 35);
   ctx.fillText('COIN EARNED!', W / 2, coinY + 35);
 
@@ -1803,7 +1803,7 @@ function drawCampaignWinScreen() {
   if (campaignWinTimer > 60) {
     const unlockAlpha = Math.min(1, (campaignWinTimer - 60) / 30);
     ctx.globalAlpha = unlockAlpha;
-    ctx.fillStyle = '#44ffcc'; ctx.font = '700 16px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#44ffcc'; ctx.font = "700 16px 'Baloo 2', sans-serif";
     ctx.fillText('ENDLESS MODE UNLOCKED!', W / 2, coinY + 60);
     ctx.globalAlpha = 1;
   }
@@ -1811,7 +1811,7 @@ function drawCampaignWinScreen() {
   // Tap to continue
   const blink = Math.sin(Date.now() * 0.004) > 0;
   if (blink && campaignWinTimer > 90) {
-    ctx.fillStyle = '#fff'; ctx.font = '700 16px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = "700 16px 'Baloo 2', sans-serif";
     ctx.fillText('TAP TO CONTINUE', W / 2, H - 30);
   }
   ctx.textAlign = 'left';
@@ -1829,7 +1829,7 @@ function drawGameOverScreen() {
   {
     // Frenzy: show TIME'S UP
     ctx.fillStyle = '#ff4400';
-    ctx.font = 'bold 44px 'Luckiest Guy', cursive';
+    ctx.font = "bold 44px 'Luckiest Guy', cursive";
     ctx.strokeText("TIME'S UP!", W / 2, 110 + bounce);
     ctx.fillText("TIME'S UP!", W / 2, 110 + bounce);
 
@@ -1839,18 +1839,18 @@ function drawGameOverScreen() {
     drawVehiclePreview(-45, -25, TRUCK_ROSTER[player1.truckIdx], false, 0, player1.truckIdx);
     ctx.restore();
 
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 48px 'Luckiest Guy', cursive';
+    ctx.fillStyle = '#fff'; ctx.font = "bold 48px 'Luckiest Guy', cursive";
     ctx.strokeText('⭐ ' + player1.score, W / 2, 280);
     ctx.fillText('⭐ ' + player1.score, W / 2, 280);
 
-    ctx.fillStyle = '#ffcc00'; ctx.font = '700 22px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#ffcc00'; ctx.font = "700 22px 'Baloo 2', sans-serif";
     ctx.fillText('CRUSHES: ' + player1.totalCrushes, W / 2, 320);
   }
 
   // Tap to continue
   const blink = Math.sin(Date.now() * 0.004) > 0;
   if (blink) {
-    ctx.fillStyle = '#fff'; ctx.font = '700 20px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#fff'; ctx.font = "700 20px 'Baloo 2', sans-serif";
     ctx.fillText('TAP TO PLAY AGAIN!', W / 2, H - 40);
   }
   ctx.textAlign = 'left';
@@ -1868,7 +1868,7 @@ function drawCountdown() {
   ctx.scale(scale, scale);
   ctx.globalAlpha = progress > 0.1 ? 1 : progress * 10;
   ctx.fillStyle = txt === 'GO!' ? '#44ff44' : '#fff';
-  ctx.font = 'bold 80px 'Luckiest Guy', cursive';
+  ctx.font = "bold 80px 'Luckiest Guy', cursive";
   ctx.strokeStyle = '#000'; ctx.lineWidth = 8;
   ctx.strokeText(txt, 0, 0); ctx.fillText(txt, 0, 0);
   ctx.restore();
@@ -2152,7 +2152,7 @@ function drawPowerUp(pu) {
   ctx.restore();
 
   // Name label above
-  ctx.fillStyle = '#fff'; ctx.font = '700 10px 'Baloo 2', sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff'; ctx.font = "700 10px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
   ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
   ctx.strokeText(pu.type.name, px, py - 28);
   ctx.fillText(pu.type.name, px, py - 28);
@@ -2682,7 +2682,7 @@ function drawCarVehicle(tx, ty, tw, th, colors, vehicleType, squishY) {
   if (vehicleType === 'bus') {
     ctx.fillStyle = '#000';
     ctx.fillRect(tx + 5, bodyY + bodyH * 0.55, tw - 10, 3);
-    ctx.font = '8px 'Baloo 2', sans-serif'; ctx.fillStyle = '#000'; ctx.textAlign = 'center';
+    ctx.font = "8px 'Baloo 2', sans-serif"; ctx.fillStyle = '#000'; ctx.textAlign = 'center';
     ctx.fillText('SCHOOL BUS', tx + tw / 2, bodyY + bodyH * 0.45);
     ctx.textAlign = 'left';
   }
@@ -3078,7 +3078,7 @@ function drawCar(obs) {
       ctx.fill();
     }
     ctx.fillStyle = '#fff';
-    ctx.font = '700 16px 'Baloo 2', sans-serif';
+    ctx.font = "700 16px 'Baloo 2', sans-serif";
     ctx.fillText('▲', x + obs.w - 20, GROUND_Y - 5);
     return;
   }
@@ -3368,7 +3368,7 @@ function drawSchoolBus(obs) {
   }
 
   // "SCHOOL BUS" text
-  ctx.fillStyle = '#333'; ctx.font = '700 7px 'Baloo 2', sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#333'; ctx.font = "700 7px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
   ctx.fillText('SCHOOL BUS', x + w / 2, y + h * 0.60);
   ctx.textAlign = 'left';
 
@@ -3380,7 +3380,7 @@ function drawSchoolBus(obs) {
   ctx.lineTo(x - 2, y + h * 0.50);
   ctx.lineTo(x - 7, y + h * 0.45);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = '4px 'Baloo 2', sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff'; ctx.font = "4px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
   ctx.fillText('STOP', x - 4.5, y + h * 0.40);
   ctx.textAlign = 'left';
 
@@ -4329,7 +4329,7 @@ function drawTitleScreen() {
   // Individual bouncing letters for "MONSTER"
   ctx.textAlign = 'center';
   const word1 = 'MONSTER';
-  ctx.font = 'bold 48px 'Luckiest Guy', cursive';
+  ctx.font = "bold 48px 'Luckiest Guy', cursive";
   ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
   const w1Width = ctx.measureText(word1).width;
   let cx1 = W / 2 - w1Width / 2;
@@ -4343,7 +4343,7 @@ function drawTitleScreen() {
   }
 
   const word2 = 'RALLY!';
-  ctx.font = 'bold 52px 'Luckiest Guy', cursive';
+  ctx.font = "bold 52px 'Luckiest Guy', cursive";
   const w2Width = ctx.measureText(word2).width;
   let cx2 = W / 2 - w2Width / 2;
   for (let i = 0; i < word2.length; i++) {
@@ -4369,20 +4369,20 @@ function drawTitleScreen() {
   drawVehiclePreview(-45, -25, TRUCK_ROSTER[1], true, 0, 1);
   ctx.restore();
 
-  ctx.fillStyle = '#fff'; ctx.font = '700 22px 'Baloo 2', sans-serif';
+  ctx.fillStyle = '#fff'; ctx.font = "700 22px 'Baloo 2', sans-serif";
   const blink = Math.sin(Date.now() * 0.004) > 0;
   if (blink) ctx.fillText('TAP ANYWHERE TO START!', W / 2, 275);
 
-  ctx.font = '16px 'Baloo 2', sans-serif'; ctx.fillStyle = '#aaa';
+  ctx.font = "16px 'Baloo 2', sans-serif"; ctx.fillStyle = '#aaa';
   ctx.fillText('SPACE / TAP = Jump  •  Crush cars for points!', W / 2, 305);
 
   if (bestScore > 0) {
-    ctx.fillStyle = '#ffd700'; ctx.font = '700 18px 'Baloo 2', sans-serif';
+    ctx.fillStyle = '#ffd700'; ctx.font = "700 18px 'Baloo 2', sans-serif";
     ctx.fillText('Best: ⭐ ' + bestScore, W / 2, 345);
   }
 
   // Version text
-  ctx.fillStyle = '#444'; ctx.font = '10px 'Baloo 2', sans-serif'; ctx.textAlign = 'right';
+  ctx.fillStyle = '#444'; ctx.font = "10px 'Baloo 2', sans-serif"; ctx.textAlign = 'right';
   ctx.fillText('v1.0', W - 10, H - 8);
 
   // Back to games button (prominent orange button, 130x50)
@@ -4514,7 +4514,7 @@ function draw() {
       ctx.globalAlpha = p.life;
       if (p.type === 'text') {
         ctx.fillStyle = p.color;
-        ctx.font = 'bold 20px 'Luckiest Guy', cursive';
+        ctx.font = "bold 20px 'Luckiest Guy', cursive";
         ctx.textAlign = 'center'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
         ctx.strokeText(p.text, p.x, p.y); ctx.fillText(p.text, p.x, p.y);
       } else {
@@ -4573,7 +4573,7 @@ function draw() {
         const lvl = campaignSequence[campaignLevel] || campaignSequence[0];
         ctx.textAlign = 'center';
         // Level indicator (top center)
-        ctx.fillStyle = '#fff'; ctx.font = '700 11px 'Baloo 2', sans-serif';
+        ctx.fillStyle = '#fff'; ctx.font = "700 11px 'Baloo 2', sans-serif";
         ctx.fillText('LEVEL ' + (campaignLevel + 1) + ': ' + lvl.name, W / 2, 12);
 
         // MAX SPEED! text when max reached
@@ -4582,7 +4582,7 @@ function draw() {
           ctx.save();
           ctx.translate(W / 2, 75);
           ctx.scale(pulse, pulse);
-          ctx.fillStyle = '#ffd700'; ctx.font = 'bold 28px 'Luckiest Guy', cursive';
+          ctx.fillStyle = '#ffd700'; ctx.font = "bold 28px 'Luckiest Guy', cursive";
           ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
           ctx.strokeText('MAX SPEED!', 0, 0);
           ctx.fillText('MAX SPEED!', 0, 0);
