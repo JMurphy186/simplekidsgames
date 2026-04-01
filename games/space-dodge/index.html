@@ -2131,20 +2131,23 @@ function drawWorldTitle() {
   drawWorldBackground();
 
   // World number
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = `bold ${Math.round(20 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = `bold ${Math.max(20, Math.round(28 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.fillText(`WORLD ${currentWorld + 1} of ${WORLDS.length}`, W / 2, H * 0.32);
 
-  // World name with accent color
+  // World name with accent color + glow
+  ctx.shadowColor = w.accent;
+  ctx.shadowBlur = 18;
   ctx.fillStyle = w.accent;
-  ctx.font = `bold ${Math.round(48 * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.font = `bold ${Math.max(44, Math.round(64 * scale))}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.fillText(w.name, W / 2, H * 0.46);
+  ctx.shadowBlur = 0;
 
   // Decorative line
-  const lineW = 120 * scale;
+  const lineW = Math.max(100, 140 * scale);
   ctx.strokeStyle = w.accent;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.5;
   ctx.globalAlpha = 0.5;
   ctx.beginPath();
   ctx.moveTo(W / 2 - lineW, H * 0.52);
@@ -2152,23 +2155,21 @@ function drawWorldTitle() {
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Lives display — mini ships
-  const miniW = 12 * scale;
-  const miniH = 16 * scale;
-  const miniGap = 4 * scale;
+  // Lives display — mini ships (bigger)
+  const miniW = Math.max(18, 20 * scale);
+  const miniH = Math.max(24, 26 * scale);
+  const miniGap = Math.max(6, 6 * scale);
   const totalLivesW = MAX_LIVES * (miniW + miniGap) - miniGap;
-  const livesStartX = W / 2 - totalLivesW / 2 - 30 * scale;
-  const livesY = H * 0.6;
+  const livesStartX = W / 2 - totalLivesW / 2 - 36 * scale;
+  const livesY = H * 0.62;
   for (let i = 0; i < MAX_LIVES; i++) {
     drawMiniShip(livesStartX + miniW / 2 + i * (miniW + miniGap), livesY, miniW, miniH, i < lives);
   }
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.font = `${Math.round(14 * scale)}px Arial, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.font = `${Math.max(16, Math.round(18 * scale))}px Arial, sans-serif`;
   ctx.textAlign = 'left';
-  ctx.fillText(`|  Score: ${score}`, livesStartX + totalLivesW + 12 * scale, livesY + 5 * scale);
+  ctx.fillText(`|  Score: ${score}`, livesStartX + totalLivesW + 14 * scale, livesY + 5 * scale);
   ctx.textAlign = 'center';
-
-  drawMenuButton();
 }
 
 // --- COUNTDOWN ---
@@ -2181,11 +2182,16 @@ function drawCountdown() {
 
   // Number or GO
   const label = countdownNum > 0 ? countdownNum.toString() : 'GO!';
-  const numScale = countdownNum > 0 ? 80 : 60;
+  const numPx = countdownNum > 0 ? Math.max(96, Math.round(120 * scale)) : Math.max(72, Math.round(90 * scale));
   ctx.fillStyle = countdownNum > 0 ? '#fff' : w.accent;
-  ctx.font = `bold ${Math.round(numScale * scale)}px 'Arial Rounded MT Bold', Arial, sans-serif`;
+  ctx.shadowColor = countdownNum > 0 ? 'rgba(255,255,255,0.6)' : w.accent;
+  ctx.shadowBlur = 24;
+  ctx.font = `bold ${numPx}px 'Arial Rounded MT Bold', Arial, sans-serif`;
   ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   ctx.fillText(label, W / 2, H * 0.45);
+  ctx.textBaseline = 'alphabetic';
+  ctx.shadowBlur = 0;
 }
 
 // --- LEVEL COMPLETE ---
