@@ -201,67 +201,120 @@ simplekidsgames/
 
 # Space Dodge (`games/space-dodge/index.html`)
 
-**Status:** v1.0 — Complete. 5 worlds, 5 ships, 2 power-ups, audio system.
+**Status:** v2.0 — Complete overhaul. 5 worlds, 5 redesigned ships, 4 power-ups, 4 asteroid variants, 12-sound system, mobile-optimized.
 
 ### Architecture
-- Single HTML file (~2,500 lines) — Canvas only
+- Single HTML file (~4,000+ lines) — Canvas only
 - No external dependencies (fonts, assets, or audio files)
 - 60fps frame cap, dt-based physics
-- All graphics: Canvas paths + SVG ships via base64 data URI drawImage()
-- All audio: Web Audio API synthesized (ambient drones, melodic pings, SFX)
+- All graphics: Canvas paths + SVG ships/asteroids via base64 data URI drawImage()
+- Audio: 10 base64 clips (Pixabay) + 2 synthesized tones + ambient Web Audio drone
+- Mobile-first: `mobileBoost()` returns 2.0× for W < 600
 
 ### Game Flow (State Machine)
-1. **TITLE** — Spotlight title screen with animated wave text. Inline ship picker below. MENU button (top-left), SHIPS label (top-right).
-2. **PLAYING** — Dodge asteroids, collect power-ups, survive. Left/right movement + auto-fire laser.
-3. **PAUSED** — Resume, Change Ship, Main Menu.
-4. **GAME_OVER** — Stats display, retry option.
-5. **VICTORY** — Confetti + unlocked ship preview after beating campaign.
+1. **TITLE** — Large title with glow, inline ship picker (4.0× preview), MENU (top-left), TROPHIES (top-right, "Coming Soon" overlay), PLAY button, page dots
+2. **COUNTDOWN** — 3-2-1-GO with synthesized beeps (660Hz/880Hz)
+3. **PLAYING** — Dodge asteroids, collect power-ups, auto-fire blasters. Left/right movement (arrow keys + touch drag). Ship speed 5.5 (4.5 during Mega Beam)
+4. **PAUSED** — 5-button C&R-style stack: Resume → Sound → Trophies → Change Ship → Menu
+5. **LEVEL_COMPLETE** — Stats + transition to next world
+6. **VICTORY** — Confetti + unlocked ship at 3× with accent glow + "CHAMPION PILOT!" if all ships unlocked
+7. **GAME_OVER** — Stats, retry option
 
 ### World Campaign (5 worlds)
-
-| # | World | Background | Audio Vibe |
-|---|-------|-----------|------------|
-| 1 | Deep Space | Clean starfield | Calm drone |
-| 2 | Nebula | Purple/pink gas clouds, particle wisps | Ethereal |
-| 3 | Asteroid Belt | Dense floating rock debris, parallax layers | Tense |
-| 4 | Ice Field | Crystalline shards, frost particles, pale aurora | Crisp |
-| 5 | Supernova | Expanding red/orange shockwave rings, embers | Intense |
+| # | World | Background |
+|---|-------|-----------|
+| 1 | Deep Space | Clean starfield — baseline |
+| 2 | Nebula | Pillars of Creation — gas columns, tendrils, star clusters |
+| 3 | Asteroid Belt | Gas giant with scrolling bands, 3-layer parallax rocks, dust |
+| 4 | Ice Field | Moon with glow, 3 aurora bands, ice crystals, fog, sparkles |
+| 5 | Supernova | Expanding shockwave rings, embers — unchanged |
 
 ### Ships (5 total, all SVG base64 data URIs)
+| # | Ship | Style | Accent | Unlock |
+|---|------|-------|--------|--------|
+| 1 | Nova Wing | Dual nacelles, pilot dome, orange nose/stripes | #42A5F5 | Default |
+| 2 | Interceptor | Stealth angular, green neon visor + edge lighting | #00E676 | Beat campaign with #1 |
+| 3 | Juggernaut | Red/orange heavy armor, gold cockpit slit, side cannons | #FF6D00 | Beat campaign with #2 |
+| 4 | Star Cruiser | Pearlescent needle, gold delta wings, teardrop cockpit | #FFCA28 | Beat campaign with #3 |
+| 5 | Alien Tech | Purple energy pylons, floating orb core, magenta lines | #EA80FC | Beat campaign with #4 |
 
-| # | Ship | Style | Unlock |
-|---|------|-------|--------|
-| 1 | Star Rider | Blue panels, red fins | Default |
-| 2 | The Interceptor | Stealth black, green neon | Beat campaign with Ship 1 |
-| 3 | Red Phantom | Heavy red hull, triple engines | Beat campaign with Ship 2 |
-| 4 | Star Cruiser | White/gold needle, ion engine | Beat campaign with Ship 3 |
-| 5 | Alien Tech | Purple energy pylons, orb core | Beat campaign with Ship 4 |
+Ship picker: inline on title screen + Change Ship overlay in pause menu. Auto-switch to newly unlocked ship. Saves to localStorage.
 
-### Power-Ups (2)
+### Asteroids (4 SVG variants, slate gray palette)
+| Variant | Trigger | Details |
+|---------|---------|---------|
+| Pebble A | r < 25px | Smooth rounded, minimal detail |
+| Pebble B | r < 25px (50/50) | Angular elongated, crack, pits |
+| Rock | 25 ≤ r < 35px | Jagged, 2 craters, 2 ridges |
+| Boulder | r ≥ 35px | Massive, 3 craters, crack network, mineral flecks |
 
-| Power-Up | Effect | Visual |
-|----------|--------|--------|
-| Plasma Laser | Faster fire rate + wider beam, ~8s | Cyan energy beam |
-| Energy Shield | Blocks ONE asteroid hit | Green bubble around ship |
+Colors: #CFD8DC → #90A4AE → #546E7A → #263238 (slate gray, not brown)
 
-### Audio System
-- Per-world ambient drone + melodic ping patterns
-- SFX: laser fire, asteroid explosion, power-up collect, shield pop, game over
-- Mute toggle (persisted to localStorage)
-- All Web Audio API — zero audio files
+### Power-Ups (4)
+| Power-Up | Color | Effect | Duration |
+|----------|-------|--------|----------|
+| Plasma Laser | Cyan #00E5FF | Faster fire, pointed bolts with electric arcs, pierce | 8s |
+| Energy Shield | Green #69F0AE | Hex mesh bubble, absorbs one hit | Until hit |
+| Mega Beam | Red #FF1744 | Ship 2.0×, continuous beam column, disables cannon | 6s |
+| Phase Shift | Gold #FFD740 | Ship flickers 40-55%, ghost echo, scan lines, sparkles, asteroids pass through | 5s |
+
+Icons drawn from mockup functions: drawNewPlasma(), drawNewShield(), drawNewMega(), drawNewPhase(), drawContainer()
+
+### Sound System
+| Key | Trigger | Source |
+|-----|---------|--------|
+| laser | Blaster fires | Base64 clip |
+| explode | Asteroid destroyed | Base64 clip |
+| powerup | Power-up collected | Base64 clip |
+| shield_hit | Shield absorbs hit | Base64 clip |
+| shield_break | Shield breaks | Base64 clip |
+| hit | Player loses life | Base64 clip |
+| megabeam | Mega Beam activates | Base64 clip |
+| phase | Phase Shift activates | Base64 clip |
+| level_complete | Beat a world | Base64 clip |
+| victory | Beat campaign | Base64 clip |
+| countdown | 3-2-1 beeps | Synthesized 660Hz sine |
+| go | "GO!" | Synthesized 880Hz sine |
+
+playS(key) — cloneNode() pattern, 0.7 volume. Mute via localStorage('sd_mute').
+
+### Mobile (iPhone-first, W < 600)
+- `mobileBoost()` returns 2.0× — applies to ship size, Mega Beam stacks to 4.0×
+- Blaster bolts: 2.0× width, 1.8× height, 2.0× glow
+- Power-up pickups: 2.0× radius
+- HUD layout: LIVES + compact labels (left), progress bar + world + score (center), gear button (right)
+- All text: clampFont() with 13px minimum, dark text shadows
+- All buttons: min 48px tap targets
+- Touch handlers: touchstart + preventDefault + { passive: false } on everything
+
+### HUD Layout (mobile)
+```
+TOP-LEFT:           TOP-CENTER:              TOP-RIGHT:
+LIVES               ██████░░ 24%             ⚙️
+🚀🚀🚀             WORLD 2: NEBULA
+⚡ PLASMA            Score: 82
+```
+
+### Pause Menu (5 buttons, C&R-style)
+1. ▶ RESUME (green)
+2. 🔊 SOUND ON / 🔇 SOUND OFF (blue)
+3. 🏆 TROPHIES (gold) → Coming Soon overlay
+4. 🚀 CHANGE SHIP (orange) → ship picker overlay
+5. 🏠 MENU (gray)
 
 ### localStorage Keys
-- `sd_highscore` — best score
-- `sd_unlocked` — unlocked ship indices
 - `sd_ship` — selected ship index
-- `sd_mute` — mute state
-- `sd_campaign` — campaign progress
+- `sd_unlocked` — JSON array of unlocked ship indices
+- `sd_mute` — mute state ('true'/'false')
 
-### Queued (Not Built)
-- Bonus objects: UFO, Golden Comet, Supply Capsule
-- Title screen demo scene
-- Game over stats enhancement
-- Ship-specific abilities
+### Mockup Reference Files (in repo root)
+- `weapon-effects-combined-final.html` — all 4 power-up effects animated
+- `ship-redesigns-mockup.html` — 3 ship redesigns before/after
+- `powerup-rework-mockup.html` — 4 power-up icons before/after
+- `asteroid-color-options.html` — 6 color palette options
+- `space-dodge-bg-rework.html` — 3 world backgrounds before/after
+- `nova-wing-concepts.html` — Nova Wing ship concepts
+- `asteroid-variants-mockup.html` — 4 asteroid SVG variants
 
 ---
 
@@ -459,3 +512,18 @@ When adding fish in batches, use Node.js patch scripts saved in the repo root (n
 6. Normalize CRLF↔LF before/after editing
 7. Verify prefix IDs by decoding b64 back to text
 8. Run syntax check on script block only (not full HTML)
+
+### Commit/Push Protocol (ALL PROMPTS)
+Every Code prompt must end with:
+1. `git add -A`
+2. `git commit -m "[descriptive message]"`
+3. `git push origin main`
+4. Confirm: "Pushed commit [hash] to main. Vercel will auto-deploy."
+Do NOT end session without pushing. If on branch: `git checkout main && git merge [branch] && git push origin main`
+
+### Mockup-First Implementation
+When visual fidelity matters, tell Code to READ the mockup HTML file and PORT the exact drawing functions. Do NOT describe visuals in prose — Code will reinterpret and drift. Pattern:
+"Open [mockup.html], find function [drawXxx()], port the exact Canvas/SVG drawing code into the game."
+
+### Mobile Boost Pattern
+`mobileBoost()` returns 2.0 when W < 600, 1.0 otherwise. Apply to ship size, bolt size, pickup radius. Everything downstream reads from ship.w/ship.h automatically.
