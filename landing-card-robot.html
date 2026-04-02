@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKG — Catch & Reel Card (Robot on Dock)</title>
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a12;
+    color: #e8f0ff;
+    font-family: 'Baloo 2', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    gap: 32px;
+  }
+  .header h1 {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 28px;
+    color: #22C1C3;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+  .header .sub {
+    text-align: center;
+    font-size: 13px;
+    color: #4a5a7a;
+    margin-top: 4px;
+  }
+  .cards-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .label {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 14px;
+    color: #5a6a8a;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .game-card {
+    width: 280px;
+    height: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid #1a1a2e;
+    cursor: pointer;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  }
+  .game-card:hover {
+    transform: translateY(-6px);
+    border-color: #3a3a5e;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .game-card canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .card-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.85) 60%);
+    z-index: 2;
+  }
+  .card-title {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 20px;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .card-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .card-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .play-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #2ecc40;
+    color: #fff;
+    font-family: 'Luckiest Guy', cursive;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    z-index: 3;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(46,204,64,0.3);
+    transform: rotate(3deg);
+  }
+  .size-note {
+    font-size: 11px;
+    color: #3a4a6a;
+    text-align: center;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎣 CATCH & REEL — LANDING CARD</h1>
+  <div class="sub">Night Dock with Robo-Fisher 3000 — for the simplekidsgames.com game grid</div>
+</div>
+
+<!-- All 3 cards side by side for context -->
+<div class="label">ALL THREE CARDS (for context)</div>
+<div class="cards-row">
+  <!-- Monster Rally reference -->
+  <div class="game-card">
+    <canvas id="cMR" width="280" height="320"></canvas>
+    <div class="play-badge">▶ PLAY!</div>
+    <div class="card-overlay">
+      <div class="card-title">Monster Rally</div>
+      <div class="card-tags">
+        <span class="card-tag" style="background:rgba(255,100,50,0.3);color:#ff8844;">🏎️ ACTION</span>
+        <span class="card-tag" style="background:rgba(100,200,100,0.3);color:#66cc66;">MONSTER TRUCKS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Space Dodge reference -->
+  <div class="game-card">
+    <canvas id="cSD" width="280" height="320"></canvas>
+    <div class="play-badge">▶ PLAY!</div>
+    <div class="card-overlay">
+      <div class="card-title">Space Dodge</div>
+      <div class="card-tags">
+        <span class="card-tag" style="background:rgba(80,80,255,0.3);color:#8888ff;">🚀 ACTION</span>
+        <span class="card-tag" style="background:rgba(150,50,200,0.3);color:#cc88ff;">SPACE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATCH & REEL — THE CARD -->
+  <div class="game-card">
+    <canvas id="cCR" width="280" height="320"></canvas>
+    <div class="play-badge">▶ PLAY!</div>
+    <div class="card-overlay">
+      <div class="card-title">Catch & Reel</div>
+      <div class="card-tags">
+        <span class="card-tag" style="background:rgba(34,193,195,0.3);color:#22C1C3;">🎣 ARCADE</span>
+        <span class="card-tag" style="background:rgba(50,100,200,0.3);color:#6699ff;">FISHING</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Solo enlarged version -->
+<div class="label">CATCH & REEL CARD — ENLARGED</div>
+<div style="width:400px;height:460px;border-radius:20px;overflow:hidden;border:2px solid #1a1a2e;position:relative;box-shadow:0 12px 50px rgba(0,0,0,0.6);">
+  <canvas id="cCR2" width="400" height="460"></canvas>
+  <div class="play-badge" style="font-size:14px;padding:6px 14px;">▶ PLAY!</div>
+  <div class="card-overlay" style="padding:20px;">
+    <div class="card-title" style="font-size:26px;">Catch & Reel</div>
+    <div class="card-tags" style="margin-top:8px;">
+      <span class="card-tag" style="background:rgba(34,193,195,0.3);color:#22C1C3;font-size:11px;padding:3px 10px;">🎣 ARCADE</span>
+      <span class="card-tag" style="background:rgba(50,100,200,0.3);color:#6699ff;font-size:11px;padding:3px 10px;">FISHING</span>
+    </div>
+  </div>
+</div>
+<div class="size-note">Top row: actual card size (280×320) · Bottom: enlarged for detail review</div>
+
+<script>
+const R = () => Math.random();
+let frame = 0;
+
+// ==================== MONSTER RALLY (reference) ====================
+const mrCtx = document.getElementById('cMR').getContext('2d');
+const mrStars = Array.from({length:40}, () => ({x:R()*280,y:R()*200,r:R()*1.5+0.3,tw:R()*6.28,sp:0.02+R()*0.02}));
+
+function drawMR() {
+  const c=mrCtx,W=280,H=320;
+  let g=c.createLinearGradient(0,0,0,H*0.65);
+  g.addColorStop(0,'#0a0818');g.addColorStop(0.5,'#121030');g.addColorStop(1,'#1a1845');
+  c.fillStyle=g;c.fillRect(0,0,W,H*0.65);
+  mrStars.forEach(s=>{s.tw+=s.sp;c.beginPath();c.arc(s.x,s.y,s.r,0,6.28);c.fillStyle=`rgba(255,255,200,${0.3+Math.sin(s.tw)*0.4})`;c.fill();});
+  c.beginPath();c.arc(W*0.8,H*0.12,15,0,6.28);let mg=c.createRadialGradient(W*0.8,H*0.12,3,W*0.8,H*0.12,15);mg.addColorStop(0,'rgba(255,250,220,0.9)');mg.addColorStop(1,'rgba(200,210,230,0)');c.fillStyle=mg;c.fill();
+  g=c.createLinearGradient(0,H*0.6,0,H);g.addColorStop(0,'#2a1a10');g.addColorStop(1,'#120a04');c.fillStyle=g;c.fillRect(0,H*0.6,W,H*0.4);
+  c.fillStyle='#333';c.fillRect(0,H*0.68,W,H*0.12);
+  c.strokeStyle='#aa0';c.lineWidth=1.5;c.setLineDash([8,6]);c.beginPath();c.moveTo(0,H*0.74);c.lineTo(W,H*0.74);c.stroke();c.setLineDash([]);
+  let tx=W*0.35+Math.sin(frame*0.015)*5,ty=H*0.62,wa=frame*0.06;
+  c.fillStyle='#e85020';c.fillRect(tx-20,ty-18,40,18);c.fillRect(tx-8,ty-28,22,12);
+  c.fillStyle='#222';c.beginPath();c.arc(tx-12,ty+2,8,0,6.28);c.fill();c.beginPath();c.arc(tx+14,ty+2,8,0,6.28);c.fill();
+  c.fillStyle='#888';c.beginPath();c.arc(tx-12,ty+2,3,0,6.28);c.fill();c.beginPath();c.arc(tx+14,ty+2,3,0,6.28);c.fill();
+  c.fillStyle=`rgba(255,150,30,${0.3+Math.sin(frame*0.1)*0.2})`;c.beginPath();c.arc(tx-22,ty-8,4+Math.sin(frame*0.08)*2,0,6.28);c.fill();
+}
+
+// ==================== SPACE DODGE (reference) ====================
+const sdCtx = document.getElementById('cSD').getContext('2d');
+const sdStars = Array.from({length:60}, () => ({x:R()*280,y:R()*320,sp:0.3+R()*1.5,r:R()*1.2+0.2}));
+const sdAsteroids = Array.from({length:5}, () => ({x:R()*280,y:R()*320,r:6+R()*10,sp:0.4+R()*0.6,rot:R()*6.28,rotSp:0.01+R()*0.02}));
+
+function drawSD() {
+  const c=sdCtx,W=280,H=320;
+  let g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#050510');g.addColorStop(0.5,'#0a0a25');g.addColorStop(1,'#0f0a30');
+  c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.beginPath();c.arc(W*0.7,H*0.3,80,0,6.28);let ng=c.createRadialGradient(W*0.7,H*0.3,10,W*0.7,H*0.3,80);ng.addColorStop(0,'rgba(100,50,180,0.08)');ng.addColorStop(1,'rgba(100,50,180,0)');c.fillStyle=ng;c.fill();
+  sdStars.forEach(s=>{s.y+=s.sp;if(s.y>H+5){s.y=-5;s.x=R()*W;}c.beginPath();c.arc(s.x,s.y,s.r,0,6.28);c.fillStyle=`rgba(200,210,255,${0.4+s.sp*0.2})`;c.fill();});
+  sdAsteroids.forEach(a=>{a.y+=a.sp;a.rot+=a.rotSp;if(a.y>H+20){a.y=-20;a.x=R()*W;}c.save();c.translate(a.x,a.y);c.rotate(a.rot);c.fillStyle='#4a4040';c.beginPath();for(let i=0;i<6;i++){let an=i*Math.PI/3,r=a.r*(0.7+((i*3+2)%5)*0.08);i===0?c.moveTo(Math.cos(an)*r,Math.sin(an)*r):c.lineTo(Math.cos(an)*r,Math.sin(an)*r);}c.closePath();c.fill();c.strokeStyle='#5a5050';c.lineWidth=1;c.stroke();c.restore();});
+  let sy=H*0.55+Math.sin(frame*0.03)*8;c.save();c.translate(W*0.5,sy);c.fillStyle='#4488cc';c.beginPath();c.moveTo(0,-18);c.lineTo(12,10);c.lineTo(-12,10);c.closePath();c.fill();c.fillStyle='#88ddff';c.beginPath();c.moveTo(0,-10);c.lineTo(5,2);c.lineTo(-5,2);c.closePath();c.fill();c.fillStyle=`rgba(80,180,255,${0.4+Math.sin(frame*0.08)*0.2})`;c.beginPath();c.arc(0,14,5+Math.sin(frame*0.1)*2,0,6.28);c.fill();c.restore();
+}
+
+// ==================== CATCH & REEL CARD — ROBOT ON DOCK ====================
+function createCRState(W, H) {
+  return {
+    stars: Array.from({length:80}, () => ({x:R()*W,y:R()*H*0.55,r:R()*1.6+0.3,tw:R()*6.28,sp:0.015+R()*0.025,hue:190+R()*40})),
+    fireflies: Array.from({length:5}, () => ({x:W*0.05+R()*W*0.35,y:H*0.3+R()*H*0.2,vx:(R()-0.5)*0.3,vy:(R()-0.5)*0.2,tw:R()*6.28})),
+    shoot: {x:-20,y:R()*80+20,vx:2.5,vy:0.8,life:0,ml:50,del:60+R()*100}
+  };
+}
+
+function drawCR(c, W, H, state) {
+  const WL = H * 0.58; // waterline
+
+  // === SKY ===
+  let g = c.createLinearGradient(0,0,0,WL);
+  g.addColorStop(0,'#030810'); g.addColorStop(0.25,'#081020'); g.addColorStop(0.5,'#0c1830'); g.addColorStop(0.8,'#122448'); g.addColorStop(1,'#183058');
+  c.fillStyle=g; c.fillRect(0,0,W,WL);
+
+  // Milky way hint
+  c.save(); c.globalAlpha=0.025;
+  c.beginPath(); c.moveTo(W*0.05,0); c.quadraticCurveTo(W*0.35,H*0.12,W*0.65,H*0.08); c.lineTo(W*0.9,0); c.lineTo(W*0.05,0);
+  c.fillStyle='#7080b0'; c.fill(); c.restore();
+
+  // Moon
+  let mx=W*0.78, my=H*0.12;
+  c.beginPath(); c.arc(mx,my,W*0.05,0,6.28);
+  let mg=c.createRadialGradient(mx,my,W*0.01,mx,my,W*0.05);
+  mg.addColorStop(0,'rgba(255,252,235,0.9)'); mg.addColorStop(1,'rgba(180,200,220,0)');
+  c.fillStyle=mg; c.fill();
+  // Moon glow
+  c.beginPath(); c.arc(mx,my,W*0.1,0,6.28);
+  mg=c.createRadialGradient(mx,my,W*0.03,mx,my,W*0.1);
+  mg.addColorStop(0,'rgba(180,200,240,0.06)'); mg.addColorStop(1,'rgba(180,200,240,0)');
+  c.fillStyle=mg; c.fill();
+  // Moon craters
+  c.save(); c.globalAlpha=0.07;
+  c.beginPath(); c.arc(mx-W*0.015,my-W*0.01,W*0.01,0,6.28); c.fillStyle='#aab'; c.fill();
+  c.beginPath(); c.arc(mx+W*0.02,my+W*0.015,W*0.008,0,6.28); c.fill();
+  c.restore();
+
+  // Stars
+  state.stars.forEach(s => {
+    s.tw += s.sp;
+    let a = 0.25+Math.sin(s.tw)*0.4;
+    c.beginPath(); c.arc(s.x,s.y,s.r,0,6.28);
+    c.fillStyle=`hsla(${s.hue},40%,85%,${a})`;
+    c.fill();
+    if (s.r>1.4) {
+      c.save(); c.globalAlpha=a*0.25;
+      c.strokeStyle=`hsla(${s.hue},40%,85%,0.4)`;
+      c.lineWidth=0.4;
+      c.beginPath(); c.moveTo(s.x-s.r*2,s.y); c.lineTo(s.x+s.r*2,s.y); c.stroke();
+      c.beginPath(); c.moveTo(s.x,s.y-s.r*2); c.lineTo(s.x,s.y+s.r*2); c.stroke();
+      c.restore();
+    }
+  });
+
+  // Shooting star
+  let sh = state.shoot;
+  if (sh.del>0) sh.del--;
+  else {
+    sh.life++;
+    if (sh.life>sh.ml) { sh.x=-20; sh.y=R()*H*0.25+H*0.05; sh.life=0; sh.del=80+R()*200; }
+    else {
+      sh.x+=sh.vx; sh.y+=sh.vy;
+      let a=1-sh.life/sh.ml;
+      c.beginPath(); c.moveTo(sh.x,sh.y); c.lineTo(sh.x-sh.vx*10,sh.y-sh.vy*10);
+      let tg=c.createLinearGradient(sh.x,sh.y,sh.x-sh.vx*10,sh.y-sh.vy*10);
+      tg.addColorStop(0,`rgba(220,240,255,${a*0.7})`); tg.addColorStop(1,'rgba(220,240,255,0)');
+      c.strokeStyle=tg; c.lineWidth=1.5; c.stroke();
+      c.beginPath(); c.arc(sh.x,sh.y,1.5,0,6.28); c.fillStyle=`rgba(255,255,255,${a})`; c.fill();
+    }
+  }
+
+  // === WATER ===
+  g = c.createLinearGradient(0,WL,0,H);
+  g.addColorStop(0,'#0c1a30'); g.addColorStop(0.3,'#081428'); g.addColorStop(0.7,'#06101e'); g.addColorStop(1,'#040c18');
+  c.fillStyle=g; c.fillRect(0,WL,W,H-WL);
+
+  // Moon reflection
+  c.save(); c.globalAlpha=0.08;
+  for (let i=0;i<10;i++) {
+    let ry=WL+3+i*H*0.015, rw=1.5+Math.sin(frame*0.02+i*0.5)*1.5;
+    c.fillStyle='rgba(200,220,255,0.3)';
+    c.fillRect(mx-rw+Math.sin(frame*0.012+i)*2,ry,rw*2,1);
+  }
+  c.restore();
+
+  // Water ripples
+  for (let i=0;i<6;i++) {
+    let ry=WL+H*0.02+i*H*0.045;
+    c.beginPath(); c.moveTo(0,ry);
+    for (let x=0;x<W;x+=3) c.lineTo(x,ry+Math.sin(x*0.02+frame*0.02+i*1.1)*1.5);
+    c.strokeStyle=`rgba(80,130,200,${0.06-i*0.008})`; c.lineWidth=0.8; c.stroke();
+  }
+
+  // Distant treeline
+  c.fillStyle='#0a1018';
+  c.beginPath(); c.moveTo(W*0.5,WL);
+  for (let x=W*0.5;x<=W;x+=4) c.lineTo(x,WL-H*0.015-Math.sin(x*0.03)*H*0.012-Math.sin(x*0.07)*H*0.008);
+  c.lineTo(W,WL); c.fill();
+
+  // === DOCK ===
+  let dockY = WL - H*0.015;
+  let dockW = W*0.48;
+  c.fillStyle='#1c1208';
+  c.fillRect(0,dockY,dockW,H*0.015);
+  // Posts
+  [0.08,0.2,0.32].forEach(px => {
+    c.fillStyle='#2a1e12';
+    c.fillRect(W*px-1.5,dockY,3,H*0.06);
+  });
+  // Plank lines
+  for (let i=0;i<6;i++) {
+    c.fillStyle='rgba(0,0,0,0.15)';
+    c.fillRect(i*(dockW/6),dockY,0.5,H*0.015);
+  }
+  // Front edge highlight
+  c.fillStyle='#2a1e12';
+  c.fillRect(0,dockY,dockW,1);
+
+  // === LANTERN ===
+  let lanternPostX = dockW + 2;
+  c.fillStyle='#2a1e12';
+  c.fillRect(lanternPostX-1.5,dockY-H*0.06,3,H*0.06+H*0.015);
+  // Arm
+  c.strokeStyle='#3a3028'; c.lineWidth=1.5; c.lineCap='round';
+  c.beginPath(); c.moveTo(lanternPostX,dockY-H*0.058);
+  c.quadraticCurveTo(lanternPostX+W*0.03,dockY-H*0.065,lanternPostX+W*0.04,dockY-H*0.055);
+  c.stroke();
+  // Chain
+  let lx=lanternPostX+W*0.04, ly=dockY-H*0.04;
+  let swing=Math.sin(frame*0.012)*1.5;
+  lx += swing;
+  c.strokeStyle='#5a5040'; c.lineWidth=0.6;
+  c.beginPath(); c.moveTo(lanternPostX+W*0.04,dockY-H*0.055); c.lineTo(lx,ly); c.stroke();
+  // Lantern body
+  let flicker=Math.sin(frame*0.08)*0.3+Math.sin(frame*0.13)*0.2;
+  c.fillStyle=`rgba(255,200,60,${0.7+flicker*0.15})`;
+  c.fillRect(lx-W*0.01,ly,W*0.02,H*0.025);
+  c.fillStyle='#4a4035';
+  c.fillRect(lx-W*0.012,ly-H*0.004,W*0.024,H*0.005);
+  c.fillRect(lx-W*0.012,ly+H*0.025,W*0.024,H*0.005);
+  // Glow
+  let glowR=W*0.1+Math.sin(frame*0.06)*W*0.01;
+  c.beginPath(); c.arc(lx,ly+H*0.012,glowR,0,6.28);
+  let lg=c.createRadialGradient(lx,ly+H*0.012,2,lx,ly+H*0.012,glowR);
+  lg.addColorStop(0,'rgba(255,190,60,0.1)'); lg.addColorStop(0.4,'rgba(255,160,40,0.04)'); lg.addColorStop(1,'rgba(255,100,10,0)');
+  c.fillStyle=lg; c.fill();
+  // Lantern water reflection
+  c.save(); c.globalAlpha=0.04;
+  for (let i=0;i<5;i++) {
+    let ry=WL+3+i*H*0.015, rw=1.5+Math.sin(frame*0.02+i)*1;
+    c.fillStyle='rgba(255,180,60,0.4)';
+    c.fillRect(lx-rw+Math.sin(frame*0.015+i)*1,ry,rw*2,1);
+  }
+  c.restore();
+
+  // === ROBOT CHARACTER ===
+  let robX = W*0.28;
+  let robY = dockY;
+  let rs = W*0.0015; // robot scale factor
+
+  // Shadow
+  c.save(); c.globalAlpha=0.2;
+  c.fillStyle='#000';
+  c.beginPath(); c.ellipse(robX,robY+1*rs,12*rs,3*rs,0,0,6.28); c.fill();
+  c.restore();
+
+  // Feet
+  c.fillStyle='#6a8aaa';
+  c.beginPath(); c.arc(robX-8*rs,robY-2*rs,4*rs,0,6.28); c.fill();
+  c.beginPath(); c.arc(robX+8*rs,robY-2*rs,4*rs,0,6.28); c.fill();
+
+  // Body
+  c.fillStyle='#7a9ab8';
+  c.beginPath();
+  c.roundRect(robX-16*rs,robY-42*rs,32*rs,38*rs,4*rs);
+  c.fill();
+  // Body gradient overlay
+  let bg = c.createLinearGradient(robX-16*rs,robY-42*rs,robX+16*rs,robY-4*rs);
+  bg.addColorStop(0,'rgba(255,255,255,0.08)'); bg.addColorStop(1,'rgba(0,0,0,0.08)');
+  c.fillStyle=bg;
+  c.beginPath(); c.roundRect(robX-16*rs,robY-42*rs,32*rs,38*rs,4*rs); c.fill();
+
+  // Chest panel
+  c.fillStyle='#5a7a98';
+  c.beginPath(); c.roundRect(robX-10*rs,robY-35*rs,20*rs,12*rs,2*rs); c.fill();
+  // Panel lights
+  c.fillStyle='#ff4444'; c.beginPath(); c.arc(robX-5*rs,robY-29*rs,2*rs,0,6.28); c.fill();
+  c.fillStyle='#ffcc00'; c.beginPath(); c.arc(robX,robY-29*rs,2*rs,0,6.28); c.fill();
+  c.fillStyle='#44cc44'; c.beginPath(); c.arc(robX+5*rs,robY-29*rs,2*rs,0,6.28); c.fill();
+  // Panel lines
+  c.strokeStyle='rgba(255,255,255,0.1)'; c.lineWidth=0.5;
+  c.beginPath(); c.moveTo(robX-8*rs,robY-33*rs); c.lineTo(robX+8*rs,robY-33*rs); c.stroke();
+  c.beginPath(); c.moveTo(robX-8*rs,robY-31*rs); c.lineTo(robX+8*rs,robY-31*rs); c.stroke();
+
+  // Belly button
+  c.fillStyle='#e07020';
+  c.beginPath(); c.arc(robX,robY-18*rs,3*rs,0,6.28); c.fill();
+
+  // Arms
+  c.fillStyle='#6a8aaa';
+  // Left arm (down)
+  c.beginPath(); c.roundRect(robX-22*rs,robY-36*rs,7*rs,22*rs,3*rs); c.fill();
+  // Left hand
+  c.fillStyle='#88c840';
+  c.beginPath(); c.arc(robX-18.5*rs,robY-14*rs,4*rs,0,6.28); c.fill();
+
+  // Right arm (holding rod, slightly angled out)
+  c.save();
+  c.translate(robX+18*rs,robY-36*rs);
+  c.rotate(0.15);
+  c.fillStyle='#6a8aaa';
+  c.beginPath(); c.roundRect(-3.5*rs,0,7*rs,22*rs,3*rs); c.fill();
+  // Right hand
+  c.fillStyle='#88c840';
+  c.beginPath(); c.arc(0,22*rs,4*rs,0,6.28); c.fill();
+  c.restore();
+
+  // Head
+  c.fillStyle='#8aaabe';
+  c.beginPath(); c.roundRect(robX-14*rs,robY-62*rs,28*rs,22*rs,4*rs); c.fill();
+  // Head gradient
+  let hg=c.createLinearGradient(robX-14*rs,robY-62*rs,robX+14*rs,robY-40*rs);
+  hg.addColorStop(0,'rgba(255,255,255,0.06)'); hg.addColorStop(1,'rgba(0,0,0,0.06)');
+  c.fillStyle=hg;
+  c.beginPath(); c.roundRect(robX-14*rs,robY-62*rs,28*rs,22*rs,4*rs); c.fill();
+
+  // Eyes — teal glow
+  c.fillStyle='#22C1C3';
+  c.beginPath(); c.arc(robX-6*rs,robY-52*rs,3.5*rs,0,6.28); c.fill();
+  c.beginPath(); c.arc(robX+6*rs,robY-52*rs,3.5*rs,0,6.28); c.fill();
+  // Eye shine
+  c.fillStyle='rgba(255,255,255,0.4)';
+  c.beginPath(); c.arc(robX-7*rs,robY-53*rs,1*rs,0,6.28); c.fill();
+  c.beginPath(); c.arc(robX+5*rs,robY-53*rs,1*rs,0,6.28); c.fill();
+  // Eye glow halo
+  c.save(); c.globalAlpha=0.08;
+  c.fillStyle='#22C1C3';
+  c.beginPath(); c.arc(robX-6*rs,robY-52*rs,8*rs,0,6.28); c.fill();
+  c.beginPath(); c.arc(robX+6*rs,robY-52*rs,8*rs,0,6.28); c.fill();
+  c.restore();
+
+  // Mouth — small rectangle
+  c.fillStyle='#5a7a90';
+  c.beginPath(); c.roundRect(robX-4*rs,robY-46*rs,8*rs,3*rs,1*rs); c.fill();
+
+  // Antenna
+  c.strokeStyle='#6a8aaa'; c.lineWidth=1.5;
+  c.beginPath(); c.moveTo(robX,robY-62*rs); c.lineTo(robX,robY-72*rs); c.stroke();
+  // Antenna light — pulsing orange
+  let antPulse = 0.5+Math.sin(frame*0.06)*0.3;
+  c.fillStyle=`rgba(255,120,30,${antPulse})`;
+  c.beginPath(); c.arc(robX,robY-72*rs,2.5*rs,0,6.28); c.fill();
+  c.fillStyle=`rgba(255,120,30,${antPulse*0.2})`;
+  c.beginPath(); c.arc(robX,robY-72*rs,6*rs,0,6.28); c.fill();
+
+  // Ear bolts
+  c.fillStyle='#5a7a90';
+  c.beginPath(); c.arc(robX-14*rs,robY-51*rs,2*rs,0,6.28); c.fill();
+  c.beginPath(); c.arc(robX+14*rs,robY-51*rs,2*rs,0,6.28); c.fill();
+
+  // === FISHING ROD ===
+  let rodBaseX = robX+22*rs;
+  let rodBaseY = robY-14*rs;
+  let rodTipX = robX+W*0.22;
+  let rodTipY = dockY-H*0.15;
+
+  c.strokeStyle='#8aaabe';
+  c.lineWidth=2;
+  c.lineCap='round';
+  c.beginPath();
+  c.moveTo(rodBaseX,rodBaseY);
+  c.quadraticCurveTo(rodTipX-W*0.05,rodTipY-H*0.05,rodTipX,rodTipY);
+  c.stroke();
+
+  // Rod tip dot (teal for robot theme)
+  c.fillStyle='#22C1C3';
+  c.beginPath(); c.arc(rodTipX,rodTipY,2,0,6.28); c.fill();
+
+  // === FISHING LINE + BOBBER ===
+  let bobX = W*0.65;
+  let bobY = WL + H*0.02 + Math.sin(frame*0.025)*H*0.01;
+
+  // Fishing line — thin, arcing from rod tip to bobber
+  c.strokeStyle='rgba(100,200,220,0.2)';
+  c.lineWidth=0.7;
+  c.beginPath();
+  c.moveTo(rodTipX,rodTipY);
+  c.quadraticCurveTo((rodTipX+bobX)*0.5,rodTipY+H*0.05,bobX,bobY);
+  c.stroke();
+
+  // Bobber
+  c.fillStyle='#ff4444';
+  c.beginPath(); c.arc(bobX,bobY,W*0.012,0,6.28); c.fill();
+  c.fillStyle='#ffffff';
+  c.beginPath(); c.arc(bobX,bobY+W*0.012,W*0.012,0,6.28); c.fill();
+
+  // Bobber ripple
+  c.save(); c.globalAlpha=0.1+Math.sin(frame*0.03)*0.05;
+  c.strokeStyle='rgba(200,220,255,0.3)';
+  c.lineWidth=0.5;
+  c.beginPath(); c.ellipse(bobX,bobY+W*0.015,W*0.025+Math.sin(frame*0.02)*W*0.005,H*0.005,0,0,6.28); c.stroke();
+  c.restore();
+
+  // === FIREFLIES ===
+  state.fireflies.forEach(f => {
+    f.tw += 0.03;
+    f.x += f.vx+Math.sin(f.tw*2)*0.15;
+    f.y += f.vy+Math.cos(f.tw*1.5)*0.1;
+    if (f.x<W*0.02) f.vx=Math.abs(f.vx);
+    if (f.x>W*0.45) f.vx=-Math.abs(f.vx);
+    if (f.y<H*0.28) f.vy=Math.abs(f.vy);
+    if (f.y>WL-H*0.03) f.vy=-Math.abs(f.vy);
+    let a=0.3+Math.sin(f.tw)*0.4;
+    if (a>0) {
+      c.beginPath(); c.arc(f.x,f.y,W*0.015,0,6.28);
+      c.fillStyle=`rgba(255,230,80,${a*0.06})`; c.fill();
+      c.beginPath(); c.arc(f.x,f.y,W*0.005,0,6.28);
+      c.fillStyle=`rgba(255,240,120,${a*0.5})`; c.fill();
+    }
+  });
+}
+
+// Create states for both card sizes
+const crState1 = createCRState(280, 320);
+const crState2 = createCRState(400, 460);
+const crCtx1 = document.getElementById('cCR').getContext('2d');
+const crCtx2 = document.getElementById('cCR2').getContext('2d');
+
+// ==================== ANIMATION LOOP ====================
+function animate() {
+  frame++;
+  drawMR();
+  drawSD();
+  drawCR(crCtx1, 280, 320, crState1);
+  drawCR(crCtx2, 400, 460, crState2);
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

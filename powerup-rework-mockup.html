@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Dodge — Power-Up Icon Rework</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a2e;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    color: #42A5F5;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 30px;
+  }
+  .section-label {
+    text-align: center;
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .icon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .icon-card .name {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .icon-card .desc {
+    font-size: 10px;
+    color: #777;
+    max-width: 130px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  canvas {
+    border-radius: 8px;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid #1a1a3a;
+    margin: 10px auto 30px;
+    max-width: 700px;
+  }
+  .size-row {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .size-group {
+    text-align: center;
+  }
+  .size-group .tag {
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .inline-icons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>POWER-UP ICON REWORK</h1>
+<p class="subtitle">Before (current 2) vs After (reworked 4). All Canvas-drawn with gradients and glow.</p>
+
+<!-- BEFORE -->
+<div class="section-label">📸 Current Icons</div>
+<div class="row">
+  <div class="icon-card">
+    <canvas id="old-plasma" width="100" height="100"></canvas>
+    <div class="name" style="color:#00E5FF">PLASMA</div>
+    <div class="desc">Flat lightning bolt, single color</div>
+  </div>
+  <div class="icon-card">
+    <canvas id="old-shield" width="100" height="100"></canvas>
+    <div class="name" style="color:#69F0AE">SHIELD</div>
+    <div class="desc">Flat shield + checkmark, single color</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- AFTER -->
+<div class="section-label">✅ Reworked Icons (Enhanced Canvas)</div>
+<div class="row">
+  <div class="icon-card">
+    <canvas id="new-plasma" width="100" height="100"></canvas>
+    <div class="name" style="color:#00E5FF">PLASMA LASER</div>
+    <div class="desc">Gradient bolt, electric arcs, bright core glow</div>
+  </div>
+  <div class="icon-card">
+    <canvas id="new-shield" width="100" height="100"></canvas>
+    <div class="name" style="color:#69F0AE">ENERGY SHIELD</div>
+    <div class="desc">Metallic gradient, energy pulse ring, hex pattern</div>
+  </div>
+  <div class="icon-card">
+    <canvas id="new-mega" width="100" height="100"></canvas>
+    <div class="name" style="color:#FF1744">MEGA BEAM</div>
+    <div class="desc">Ship + beam icon, radiating rings, intense glow</div>
+  </div>
+  <div class="icon-card">
+    <canvas id="new-phase" width="100" height="100"></canvas>
+    <div class="name" style="color:#FFD740">PHASE SHIFT</div>
+    <div class="desc">Ghost ship silhouette, scan lines, hologram flicker</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- GAMEPLAY SIZE -->
+<div class="section-label">📐 At Gameplay Size (~36px)</div>
+<div class="size-row">
+  <div class="size-group">
+    <div class="tag">Current</div>
+    <div class="inline-icons">
+      <canvas id="sm-old-plasma" width="36" height="36"></canvas>
+      <canvas id="sm-old-shield" width="36" height="36"></canvas>
+    </div>
+  </div>
+  <div class="size-group">
+    <div class="tag">Reworked</div>
+    <div class="inline-icons">
+      <canvas id="sm-new-plasma" width="36" height="36"></canvas>
+      <canvas id="sm-new-shield" width="36" height="36"></canvas>
+      <canvas id="sm-new-mega" width="36" height="36"></canvas>
+      <canvas id="sm-new-phase" width="36" height="36"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// SHARED: Draw power-up container (glow + dark circle + border)
+// ============================================
+function drawContainer(ctx, cx, cy, r, color, t) {
+  // Outer glow
+  ctx.globalAlpha = 0.25;
+  const glow = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, r * 1.6);
+  glow.addColorStop(0, color);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Dark inner circle
+  const innerGrad = ctx.createRadialGradient(cx - r*0.2, cy - r*0.2, 0, cx, cy, r);
+  innerGrad.addColorStop(0, '#1e1e3a');
+  innerGrad.addColorStop(1, '#0c0c1e');
+  ctx.fillStyle = innerGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Border with gradient
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Subtle inner ring
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.85, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+// ============================================
+// OLD ICONS (flat, current implementation)
+// ============================================
+function drawOldIcon(canvasId, type, color) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const cx = c.width / 2, cy = c.height / 2;
+  const r = 32;
+
+  // Space bg
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // Outer glow
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Dark circle
+  ctx.fillStyle = '#16162C';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Icon
+  ctx.fillStyle = color;
+  if (type === 'plasma') {
+    const s = r * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + s * 0.3, cy - s);
+    ctx.lineTo(cx - s * 0.4, cy + s * 0.1);
+    ctx.lineTo(cx + s * 0.05, cy + s * 0.1);
+    ctx.lineTo(cx - s * 0.3, cy + s);
+    ctx.lineTo(cx + s * 0.4, cy - s * 0.1);
+    ctx.lineTo(cx - s * 0.05, cy - s * 0.1);
+    ctx.closePath();
+    ctx.fill();
+  } else if (type === 'shield') {
+    const s = r * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s);
+    ctx.lineTo(cx + s * 0.85, cy - s * 0.55);
+    ctx.lineTo(cx + s * 0.85, cy + s * 0.15);
+    ctx.quadraticCurveTo(cx + s * 0.7, cy + s * 0.8, cx, cy + s * 1.1);
+    ctx.quadraticCurveTo(cx - s * 0.7, cy + s * 0.8, cx - s * 0.85, cy + s * 0.15);
+    ctx.lineTo(cx - s * 0.85, cy - s * 0.55);
+    ctx.closePath();
+    ctx.fill();
+    // Checkmark
+    ctx.strokeStyle = '#16162C';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - s * 0.25, cy + s * 0.05);
+    ctx.lineTo(cx - s * 0.05, cy + s * 0.3);
+    ctx.lineTo(cx + s * 0.3, cy - s * 0.2);
+    ctx.stroke();
+  }
+}
+
+drawOldIcon('old-plasma', 'plasma', '#00E5FF');
+drawOldIcon('old-shield', 'shield', '#69F0AE');
+
+// ============================================
+// NEW: PLASMA LASER (gradient bolt + arcs)
+// ============================================
+function drawNewPlasma(canvasId, size) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const cx = c.width / 2, cy = c.height / 2;
+  const r = size || 32;
+  const color = '#00E5FF';
+
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, c.width, c.height);
+  drawContainer(ctx, cx, cy, r, color, 0);
+
+  // Electric arcs (behind bolt)
+  ctx.strokeStyle = '#00E5FF';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.4;
+  // Arc 1
+  ctx.beginPath();
+  ctx.moveTo(cx - r*0.5, cy - r*0.3);
+  ctx.quadraticCurveTo(cx - r*0.1, cy - r*0.5, cx + r*0.15, cy - r*0.15);
+  ctx.stroke();
+  // Arc 2
+  ctx.beginPath();
+  ctx.moveTo(cx + r*0.5, cy + r*0.3);
+  ctx.quadraticCurveTo(cx + r*0.1, cy + r*0.5, cx - r*0.15, cy + r*0.15);
+  ctx.stroke();
+  // Arc 3
+  ctx.beginPath();
+  ctx.moveTo(cx - r*0.4, cy + r*0.2);
+  ctx.quadraticCurveTo(cx - r*0.55, cy - r*0.1, cx - r*0.2, cy - r*0.4);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Lightning bolt with gradient
+  const s = r * 0.55;
+  const boltGrad = ctx.createLinearGradient(cx, cy - s, cx, cy + s);
+  boltGrad.addColorStop(0, '#FFFFFF');
+  boltGrad.addColorStop(0.3, '#80DEEA');
+  boltGrad.addColorStop(0.7, '#00E5FF');
+  boltGrad.addColorStop(1, '#00B8D4');
+  ctx.fillStyle = boltGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx + s * 0.35, cy - s);
+  ctx.lineTo(cx - s * 0.15, cy - s * 0.05);
+  ctx.lineTo(cx + s * 0.12, cy - s * 0.05);
+  ctx.lineTo(cx - s * 0.35, cy + s);
+  ctx.lineTo(cx + s * 0.15, cy + s * 0.05);
+  ctx.lineTo(cx - s * 0.12, cy + s * 0.05);
+  ctx.closePath();
+  ctx.fill();
+
+  // Bright core glow on bolt center
+  const coreGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.4);
+  coreGlow.addColorStop(0, 'rgba(255,255,255,0.3)');
+  coreGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreGlow;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tiny spark dots
+  ctx.fillStyle = '#FFFFFF';
+  ctx.globalAlpha = 0.7;
+  [[cx-r*0.35, cy-r*0.45], [cx+r*0.4, cy+r*0.35], [cx+r*0.35, cy-r*0.2], [cx-r*0.3, cy+r*0.5]].forEach(([x,y]) => {
+    ctx.beginPath();
+    ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+drawNewPlasma('new-plasma');
+
+// ============================================
+// NEW: ENERGY SHIELD (metallic + energy pulse)
+// ============================================
+function drawNewShield(canvasId, size) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const cx = c.width / 2, cy = c.height / 2;
+  const r = size || 32;
+  const color = '#69F0AE';
+
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, c.width, c.height);
+  drawContainer(ctx, cx, cy, r, color, 0);
+
+  const s = r * 0.58;
+
+  // Shield shape with metallic gradient
+  const shieldGrad = ctx.createLinearGradient(cx - s, cy - s, cx + s, cy + s);
+  shieldGrad.addColorStop(0, '#B9F6CA');
+  shieldGrad.addColorStop(0.25, '#69F0AE');
+  shieldGrad.addColorStop(0.5, '#00E676');
+  shieldGrad.addColorStop(0.75, '#69F0AE');
+  shieldGrad.addColorStop(1, '#00C853');
+
+  ctx.fillStyle = shieldGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - s);
+  ctx.lineTo(cx + s * 0.85, cy - s * 0.5);
+  ctx.lineTo(cx + s * 0.85, cy + s * 0.15);
+  ctx.quadraticCurveTo(cx + s * 0.7, cy + s * 0.8, cx, cy + s * 1.05);
+  ctx.quadraticCurveTo(cx - s * 0.7, cy + s * 0.8, cx - s * 0.85, cy + s * 0.15);
+  ctx.lineTo(cx - s * 0.85, cy - s * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Highlight streak (metallic shine)
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.moveTo(cx - s * 0.3, cy - s * 0.9);
+  ctx.lineTo(cx - s * 0.5, cy - s * 0.3);
+  ctx.lineTo(cx - s * 0.2, cy + s * 0.2);
+  ctx.lineTo(cx, cy - s * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Inner border (dark inset)
+  ctx.strokeStyle = '#004D40';
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - s * 0.7);
+  ctx.lineTo(cx + s * 0.55, cy - s * 0.3);
+  ctx.lineTo(cx + s * 0.55, cy + s * 0.1);
+  ctx.quadraticCurveTo(cx + s * 0.45, cy + s * 0.55, cx, cy + s * 0.72);
+  ctx.quadraticCurveTo(cx - s * 0.45, cy + s * 0.55, cx - s * 0.55, cy + s * 0.1);
+  ctx.lineTo(cx - s * 0.55, cy - s * 0.3);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Energy plus symbol (instead of checkmark)
+  ctx.strokeStyle = '#004D40';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - s * 0.25);
+  ctx.lineTo(cx, cy + s * 0.25);
+  ctx.moveTo(cx - s * 0.25, cy);
+  ctx.lineTo(cx + s * 0.25, cy);
+  ctx.stroke();
+
+  // Outer energy ring pulse
+  ctx.strokeStyle = '#69F0AE';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.2;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.95, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
+drawNewShield('new-shield');
+
+// ============================================
+// NEW: MEGA BEAM (ship + beam icon)
+// ============================================
+function drawNewMega(canvasId, size) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const cx = c.width / 2, cy = c.height / 2;
+  const r = size || 32;
+  const color = '#FF1744';
+
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, c.width, c.height);
+  drawContainer(ctx, cx, cy, r, color, 0);
+
+  // Beam column (behind ship icon)
+  const beamGrad = ctx.createLinearGradient(cx - r*0.15, 0, cx + r*0.15, 0);
+  beamGrad.addColorStop(0, 'transparent');
+  beamGrad.addColorStop(0.2, '#FF174440');
+  beamGrad.addColorStop(0.35, '#FF174480');
+  beamGrad.addColorStop(0.5, '#FF1744CC');
+  beamGrad.addColorStop(0.65, '#FF174480');
+  beamGrad.addColorStop(0.8, '#FF174440');
+  beamGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = beamGrad;
+  ctx.fillRect(cx - r*0.4, cy - r*0.85, r*0.8, r*0.7);
+
+  // Beam core (bright center line)
+  const coreGrad = ctx.createLinearGradient(cx - r*0.05, 0, cx + r*0.05, 0);
+  coreGrad.addColorStop(0, 'transparent');
+  coreGrad.addColorStop(0.3, '#FFFFFF80');
+  coreGrad.addColorStop(0.5, '#FFFFFFCC');
+  coreGrad.addColorStop(0.7, '#FFFFFF80');
+  coreGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = coreGrad;
+  ctx.fillRect(cx - r*0.12, cy - r*0.85, r*0.24, r*0.7);
+
+  // Radiating rings from beam origin
+  ctx.strokeStyle = '#FF1744';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 3; i++) {
+    const ringR = r * (0.3 + i * 0.12);
+    ctx.globalAlpha = 0.3 - i * 0.08;
+    ctx.beginPath();
+    ctx.arc(cx, cy + r*0.15, ringR, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Mini ship silhouette (center-bottom)
+  const ss = r * 0.35;
+  const sy = cy + r * 0.2;
+  // Ship body
+  const shipGrad = ctx.createLinearGradient(cx - ss, sy, cx + ss, sy);
+  shipGrad.addColorStop(0, '#FF8A80');
+  shipGrad.addColorStop(0.5, '#FFFFFF');
+  shipGrad.addColorStop(1, '#FF8A80');
+  ctx.fillStyle = shipGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx, sy - ss * 1.2);
+  ctx.lineTo(cx + ss * 0.6, sy + ss * 0.4);
+  ctx.lineTo(cx, sy + ss * 0.2);
+  ctx.lineTo(cx - ss * 0.6, sy + ss * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  // Wings
+  ctx.fillStyle = '#FF1744';
+  ctx.beginPath();
+  ctx.moveTo(cx - ss * 0.4, sy - ss * 0.1);
+  ctx.lineTo(cx - ss * 1.0, sy + ss * 0.5);
+  ctx.lineTo(cx - ss * 0.3, sy + ss * 0.3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + ss * 0.4, sy - ss * 0.1);
+  ctx.lineTo(cx + ss * 1.0, sy + ss * 0.5);
+  ctx.lineTo(cx + ss * 0.3, sy + ss * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Size-up arrows (flanking ship)
+  ctx.strokeStyle = '#FF8A80';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.6;
+  // Left arrow pointing outward
+  ctx.beginPath();
+  ctx.moveTo(cx - r*0.55, sy - r*0.1);
+  ctx.lineTo(cx - r*0.7, sy);
+  ctx.lineTo(cx - r*0.55, sy + r*0.1);
+  ctx.stroke();
+  // Right arrow
+  ctx.beginPath();
+  ctx.moveTo(cx + r*0.55, sy - r*0.1);
+  ctx.lineTo(cx + r*0.7, sy);
+  ctx.lineTo(cx + r*0.55, sy + r*0.1);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+drawNewMega('new-mega');
+
+// ============================================
+// NEW: PHASE SHIFT (ghost ship + scan lines)
+// ============================================
+function drawNewPhase(canvasId, size) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const cx = c.width / 2, cy = c.height / 2;
+  const r = size || 32;
+  const color = '#FFD740';
+
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, c.width, c.height);
+  drawContainer(ctx, cx, cy, r, color, 0);
+
+  // Ghost ship silhouette (translucent)
+  const ss = r * 0.4;
+  const sy = cy - r * 0.05;
+
+  // Ship shadow/echo (offset, very faint — "phasing" effect)
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = '#FFD740';
+  ctx.beginPath();
+  ctx.moveTo(cx + 3, sy - ss * 1.3);
+  ctx.lineTo(cx + 3 + ss * 0.7, sy + ss * 0.5);
+  ctx.lineTo(cx + 3, sy + ss * 0.3);
+  ctx.lineTo(cx + 3 - ss * 0.7, sy + ss * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Main ghost ship
+  const ghostGrad = ctx.createLinearGradient(cx, sy - ss * 1.3, cx, sy + ss * 0.5);
+  ghostGrad.addColorStop(0, '#FFFDE7');
+  ghostGrad.addColorStop(0.4, '#FFD740');
+  ghostGrad.addColorStop(1, '#FFA000');
+  ctx.globalAlpha = 0.55;
+  ctx.fillStyle = ghostGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx, sy - ss * 1.3);
+  ctx.lineTo(cx + ss * 0.7, sy + ss * 0.5);
+  ctx.lineTo(cx, sy + ss * 0.3);
+  ctx.lineTo(cx - ss * 0.7, sy + ss * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  // Wings
+  ctx.beginPath();
+  ctx.moveTo(cx - ss * 0.5, sy);
+  ctx.lineTo(cx - ss * 1.2, sy + ss * 0.6);
+  ctx.lineTo(cx - ss * 0.4, sy + ss * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + ss * 0.5, sy);
+  ctx.lineTo(cx + ss * 1.2, sy + ss * 0.6);
+  ctx.lineTo(cx + ss * 0.4, sy + ss * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Holographic scan lines across ship area
+  ctx.strokeStyle = '#FFD740';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < 8; i++) {
+    const ly = sy - ss * 1.2 + i * (ss * 2.2 / 8);
+    ctx.globalAlpha = 0.15 + (i % 2) * 0.1;
+    ctx.beginPath();
+    ctx.moveTo(cx - r * 0.5, ly);
+    ctx.lineTo(cx + r * 0.5, ly);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Glitch offset bars (2 small horizontal rects, shifted)
+  ctx.fillStyle = '#FFD740';
+  ctx.globalAlpha = 0.25;
+  ctx.fillRect(cx - r*0.4, sy - ss*0.3, r*0.3, 2);
+  ctx.fillRect(cx + r*0.1, sy + ss*0.1, r*0.35, 2);
+  ctx.globalAlpha = 1;
+
+  // Corner sparkle diamonds
+  ctx.fillStyle = '#FFFDE7';
+  ctx.globalAlpha = 0.6;
+  const diamonds = [[cx - r*0.55, cy - r*0.55], [cx + r*0.55, cy - r*0.45], [cx - r*0.5, cy + r*0.5], [cx + r*0.45, cy + r*0.55]];
+  diamonds.forEach(([dx, dy]) => {
+    const ds = 2;
+    ctx.beginPath();
+    ctx.moveTo(dx, dy - ds);
+    ctx.lineTo(dx + ds*0.6, dy);
+    ctx.lineTo(dx, dy + ds);
+    ctx.lineTo(dx - ds*0.6, dy);
+    ctx.closePath();
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+drawNewPhase('new-phase');
+
+// ============================================
+// SMALL SIZE VERSIONS (36px gameplay size)
+// ============================================
+function drawSmallOld(canvasId, type, color) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  const cx = 18, cy = 18, r2 = 14;
+  ctx.fillStyle = '#0a0a2e';
+  ctx.fillRect(0, 0, 36, 36);
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(cx, cy, r2*1.4, 0, Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#16162C';
+  ctx.beginPath(); ctx.arc(cx, cy, r2, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(cx, cy, r2, 0, Math.PI*2); ctx.stroke();
+  ctx.fillStyle = color;
+  if (type === 'plasma') {
+    const s = r2*0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx+s*0.3,cy-s); ctx.lineTo(cx-s*0.4,cy+s*0.1);
+    ctx.lineTo(cx+s*0.05,cy+s*0.1); ctx.lineTo(cx-s*0.3,cy+s);
+    ctx.lineTo(cx+s*0.4,cy-s*0.1); ctx.lineTo(cx-s*0.05,cy-s*0.1);
+    ctx.closePath(); ctx.fill();
+  } else {
+    const s = r2*0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy-s); ctx.lineTo(cx+s*0.8,cy-s*0.5);
+    ctx.lineTo(cx+s*0.8,cy+s*0.1);
+    ctx.quadraticCurveTo(cx+s*0.6,cy+s*0.7,cx,cy+s);
+    ctx.quadraticCurveTo(cx-s*0.6,cy+s*0.7,cx-s*0.8,cy+s*0.1);
+    ctx.lineTo(cx-s*0.8,cy-s*0.5); ctx.closePath(); ctx.fill();
+  }
+}
+drawSmallOld('sm-old-plasma', 'plasma', '#00E5FF');
+drawSmallOld('sm-old-shield', 'shield', '#69F0AE');
+
+// Small new versions
+function drawSmallNew(canvasId, drawFn, size) {
+  drawFn(canvasId, size);
+}
+drawSmallNew('sm-new-plasma', drawNewPlasma, 14);
+drawSmallNew('sm-new-shield', drawNewShield, 14);
+drawSmallNew('sm-new-mega', drawNewMega, 14);
+drawSmallNew('sm-new-phase', drawNewPhase, 14);
+
+</script>
+</body>
+</html>

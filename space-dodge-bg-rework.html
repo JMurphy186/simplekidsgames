@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Dodge — Background Rework Concepts</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a12;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 24px;
+    color: #90CAF9;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 30px;
+  }
+  .world-section {
+    margin-bottom: 40px;
+  }
+  .world-label {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .compare-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .compare-item {
+    text-align: center;
+  }
+  .compare-item .tag {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  canvas {
+    border-radius: 12px;
+    border: 1px solid #222;
+  }
+</style>
+</head>
+<body>
+
+<h1>SPACE DODGE — BACKGROUND REWORK</h1>
+<p class="subtitle">Worlds 2, 3, 4 — Before (current) vs After (concept). Worlds 1 & 5 stay unchanged.</p>
+
+<!-- NEBULA -->
+<div class="world-section">
+  <div class="world-label" style="color:#CE93D8">WORLD 2: NEBULA</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Before (current)</div>
+      <canvas id="neb-before" width="360" height="640"></canvas>
+    </div>
+    <div class="compare-item">
+      <div class="tag">After (concept)</div>
+      <canvas id="neb-after" width="360" height="640"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ASTEROID BELT -->
+<div class="world-section">
+  <div class="world-label" style="color:#FFB74D">WORLD 3: ASTEROID BELT</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Before (current)</div>
+      <canvas id="ast-before" width="360" height="640"></canvas>
+    </div>
+    <div class="compare-item">
+      <div class="tag">After (concept)</div>
+      <canvas id="ast-after" width="360" height="640"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ICE FIELD -->
+<div class="world-section">
+  <div class="world-label" style="color:#4FC3F7">WORLD 4: ICE FIELD</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Before (current)</div>
+      <canvas id="ice-before" width="360" height="640"></canvas>
+    </div>
+    <div class="compare-item">
+      <div class="tag">After (concept)</div>
+      <canvas id="ice-after" width="360" height="640"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// SHARED HELPERS
+// ============================================
+function drawStarField(ctx, W, H, count, baseColor, sizeRange) {
+  const [r, g, b] = baseColor;
+  for (let i = 0; i < count; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const sz = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
+    const a = 0.3 + Math.random() * 0.7;
+    ctx.fillStyle = `rgba(${r},${g},${b},${a})`;
+    ctx.beginPath();
+    ctx.arc(x, y, sz, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawGradientBg(ctx, W, H, stops) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  stops.forEach((s, i) => grad.addColorStop(i / (stops.length - 1), s));
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+// ============================================
+// NEBULA — BEFORE (current: faint purple blobs)
+// ============================================
+(function() {
+  const c = document.getElementById('neb-before');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  drawGradientBg(ctx, W, H, ['#120820', '#1a0a2e', '#220e3a']);
+  drawStarField(ctx, W, H, 100, [224, 176, 255], [0.5, 1.5]);
+
+  // Faint blobs (current implementation)
+  const clouds = [
+    { x: 0.2, y: 0.3, rx: 100, ry: 50, color: '#CE93D8', alpha: 0.07 },
+    { x: 0.7, y: 0.5, rx: 120, ry: 60, color: '#F48FB1', alpha: 0.06 },
+    { x: 0.4, y: 0.7, rx: 90, ry: 45, color: '#CE93D8', alpha: 0.08 },
+    { x: 0.8, y: 0.2, rx: 80, ry: 50, color: '#F48FB1', alpha: 0.05 },
+    { x: 0.1, y: 0.8, rx: 110, ry: 55, color: '#CE93D8', alpha: 0.06 },
+  ];
+  clouds.forEach(cl => {
+    ctx.globalAlpha = cl.alpha;
+    const g = ctx.createRadialGradient(cl.x * W, cl.y * H, 0, cl.x * W, cl.y * H, cl.rx);
+    g.addColorStop(0, cl.color);
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(cl.x * W, cl.y * H, cl.rx, cl.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+})();
+
+// ============================================
+// NEBULA — AFTER (Pillars of Creation vibe)
+// ============================================
+(function() {
+  const c = document.getElementById('neb-after');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // Deeper gradient with more color
+  drawGradientBg(ctx, W, H, ['#0a0520', '#1a0a3e', '#2a0e4a', '#1a0830']);
+
+  // LAYER 1: Deep background glow (large diffuse patches)
+  const bgGlows = [
+    { x: 0.15, y: 0.2, rx: 200, ry: 300, color: '#4A148C', alpha: 0.12 },
+    { x: 0.85, y: 0.6, rx: 180, ry: 250, color: '#880E4F', alpha: 0.10 },
+    { x: 0.5, y: 0.8, rx: 250, ry: 150, color: '#311B92', alpha: 0.08 },
+  ];
+  bgGlows.forEach(g => {
+    ctx.globalAlpha = g.alpha;
+    const grad = ctx.createRadialGradient(g.x * W, g.y * H, 0, g.x * W, g.y * H, g.rx);
+    grad.addColorStop(0, g.color);
+    grad.addColorStop(0.6, g.color + '40');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(g.x * W, g.y * H, g.rx, g.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  // LAYER 2: Nebula pillars (tall vertical gas columns)
+  function drawPillar(x, topY, botY, width, colors) {
+    const grad = ctx.createLinearGradient(x - width/2, topY, x + width/2, topY);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.2, colors[0] + '30');
+    grad.addColorStop(0.4, colors[1] + '50');
+    grad.addColorStop(0.5, colors[1] + '60');
+    grad.addColorStop(0.6, colors[1] + '50');
+    grad.addColorStop(0.8, colors[0] + '30');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - width/2, topY, width, botY - topY);
+
+    // Bright edge highlights
+    ctx.strokeStyle = colors[2] + '40';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - width * 0.3, topY);
+    ctx.bezierCurveTo(x - width * 0.35, topY + (botY-topY)*0.3, x - width * 0.25, topY + (botY-topY)*0.7, x - width * 0.3, botY);
+    ctx.stroke();
+  }
+
+  drawPillar(W * 0.18, H * 0.1, H * 0.95, 80, ['#6A1B9A', '#CE93D8', '#F48FB1']);
+  drawPillar(W * 0.45, H * 0.2, H * 1.0, 100, ['#4A148C', '#AB47BC', '#EA80FC']);
+  drawPillar(W * 0.72, H * 0.05, H * 0.85, 70, ['#880E4F', '#F48FB1', '#FCE4EC']);
+
+  // LAYER 3: Wispy tendrils (curved gas filaments)
+  const tendrils = [
+    { x1: 0, y1: 0.3, x2: W * 0.5, y2: 0.5, cx: W * 0.25, cy: 0.2, color: '#CE93D8', alpha: 0.15 },
+    { x1: W * 0.4, y1: 0.1, x2: W, y2: 0.4, cx: W * 0.7, cy: 0.15, color: '#F48FB1', alpha: 0.12 },
+    { x1: 0, y1: 0.6, x2: W * 0.6, y2: 0.8, cx: W * 0.3, cy: 0.55, color: '#EA80FC', alpha: 0.10 },
+    { x1: W * 0.3, y1: 0.7, x2: W, y2: 0.65, cx: W * 0.65, cy: 0.85, color: '#CE93D8', alpha: 0.08 },
+  ];
+  tendrils.forEach(t => {
+    ctx.globalAlpha = t.alpha;
+    ctx.strokeStyle = t.color;
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(t.x1, t.y1 * H);
+    ctx.quadraticCurveTo(t.cx, t.cy * H, t.x2, t.y2 * H);
+    ctx.stroke();
+    // Glow version
+    ctx.lineWidth = 30;
+    ctx.globalAlpha = t.alpha * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(t.x1, t.y1 * H);
+    ctx.quadraticCurveTo(t.cx, t.cy * H, t.x2, t.y2 * H);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  });
+
+  // LAYER 4: Bright star clusters
+  drawStarField(ctx, W, H, 80, [224, 176, 255], [0.5, 1.5]);
+  // Bright prominent stars with glow
+  const brightStars = [
+    { x: W * 0.3, y: H * 0.15, r: 3, color: '#FFFFFF' },
+    { x: W * 0.7, y: H * 0.35, r: 2.5, color: '#EA80FC' },
+    { x: W * 0.5, y: H * 0.55, r: 3.5, color: '#FFFFFF' },
+    { x: W * 0.15, y: H * 0.7, r: 2, color: '#F48FB1' },
+    { x: W * 0.85, y: H * 0.2, r: 2.5, color: '#CE93D8' },
+    { x: W * 0.6, y: H * 0.8, r: 2, color: '#FFFFFF' },
+  ];
+  brightStars.forEach(s => {
+    // Outer glow
+    const glow = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 8);
+    glow.addColorStop(0, s.color + '60');
+    glow.addColorStop(0.3, s.color + '20');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r * 8, 0, Math.PI * 2);
+    ctx.fill();
+    // Core
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Star cluster (tight group)
+  for (let i = 0; i < 20; i++) {
+    const cx = W * 0.75 + (Math.random() - 0.5) * 40;
+    const cy = H * 0.12 + (Math.random() - 0.5) * 30;
+    const sr = 0.5 + Math.random() * 1.5;
+    ctx.fillStyle = `rgba(234,128,252,${0.4 + Math.random() * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(cx, cy, sr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+})();
+
+// ============================================
+// ASTEROID BELT — BEFORE (current: tiny rocks + dots)
+// ============================================
+(function() {
+  const c = document.getElementById('ast-before');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  drawGradientBg(ctx, W, H, ['#1a1008', '#201510', '#2a1a0a']);
+  drawStarField(ctx, W, H, 100, [255, 204, 128], [0.5, 1.5]);
+
+  // Small rocks (current)
+  for (let i = 0; i < 14; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = 6 + Math.random() * 20;
+    ctx.globalAlpha = 0.08 + Math.random() * 0.12;
+    ctx.fillStyle = '#5D4037';
+    ctx.beginPath();
+    const verts = 5 + Math.floor(Math.random() * 4);
+    for (let v = 0; v < verts; v++) {
+      const a = (v / verts) * Math.PI * 2;
+      const rv = r * (0.7 + Math.sin(a * 3) * 0.3);
+      if (v === 0) ctx.moveTo(x + Math.cos(a) * rv, y + Math.sin(a) * rv);
+      else ctx.lineTo(x + Math.cos(a) * rv, y + Math.sin(a) * rv);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  // Dust dots
+  for (let i = 0; i < 30; i++) {
+    ctx.globalAlpha = 0.1 + Math.random() * 0.15;
+    ctx.fillStyle = '#8D6E63';
+    ctx.beginPath();
+    ctx.arc(Math.random() * W, Math.random() * H, 1 + Math.random() * 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+})();
+
+// ============================================
+// ASTEROID BELT — AFTER (dense debris field + gas giant)
+// ============================================
+(function() {
+  const c = document.getElementById('ast-after');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // Warmer, richer gradient
+  drawGradientBg(ctx, W, H, ['#0f0a04', '#1a1008', '#251810', '#1a1008']);
+
+  // LAYER 1: Distant gas giant (partial, bottom-right)
+  const gx = W * 0.85, gy = H * 0.75, gr = 180;
+  // Planet body
+  const planetGrad = ctx.createRadialGradient(gx - 30, gy - 30, gr * 0.1, gx, gy, gr);
+  planetGrad.addColorStop(0, '#D4A574');
+  planetGrad.addColorStop(0.3, '#A67C52');
+  planetGrad.addColorStop(0.6, '#8D6E63');
+  planetGrad.addColorStop(0.85, '#5D4037');
+  planetGrad.addColorStop(1, '#3E2723');
+  ctx.globalAlpha = 0.25;
+  ctx.fillStyle = planetGrad;
+  ctx.beginPath();
+  ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+  ctx.fill();
+  // Planet bands
+  ctx.globalAlpha = 0.08;
+  for (let i = 0; i < 6; i++) {
+    const by = gy - gr + i * (gr * 2 / 6) + 15;
+    ctx.fillStyle = i % 2 === 0 ? '#BCAAA4' : '#795548';
+    ctx.fillRect(gx - gr, by, gr * 2, 8 + Math.random() * 12);
+  }
+  // Planet atmosphere glow
+  ctx.globalAlpha = 0.15;
+  const atmoGrad = ctx.createRadialGradient(gx, gy, gr * 0.9, gx, gy, gr * 1.3);
+  atmoGrad.addColorStop(0, 'transparent');
+  atmoGrad.addColorStop(0.7, '#FFB74D20');
+  atmoGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = atmoGrad;
+  ctx.beginPath();
+  ctx.arc(gx, gy, gr * 1.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // LAYER 2: Dust bands (horizontal haze lanes)
+  for (let i = 0; i < 4; i++) {
+    const bandY = H * (0.15 + i * 0.22);
+    const bandH = 20 + Math.random() * 40;
+    ctx.globalAlpha = 0.04 + Math.random() * 0.04;
+    ctx.fillStyle = '#8D6E63';
+    ctx.fillRect(0, bandY, W, bandH);
+    ctx.globalAlpha = 1;
+  }
+
+  // LAYER 3: Large background asteroids (depth = far)
+  function drawBgRock(x, y, r, alpha, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.random() * Math.PI * 2);
+    ctx.globalAlpha = alpha;
+    // Rock gradient
+    const rg = ctx.createRadialGradient(-r*0.2, -r*0.2, 0, 0, 0, r);
+    rg.addColorStop(0, color);
+    rg.addColorStop(0.6, '#5D4037');
+    rg.addColorStop(1, '#3E2723');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    const verts = 7 + Math.floor(Math.random() * 4);
+    for (let v = 0; v < verts; v++) {
+      const a = (v / verts) * Math.PI * 2;
+      const rv = r * (0.7 + Math.sin(a * 2.5 + Math.random()) * 0.3);
+      if (v === 0) ctx.moveTo(Math.cos(a) * rv, Math.sin(a) * rv);
+      else ctx.lineTo(Math.cos(a) * rv, Math.sin(a) * rv);
+    }
+    ctx.closePath();
+    ctx.fill();
+    // Crater
+    ctx.fillStyle = '#3E272360';
+    ctx.beginPath();
+    ctx.arc(r * 0.2, r * 0.1, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Highlight edge
+    ctx.strokeStyle = '#BCAAA420';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.85, -0.8, 0.5);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // Far rocks (large, faint)
+  drawBgRock(W * 0.1, H * 0.15, 45, 0.12, '#8D6E63');
+  drawBgRock(W * 0.6, H * 0.08, 35, 0.10, '#795548');
+  drawBgRock(W * 0.9, H * 0.4, 50, 0.08, '#6D4C41');
+
+  // Mid rocks (medium, moderate opacity)
+  drawBgRock(W * 0.25, H * 0.5, 28, 0.18, '#A1887F');
+  drawBgRock(W * 0.75, H * 0.6, 22, 0.20, '#8D6E63');
+  drawBgRock(W * 0.05, H * 0.7, 18, 0.22, '#795548');
+  drawBgRock(W * 0.55, H * 0.35, 20, 0.15, '#6D4C41');
+
+  // Near rocks (small, sharper)
+  for (let i = 0; i < 12; i++) {
+    drawBgRock(
+      Math.random() * W,
+      Math.random() * H,
+      4 + Math.random() * 10,
+      0.15 + Math.random() * 0.2,
+      '#8D6E63'
+    );
+  }
+
+  // LAYER 4: Dust particles (more numerous, varied size)
+  for (let i = 0; i < 60; i++) {
+    const a = 0.1 + Math.random() * 0.25;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = Math.random() > 0.5 ? '#BCAAA4' : '#8D6E63';
+    ctx.beginPath();
+    ctx.arc(Math.random() * W, Math.random() * H, 0.5 + Math.random() * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Stars (warm tinted)
+  drawStarField(ctx, W, H, 70, [255, 204, 128], [0.5, 1.5]);
+
+  // A few orange-tinted bright stars
+  [[W*0.4, H*0.2], [W*0.15, H*0.55], [W*0.65, H*0.85]].forEach(([sx, sy]) => {
+    const sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 12);
+    sg.addColorStop(0, '#FFB74D80');
+    sg.addColorStop(0.3, '#FFB74D20');
+    sg.addColorStop(1, 'transparent');
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+})();
+
+// ============================================
+// ICE FIELD — BEFORE (current: faint crystals + thin aurora)
+// ============================================
+(function() {
+  const c = document.getElementById('ice-before');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  drawGradientBg(ctx, W, H, ['#061520', '#0a1a2e', '#0c2035']);
+  drawStarField(ctx, W, H, 100, [179, 229, 252], [0.5, 1.5]);
+
+  // Faint crystals (current)
+  for (let i = 0; i < 10; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const h = 15 + Math.random() * 35;
+    const w = 3 + Math.random() * 8;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.3 + Math.random() * 0.6);
+    ctx.globalAlpha = 0.06 + Math.random() * 0.1;
+    ctx.fillStyle = '#B3E5FC';
+    ctx.beginPath();
+    ctx.moveTo(0, -h/2);
+    ctx.lineTo(w/2, h/2);
+    ctx.lineTo(-w/2, h/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // Thin aurora lines (current)
+  for (let i = 0; i < 3; i++) {
+    const ay = (0.1 + Math.random() * 0.6) * H;
+    ctx.globalAlpha = 0.06 + Math.random() * 0.06;
+    ctx.strokeStyle = Math.random() > 0.5 ? '#4FC3F7' : '#80DEEA';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 10) {
+      const y = ay + Math.sin(x * 0.004 + i * 2) * 20;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+})();
+
+// ============================================
+// ICE FIELD — AFTER (frozen expanse + vivid aurora + moon)
+// ============================================
+(function() {
+  const c = document.getElementById('ice-after');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+
+  // Richer cold gradient
+  drawGradientBg(ctx, W, H, ['#040e18', '#081828', '#0a1e35', '#061520']);
+
+  // LAYER 1: Distant frozen moon
+  const mx = W * 0.22, my = H * 0.12, mr = 40;
+  // Moon glow
+  const moonGlow = ctx.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 3);
+  moonGlow.addColorStop(0, '#B3E5FC30');
+  moonGlow.addColorStop(0.4, '#4FC3F710');
+  moonGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = moonGlow;
+  ctx.beginPath();
+  ctx.arc(mx, my, mr * 3, 0, Math.PI * 2);
+  ctx.fill();
+  // Moon body
+  const moonBod = ctx.createRadialGradient(mx - 10, my - 10, 0, mx, my, mr);
+  moonBod.addColorStop(0, '#E1F5FE');
+  moonBod.addColorStop(0.4, '#B3E5FC');
+  moonBod.addColorStop(0.8, '#81D4FA');
+  moonBod.addColorStop(1, '#4FC3F7');
+  ctx.fillStyle = moonBod;
+  ctx.beginPath();
+  ctx.arc(mx, my, mr, 0, Math.PI * 2);
+  ctx.fill();
+  // Moon craters
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = '#0288D1';
+  ctx.beginPath(); ctx.arc(mx + 8, my - 5, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(mx - 12, my + 10, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(mx + 15, my + 12, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // LAYER 2: Thick vivid aurora bands
+  function drawAurora(yBase, amplitude, color1, color2, alpha, thickness) {
+    // Glow layer (wide)
+    ctx.globalAlpha = alpha * 0.4;
+    ctx.strokeStyle = color1;
+    ctx.lineWidth = thickness * 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let x = -10; x <= W + 10; x += 5) {
+      const y = yBase + Math.sin(x * 0.005 + yBase * 0.01) * amplitude
+                      + Math.sin(x * 0.012 + yBase * 0.005) * (amplitude * 0.4);
+      if (x <= -5) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Core layer (sharp)
+    ctx.globalAlpha = alpha;
+    const aGrad = ctx.createLinearGradient(0, yBase - amplitude, 0, yBase + amplitude);
+    aGrad.addColorStop(0, color1);
+    aGrad.addColorStop(0.5, color2);
+    aGrad.addColorStop(1, color1);
+    ctx.strokeStyle = aGrad;
+    ctx.lineWidth = thickness;
+    ctx.beginPath();
+    for (let x = -10; x <= W + 10; x += 5) {
+      const y = yBase + Math.sin(x * 0.005 + yBase * 0.01) * amplitude
+                      + Math.sin(x * 0.012 + yBase * 0.005) * (amplitude * 0.4);
+      if (x <= -5) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Highlight streaks
+    ctx.globalAlpha = alpha * 0.6;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = -10; x <= W + 10; x += 5) {
+      const y = yBase - 2 + Math.sin(x * 0.005 + yBase * 0.01) * amplitude
+                             + Math.sin(x * 0.012 + yBase * 0.005) * (amplitude * 0.4);
+      if (x <= -5) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  drawAurora(H * 0.18, 35, '#00BCD4', '#4FC3F7', 0.12, 14);
+  drawAurora(H * 0.35, 25, '#26C6DA', '#80DEEA', 0.10, 10);
+  drawAurora(H * 0.55, 30, '#00ACC1', '#B2EBF2', 0.08, 12);
+
+  // LAYER 3: Large ice crystal formations
+  function drawCrystal(x, y, h, w, rot, alpha, highlight) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.globalAlpha = alpha;
+
+    // Crystal body with gradient
+    const cGrad = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
+    cGrad.addColorStop(0, '#E0F7FA');
+    cGrad.addColorStop(0.3, '#B2EBF2');
+    cGrad.addColorStop(0.6, '#80DEEA');
+    cGrad.addColorStop(1, '#4DD0E1');
+    ctx.fillStyle = cGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -h/2);
+    ctx.lineTo(w/2, 0);
+    ctx.lineTo(w * 0.3, h/2);
+    ctx.lineTo(-w * 0.3, h/2);
+    ctx.lineTo(-w/2, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Internal facet line
+    ctx.strokeStyle = '#FFFFFF40';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -h/2);
+    ctx.lineTo(w * 0.15, h * 0.3);
+    ctx.stroke();
+
+    // Highlight shine
+    if (highlight) {
+      ctx.fillStyle = '#FFFFFF30';
+      ctx.beginPath();
+      ctx.moveTo(0, -h/2);
+      ctx.lineTo(-w * 0.35, -h * 0.05);
+      ctx.lineTo(-w * 0.15, h * 0.15);
+      ctx.lineTo(0, -h * 0.2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // Large formations
+  drawCrystal(W * 0.08, H * 0.3, 90, 25, -0.15, 0.18, true);
+  drawCrystal(W * 0.12, H * 0.28, 60, 18, 0.1, 0.14, false);
+  drawCrystal(W * 0.92, H * 0.55, 80, 22, 0.2, 0.16, true);
+  drawCrystal(W * 0.88, H * 0.58, 55, 15, -0.1, 0.12, false);
+
+  // Medium scattered crystals
+  drawCrystal(W * 0.35, H * 0.15, 40, 12, 0.3, 0.10, true);
+  drawCrystal(W * 0.65, H * 0.7, 50, 16, -0.25, 0.12, true);
+  drawCrystal(W * 0.5, H * 0.9, 35, 10, 0.15, 0.08, false);
+
+  // Small crystals
+  for (let i = 0; i < 8; i++) {
+    drawCrystal(
+      Math.random() * W,
+      Math.random() * H,
+      12 + Math.random() * 20,
+      4 + Math.random() * 6,
+      -0.4 + Math.random() * 0.8,
+      0.06 + Math.random() * 0.08,
+      Math.random() > 0.5
+    );
+  }
+
+  // LAYER 4: Ice fog at bottom
+  const fogGrad = ctx.createLinearGradient(0, H * 0.75, 0, H);
+  fogGrad.addColorStop(0, 'transparent');
+  fogGrad.addColorStop(0.5, '#B3E5FC08');
+  fogGrad.addColorStop(1, '#B3E5FC15');
+  ctx.fillStyle = fogGrad;
+  ctx.fillRect(0, H * 0.75, W, H * 0.25);
+
+  // Stars with blue tint
+  drawStarField(ctx, W, H, 90, [179, 229, 252], [0.5, 1.5]);
+
+  // Ice sparkles (bright tiny flashes)
+  for (let i = 0; i < 15; i++) {
+    const sx = Math.random() * W;
+    const sy = Math.random() * H;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.globalAlpha = 0.4 + Math.random() * 0.6;
+    // 4-point sparkle
+    const sz = 1.5 + Math.random() * 2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - sz * 2); ctx.lineTo(sx + sz * 0.3, sy - sz * 0.3);
+    ctx.lineTo(sx + sz * 2, sy); ctx.lineTo(sx + sz * 0.3, sy + sz * 0.3);
+    ctx.lineTo(sx, sy + sz * 2); ctx.lineTo(sx - sz * 0.3, sy + sz * 0.3);
+    ctx.lineTo(sx - sz * 2, sy); ctx.lineTo(sx - sz * 0.3, sy - sz * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+})();
+
+</script>
+</body>
+</html>

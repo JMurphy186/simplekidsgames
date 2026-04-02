@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Dodge — Asteroid Variants</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a2e;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 20px;
+  }
+  h1 { text-align: center; font-size: 22px; color: #42A5F5; letter-spacing: 3px; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #666; font-size: 12px; margin-bottom: 30px; }
+  .section-label {
+    text-align: center; font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px;
+  }
+  hr { border: none; border-top: 1px solid #1a1a3a; margin: 10px auto 30px; max-width: 800px; }
+  .row {
+    display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin-bottom: 35px;
+  }
+  .variant {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .variant .name { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #FFB74D; }
+  .variant .desc { font-size: 10px; color: #777; max-width: 150px; text-align: center; line-height: 1.4; }
+  .frame {
+    background: radial-gradient(ellipse at center, #0f0f2a 0%, #0a0a1e 100%);
+    border-radius: 12px; border: 1px solid #1a1a3a;
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+  }
+  .size-row {
+    display: flex; justify-content: center; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 35px;
+  }
+  .size-item { text-align: center; }
+  .size-item .tag { font-size: 10px; color: #666; letter-spacing: 1px; margin-bottom: 4px; }
+  .scene-frame {
+    background: radial-gradient(ellipse at center, #0f0f2a 0%, #060612 100%);
+    border-radius: 14px; border: 1px solid #1a1a3a;
+    position: relative; overflow: hidden;
+  }
+  canvas { border-radius: 12px; }
+</style>
+</head>
+<body>
+
+<h1>ASTEROID VARIANTS</h1>
+<p class="subtitle">4 SVG designs: 2 small pebbles, 1 medium rock, 1 large boulder. Current single asteroid shown for reference.</p>
+
+<!-- CURRENT -->
+<div class="section-label" style="color:#888">📸 Current (1 shape, all sizes)</div>
+<div class="row">
+  <div class="variant">
+    <div class="frame" style="width:160px; height:160px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="130" height="130">
+        <defs>
+          <linearGradient id="cur_rg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#A1887F"/>
+            <stop offset="50%" stop-color="#795548"/>
+            <stop offset="100%" stop-color="#3E2723"/>
+          </linearGradient>
+          <radialGradient id="cur_cg" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#5D4037" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#212121" stop-opacity="0.9"/>
+          </radialGradient>
+        </defs>
+        <g transform="translate(100,100)">
+          <path d="M 0 -85 C 40 -90 75 -60 85 -20 C 95 15 80 60 50 80 C 15 100 -40 85 -70 55 C -100 20 -95 -40 -60 -70 C -30 -90 -10 -80 0 -85 Z" fill="url(#cur_rg)"/>
+          <g transform="translate(45,-15)">
+            <ellipse cx="0" cy="0" rx="22" ry="18" fill="url(#cur_cg)" transform="rotate(-20)"/>
+          </g>
+          <g transform="translate(-35,45)">
+            <circle cx="0" cy="0" r="16" fill="url(#cur_cg)"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="name">CURRENT</div>
+    <div class="desc">Single shape used for every asteroid. Gets repetitive.</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- NEW VARIANTS -->
+<div class="section-label" style="color:#FFB74D">✅ New Variants (4 SVGs)</div>
+<div class="row">
+
+  <!-- PEBBLE A -->
+  <div class="variant">
+    <div class="frame" style="width:160px; height:160px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="130" height="130">
+        <defs>
+          <radialGradient id="pa_body" cx="35%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="#BCAAA4"/>
+            <stop offset="40%" stop-color="#8D6E63"/>
+            <stop offset="80%" stop-color="#5D4037"/>
+            <stop offset="100%" stop-color="#3E2723"/>
+          </radialGradient>
+        </defs>
+        <g transform="translate(100,100)">
+          <!-- Smooth rounded shape - fewer vertices, organic -->
+          <path d="M 0 -70 C 35 -75 65 -50 75 -15 C 82 15 70 55 40 70 C 10 82 -35 75 -60 50 C -80 25 -75 -25 -55 -55 C -35 -75 -15 -72 0 -70 Z" fill="url(#pa_body)"/>
+          <!-- Single highlight ridge -->
+          <path d="M -20 -65 C 10 -70 45 -55 65 -25" fill="none" stroke="#D7CCC8" stroke-width="4" stroke-linecap="round" opacity="0.35"/>
+          <!-- Subtle surface line -->
+          <path d="M -40 10 Q -10 -5 20 15" fill="none" stroke="#4E342E" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+          <!-- One tiny dimple -->
+          <circle cx="25" cy="-20" r="8" fill="#4E342E" opacity="0.3"/>
+        </g>
+      </svg>
+    </div>
+    <div class="name">PEBBLE A</div>
+    <div class="desc">Smooth rounded. Minimal detail. Used for small spawns.</div>
+  </div>
+
+  <!-- PEBBLE B -->
+  <div class="variant">
+    <div class="frame" style="width:160px; height:160px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="130" height="130">
+        <defs>
+          <radialGradient id="pb_body" cx="40%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#A1887F"/>
+            <stop offset="35%" stop-color="#795548"/>
+            <stop offset="75%" stop-color="#4E342E"/>
+            <stop offset="100%" stop-color="#2E1610"/>
+          </radialGradient>
+        </defs>
+        <g transform="translate(100,100)">
+          <!-- Elongated angular pebble -->
+          <path d="M -10 -65 C 30 -72 60 -45 70 -10 C 78 20 55 60 20 72 C -10 80 -50 65 -70 35 C -82 10 -70 -30 -50 -55 C -35 -68 -25 -63 -10 -65 Z" fill="url(#pb_body)"/>
+          <!-- Angled highlight -->
+          <path d="M -30 -58 C 5 -68 40 -50 60 -20" fill="none" stroke="#D7CCC8" stroke-width="3.5" stroke-linecap="round" opacity="0.3"/>
+          <!-- Surface crack -->
+          <path d="M -15 -30 L 5 0 L -5 25" fill="none" stroke="#3E2723" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+          <!-- Two tiny pits -->
+          <circle cx="30" cy="10" r="6" fill="#3E2723" opacity="0.35"/>
+          <circle cx="-25" cy="35" r="5" fill="#3E2723" opacity="0.25"/>
+        </g>
+      </svg>
+    </div>
+    <div class="name">PEBBLE B</div>
+    <div class="desc">Angular elongated. Surface crack. Also for small spawns.</div>
+  </div>
+
+  <!-- MEDIUM ROCK -->
+  <div class="variant">
+    <div class="frame" style="width:160px; height:160px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="130" height="130">
+        <defs>
+          <radialGradient id="mr_body" cx="30%" cy="28%" r="70%">
+            <stop offset="0%" stop-color="#BCAAA4"/>
+            <stop offset="30%" stop-color="#8D6E63"/>
+            <stop offset="65%" stop-color="#5D4037"/>
+            <stop offset="100%" stop-color="#2E1610"/>
+          </radialGradient>
+          <radialGradient id="mr_crater1" cx="35%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="#5D4037" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#1B0E0A" stop-opacity="0.8"/>
+          </radialGradient>
+          <radialGradient id="mr_crater2" cx="40%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#4E342E" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#1B0E0A" stop-opacity="0.7"/>
+          </radialGradient>
+        </defs>
+        <g transform="translate(100,100)">
+          <!-- Jagged irregular body -->
+          <path d="M 5 -80 C 40 -82 70 -55 80 -20 C 88 10 82 40 60 65 C 35 85 0 88 -30 75 C -60 60 -80 30 -82 -5 C -84 -40 -65 -65 -40 -75 C -20 -82 -10 -78 5 -80 Z" fill="url(#mr_body)"/>
+          <!-- Two prominent craters -->
+          <g transform="translate(35,-20)">
+            <ellipse cx="0" cy="0" rx="20" ry="16" fill="url(#mr_crater1)" transform="rotate(-15)"/>
+            <path d="M -12 10 Q 0 16 12 8" fill="none" stroke="#BCAAA4" stroke-width="1.5" opacity="0.4"/>
+          </g>
+          <g transform="translate(-30,35)">
+            <circle cx="0" cy="0" r="14" fill="url(#mr_crater2)"/>
+            <path d="M -8 8 Q 0 14 10 5" fill="none" stroke="#BCAAA4" stroke-width="1.5" opacity="0.35"/>
+          </g>
+          <!-- Highlight ridges -->
+          <path d="M -15 -75 C 20 -78 55 -60 72 -30" fill="none" stroke="#D7CCC8" stroke-width="5" stroke-linecap="round" opacity="0.35"/>
+          <path d="M -70 -20 C -65 -50 -45 -70 -20 -75" fill="none" stroke="#D7CCC8" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+          <!-- Surface cracks -->
+          <path d="M -45 -10 Q -20 -20 0 10 T 30 40" fill="none" stroke="#3E2723" stroke-width="2.5" stroke-linecap="round" opacity="0.45"/>
+          <path d="M 20 -50 Q 30 -25 15 5" fill="none" stroke="#3E2723" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+          <!-- Small pits -->
+          <circle cx="-45" cy="-40" r="5" fill="#3E2723" opacity="0.4"/>
+          <circle cx="55" cy="25" r="4" fill="#3E2723" opacity="0.35"/>
+          <circle cx="10" cy="55" r="6" fill="#3E2723" opacity="0.3"/>
+        </g>
+      </svg>
+    </div>
+    <div class="name">ROCK</div>
+    <div class="desc">Jagged. Two craters with rim highlights. Deep cracks. For medium spawns.</div>
+  </div>
+
+  <!-- LARGE BOULDER -->
+  <div class="variant">
+    <div class="frame" style="width:160px; height:160px;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="130" height="130">
+        <defs>
+          <radialGradient id="lb_body" cx="28%" cy="25%" r="72%">
+            <stop offset="0%" stop-color="#D7CCC8"/>
+            <stop offset="20%" stop-color="#A1887F"/>
+            <stop offset="50%" stop-color="#6D4C41"/>
+            <stop offset="80%" stop-color="#4E342E"/>
+            <stop offset="100%" stop-color="#1B0E0A"/>
+          </radialGradient>
+          <radialGradient id="lb_c1" cx="30%" cy="25%" r="70%">
+            <stop offset="0%" stop-color="#5D4037" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#0D0705" stop-opacity="0.85"/>
+          </radialGradient>
+          <radialGradient id="lb_c2" cx="35%" cy="30%" r="65%">
+            <stop offset="0%" stop-color="#4E342E" stop-opacity="0.4"/>
+            <stop offset="100%" stop-color="#0D0705" stop-opacity="0.8"/>
+          </radialGradient>
+          <radialGradient id="lb_c3" cx="40%" cy="35%" r="60%">
+            <stop offset="0%" stop-color="#5D4037" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#0D0705" stop-opacity="0.75"/>
+          </radialGradient>
+        </defs>
+        <g transform="translate(100,100)">
+          <!-- Massive jagged body with deep indentations -->
+          <path d="M 10 -82 C 35 -88 60 -75 78 -50 C 90 -28 88 5 82 30 C 78 50 60 72 35 82 C 10 90 -20 88 -45 75 C -68 60 -82 35 -85 5 C -88 -25 -78 -55 -58 -70 C -38 -85 -15 -80 10 -82 Z" fill="url(#lb_body)"/>
+          <!-- Major crater (large, deep) -->
+          <g transform="translate(40,-15)">
+            <ellipse cx="0" cy="0" rx="24" ry="20" fill="url(#lb_c1)" transform="rotate(-25)"/>
+            <path d="M -16 12 Q -2 20 16 10" fill="none" stroke="#BCAAA4" stroke-width="2" opacity="0.45"/>
+            <!-- Inner crater shadow -->
+            <ellipse cx="3" cy="2" rx="12" ry="9" fill="#1B0E0A" opacity="0.3" transform="rotate(-25)"/>
+          </g>
+          <!-- Secondary crater -->
+          <g transform="translate(-35,40)">
+            <circle cx="0" cy="0" r="18" fill="url(#lb_c2)"/>
+            <path d="M -12 10 Q 0 18 14 8" fill="none" stroke="#BCAAA4" stroke-width="1.5" opacity="0.4"/>
+            <circle cx="2" cy="2" r="8" fill="#1B0E0A" opacity="0.25"/>
+          </g>
+          <!-- Tertiary crater -->
+          <g transform="translate(-15,-50)">
+            <ellipse cx="0" cy="0" rx="14" ry="11" fill="url(#lb_c3)" transform="rotate(15)"/>
+            <path d="M -8 7 Q 0 12 10 5" fill="none" stroke="#BCAAA4" stroke-width="1" opacity="0.35"/>
+          </g>
+          <!-- Major highlight ridges -->
+          <path d="M -25 -78 C 10 -84 45 -72 70 -45" fill="none" stroke="#D7CCC8" stroke-width="6" stroke-linecap="round" opacity="0.4"/>
+          <path d="M -80 -10 C -78 -40 -62 -65 -35 -76" fill="none" stroke="#D7CCC8" stroke-width="4" stroke-linecap="round" opacity="0.3"/>
+          <!-- Secondary ridge (lower) -->
+          <path d="M 75 15 C 68 40 50 60 30 72" fill="none" stroke="#8D6E63" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+          <!-- Deep cracks network -->
+          <path d="M -55 -20 Q -25 -35 5 -10 Q 20 5 45 15" fill="none" stroke="#2E1610" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+          <path d="M -5 -10 Q 5 15 -10 40" fill="none" stroke="#2E1610" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+          <path d="M 30 -55 Q 40 -30 25 0" fill="none" stroke="#2E1610" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+          <!-- Small detail pits scattered -->
+          <circle cx="-55" cy="-45" r="5" fill="#2E1610" opacity="0.45"/>
+          <circle cx="60" cy="40" r="4" fill="#2E1610" opacity="0.4"/>
+          <circle cx="-60" cy="15" r="6" fill="#2E1610" opacity="0.3"/>
+          <circle cx="15" cy="65" r="5" fill="#2E1610" opacity="0.35"/>
+          <circle cx="-10" cy="-65" r="3" fill="#2E1610" opacity="0.3"/>
+          <!-- Mineral fleck highlights -->
+          <circle cx="-20" cy="-25" r="2" fill="#BCAAA4" opacity="0.35"/>
+          <circle cx="50" cy="-40" r="1.5" fill="#D7CCC8" opacity="0.3"/>
+          <circle cx="-50" cy="55" r="2" fill="#BCAAA4" opacity="0.25"/>
+        </g>
+      </svg>
+    </div>
+    <div class="name">BOULDER</div>
+    <div class="desc">Massive. 3 craters with inner shadows, crack network, mineral flecks. For large spawns.</div>
+  </div>
+
+</div>
+
+<hr>
+
+<!-- SIZE COMPARISON -->
+<div class="section-label" style="color:#FFB74D">📐 At Gameplay Sizes</div>
+<div style="display:flex; justify-content:center; margin-bottom: 30px;">
+  <canvas id="size-scene" width="600" height="300"></canvas>
+</div>
+
+<hr>
+
+<!-- VARIETY SCENE -->
+<div class="section-label" style="color:#FFB74D">🎮 Gameplay Scene — Before vs After</div>
+<div class="row">
+  <div class="variant">
+    <div class="section-label" style="color:#888; font-size:11px">Before (1 shape)</div>
+    <canvas id="scene-before" width="240" height="400"></canvas>
+  </div>
+  <div class="variant">
+    <div class="section-label" style="color:#FFB74D; font-size:11px">After (4 variants)</div>
+    <canvas id="scene-after" width="240" height="400"></canvas>
+  </div>
+</div>
+
+<script>
+// ============================================
+// DRAW HELPERS
+// ============================================
+function drawSpaceBg(ctx, W, H) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#050510');
+  grad.addColorStop(0.5, '#0B0B1A');
+  grad.addColorStop(1, '#121225');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 40; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${0.15 + Math.random() * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * W, Math.random() * H, 0.3 + Math.random() * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Current single asteroid (for before scene)
+function drawOldAsteroid(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-r*0.15, -r*0.15, 0, 0, 0, r);
+  g.addColorStop(0, '#A1887F');
+  g.addColorStop(0.5, '#795548');
+  g.addColorStop(1, '#3E2723');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  const verts = 8;
+  for (let i = 0; i < verts; i++) {
+    const a = (i / verts) * Math.PI * 2;
+    const rv = r * (0.75 + Math.sin(a * 2.7 + 1) * 0.25);
+    if (i === 0) ctx.moveTo(Math.cos(a) * rv, Math.sin(a) * rv);
+    else ctx.lineTo(Math.cos(a) * rv, Math.sin(a) * rv);
+  }
+  ctx.closePath();
+  ctx.fill();
+  // Crater
+  ctx.fillStyle = 'rgba(62,39,35,0.6)';
+  ctx.beginPath();
+  ctx.arc(r*0.2, -r*0.1, r*0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// New variant asteroids (Canvas approximation of the SVGs)
+function drawPebbleA(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-r*0.15, -r*0.15, 0, 0, 0, r);
+  g.addColorStop(0, '#BCAAA4');
+  g.addColorStop(0.4, '#8D6E63');
+  g.addColorStop(0.8, '#5D4037');
+  g.addColorStop(1, '#3E2723');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  // Smooth rounded - 6 verts
+  const shape = [[-0.1,-0.88],[0.55,-0.65],[0.82,0.1],[0.5,0.78],[-0.45,0.82],[-0.78,0.15],[-0.6,-0.6]];
+  shape.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p[0]*r, p[1]*r);
+    else ctx.lineTo(p[0]*r, p[1]*r);
+  });
+  ctx.closePath();
+  ctx.fill();
+  // Highlight
+  ctx.strokeStyle = '#D7CCC8';
+  ctx.lineWidth = Math.max(1, r*0.05);
+  ctx.globalAlpha = 0.35;
+  ctx.beginPath();
+  ctx.arc(0, 0, r*0.7, -2.2, -0.8);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawPebbleB(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-r*0.1, -r*0.2, 0, 0, 0, r);
+  g.addColorStop(0, '#A1887F');
+  g.addColorStop(0.35, '#795548');
+  g.addColorStop(0.75, '#4E342E');
+  g.addColorStop(1, '#2E1610');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  // Elongated angular
+  const shape = [[0,-0.85],[0.65,-0.55],[0.82,0.15],[0.35,0.82],[-0.3,0.85],[-0.75,0.3],[-0.8,-0.35],[-0.45,-0.75]];
+  shape.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p[0]*r, p[1]*r);
+    else ctx.lineTo(p[0]*r, p[1]*r);
+  });
+  ctx.closePath();
+  ctx.fill();
+  // Crack
+  ctx.strokeStyle = '#3E2723';
+  ctx.lineWidth = Math.max(1, r*0.04);
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(-r*0.2, -r*0.4);
+  ctx.lineTo(r*0.05, 0);
+  ctx.lineTo(-r*0.05, r*0.35);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawRock(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-r*0.2, -r*0.2, 0, 0, 0, r);
+  g.addColorStop(0, '#BCAAA4');
+  g.addColorStop(0.3, '#8D6E63');
+  g.addColorStop(0.65, '#5D4037');
+  g.addColorStop(1, '#2E1610');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  // Jagged
+  const shape = [[0.05,-0.88],[0.5,-0.78],[0.8,-0.35],[0.85,0.2],[0.65,0.6],[0.2,0.85],[-0.25,0.82],[-0.65,0.55],[-0.85,0.1],[-0.8,-0.4],[-0.5,-0.72],[-0.15,-0.85]];
+  shape.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p[0]*r, p[1]*r);
+    else ctx.lineTo(p[0]*r, p[1]*r);
+  });
+  ctx.closePath();
+  ctx.fill();
+  // Two craters
+  ctx.fillStyle = 'rgba(30,15,10,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(r*0.3, -r*0.15, r*0.2, r*0.16, -0.3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-r*0.3, r*0.3, r*0.15, 0, Math.PI*2);
+  ctx.fill();
+  // Ridge
+  ctx.strokeStyle = '#D7CCC8';
+  ctx.lineWidth = Math.max(1.5, r*0.05);
+  ctx.globalAlpha = 0.35;
+  ctx.beginPath();
+  ctx.arc(0, 0, r*0.82, -2.5, -0.6);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Crack
+  ctx.strokeStyle = '#2E1610';
+  ctx.lineWidth = Math.max(1, r*0.035);
+  ctx.globalAlpha = 0.45;
+  ctx.beginPath();
+  ctx.moveTo(-r*0.5, -r*0.1);
+  ctx.quadraticCurveTo(-r*0.1, -r*0.2, r*0.15, r*0.1);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function drawBoulder(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  const g = ctx.createRadialGradient(-r*0.2, -r*0.22, 0, 0, 0, r);
+  g.addColorStop(0, '#D7CCC8');
+  g.addColorStop(0.2, '#A1887F');
+  g.addColorStop(0.5, '#6D4C41');
+  g.addColorStop(0.8, '#4E342E');
+  g.addColorStop(1, '#1B0E0A');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  const shape = [[0.1,-0.88],[0.45,-0.82],[0.75,-0.5],[0.88,-0.1],[0.85,0.25],[0.7,0.55],[0.4,0.8],[0,-0.88+1.78],[-0.35,0.75],[-0.62,0.5],[-0.82,0.15],[-0.85,-0.2],[-0.72,-0.55],[-0.4,-0.78],[-0.05,-0.85]];
+  shape.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p[0]*r, p[1]*r);
+    else ctx.lineTo(p[0]*r, p[1]*r);
+  });
+  ctx.closePath();
+  ctx.fill();
+  // 3 craters
+  ctx.fillStyle = 'rgba(13,7,5,0.6)';
+  ctx.beginPath();
+  ctx.ellipse(r*0.35, -r*0.12, r*0.22, r*0.18, -0.4, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-r*0.32, r*0.35, r*0.16, 0, Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-r*0.1, -r*0.45, r*0.12, r*0.1, 0.2, 0, Math.PI*2);
+  ctx.fill();
+  // Major ridges
+  ctx.strokeStyle = '#D7CCC8';
+  ctx.lineWidth = Math.max(2, r*0.06);
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath();
+  ctx.arc(0, 0, r*0.85, -2.6, -0.5);
+  ctx.stroke();
+  ctx.lineWidth = Math.max(1.5, r*0.04);
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.arc(0, 0, r*0.82, 0.5, 1.5);
+  ctx.stroke();
+  // Crack network
+  ctx.strokeStyle = '#1B0E0A';
+  ctx.lineWidth = Math.max(1, r*0.04);
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(-r*0.55, -r*0.15);
+  ctx.quadraticCurveTo(-r*0.15, -r*0.3, r*0.1, -r*0.05);
+  ctx.quadraticCurveTo(r*0.25, r*0.1, r*0.45, r*0.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(r*0.1, -r*0.05);
+  ctx.quadraticCurveTo(r*0.05, r*0.15, -r*0.1, r*0.4);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Mineral flecks
+  ctx.fillStyle = '#BCAAA4';
+  [[r*-0.2,r*-0.2],[r*0.45,r*-0.4],[r*-0.5,r*0.5]].forEach(([fx,fy]) => {
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.arc(fx, fy, r*0.025, 0, Math.PI*2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+// ============================================
+// SIZE COMPARISON SCENE
+// ============================================
+(function() {
+  const c = document.getElementById('size-scene');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+
+  // Labels
+  ctx.fillStyle = '#888';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'center';
+
+  // Small pebbles
+  ctx.fillText('SMALL (15-25px)', 80, 25);
+  drawPebbleA(ctx, 55, H/2, 18);
+  drawPebbleB(ctx, 105, H/2, 22);
+
+  // Medium rocks
+  ctx.fillText('MEDIUM (30-45px)', 240, 25);
+  drawRock(ctx, 220, H/2, 35);
+  drawPebbleB(ctx, 275, H/2 - 10, 30);
+
+  // Large boulders
+  ctx.fillText('LARGE (50-70px)', 440, 25);
+  drawBoulder(ctx, 430, H/2, 55);
+
+  // Scale reference ship
+  ctx.fillStyle = '#42A5F5';
+  ctx.globalAlpha = 0.3;
+  ctx.font = '9px system-ui';
+  ctx.fillText('ship for scale →', 540, H/2 - 40);
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = '#E0E0E0';
+  ctx.beginPath();
+  ctx.moveTo(555, H/2 - 32);
+  ctx.lineTo(570, H/2 + 10);
+  ctx.lineTo(555, H/2 + 5);
+  ctx.lineTo(540, H/2 + 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+})();
+
+// ============================================
+// GAMEPLAY SCENE — BEFORE (one shape)
+// ============================================
+(function() {
+  const c = document.getElementById('scene-before');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+
+  // All same asteroid shape at different sizes
+  const asteroids = [
+    [W*0.3, H*0.08, 18], [W*0.7, H*0.12, 22],
+    [W*0.5, H*0.25, 35], [W*0.15, H*0.35, 20],
+    [W*0.8, H*0.3, 28], [W*0.4, H*0.45, 45],
+    [W*0.65, H*0.5, 16], [W*0.2, H*0.55, 24],
+  ];
+  asteroids.forEach(([x, y, r]) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(Math.random() * Math.PI * 2);
+    ctx.translate(-x, -y);
+    drawOldAsteroid(ctx, x, y, r);
+    ctx.restore();
+  });
+
+  // Ship
+  ctx.fillStyle = '#E0E0E0';
+  ctx.beginPath();
+  ctx.moveTo(W/2, H*0.75);
+  ctx.lineTo(W/2+18, H*0.82);
+  ctx.lineTo(W/2, H*0.8);
+  ctx.lineTo(W/2-18, H*0.82);
+  ctx.closePath();
+  ctx.fill();
+})();
+
+// ============================================
+// GAMEPLAY SCENE — AFTER (4 variants)
+// ============================================
+(function() {
+  const c = document.getElementById('scene-after');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+
+  // Mix of all variants — small use pebbles, medium use rock, large use boulder
+  drawPebbleA(ctx, W*0.3, H*0.08, 16);
+  drawPebbleB(ctx, W*0.7, H*0.12, 20);
+  drawRock(ctx, W*0.5, H*0.25, 35);
+  drawPebbleA(ctx, W*0.15, H*0.35, 18);
+  drawPebbleB(ctx, W*0.8, H*0.3, 22);
+  drawBoulder(ctx, W*0.4, H*0.45, 48);
+  drawPebbleA(ctx, W*0.65, H*0.5, 14);
+  drawRock(ctx, W*0.2, H*0.55, 28);
+
+  // Ship
+  ctx.fillStyle = '#E0E0E0';
+  ctx.beginPath();
+  ctx.moveTo(W/2, H*0.75);
+  ctx.lineTo(W/2+18, H*0.82);
+  ctx.lineTo(W/2, H*0.8);
+  ctx.lineTo(W/2-18, H*0.82);
+  ctx.closePath();
+  ctx.fill();
+})();
+</script>
+</body>
+</html>

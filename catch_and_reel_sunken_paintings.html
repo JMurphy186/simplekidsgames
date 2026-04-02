@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch & Reel - Sunken Treasures</title>
+  <style>
+    body {
+      background-color: #0b0f19;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 50px;
+      margin: 0;
+      flex-wrap: wrap;
+    }
+
+    .game-card {
+      width: 320px;
+      background-color: #0f1322;
+      border: 3px solid #5ce1e6;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(92, 225, 230, 0.3), inset 0 0 20px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      position: relative;
+    }
+
+    .rare-tag {
+      color: #5ce1e6;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 40px;
+      text-shadow: 0 0 8px rgba(92, 225, 230, 0.6);
+    }
+
+    .digital-frame {
+      background: #1a110a;
+      padding: 8px;
+      border-radius: 4px;
+      box-shadow: 0 15px 25px rgba(0,0,0,0.8);
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .digital-frame-inner {
+      background: linear-gradient(135deg, #fceabb 0%, #f8b500 50%, #b8860b 100%);
+      padding: 6px;
+      border-radius: 2px;
+      box-shadow: inset 0 0 10px rgba(100, 50, 0, 0.8);
+    }
+
+    .digital-frame-mat {
+      background: #2a1f18;
+      padding: 4px;
+      box-shadow: inset 0 5px 10px rgba(0,0,0,0.9);
+    }
+
+    .canvas-image {
+      display: block;
+      width: 180px;
+      height: 180px;
+      object-fit: cover;
+      border: 1px solid rgba(0,0,0,0.5);
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8); 
+    }
+
+    .catch-title {
+      color: #ffffff;
+      font-family: 'Impact', 'Arial Black', sans-serif;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+      margin-bottom: 25px;
+    }
+
+    .stats {
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .stat-line { font-size: 16px; font-weight: bold; }
+    .stat-label { color: #fceabb; }
+    .stat-value { color: #ffffff; }
+  </style>
+</head>
+<body>
+
+  <!-- CARD 1: Lighthouse (Night Dock) -->
+  <div class="game-card">
+    <div class="rare-tag">★ RARE ★</div>
+    <div class="digital-frame">
+      <div class="digital-frame-inner">
+        <div class="digital-frame-mat">
+          <img src="https://user-gen-media-assets.s3.amazonaws.com/gemini_images/d8f27d90-d6d8-4a59-9ae1-3d83e077c4b6.png" alt="Lighthouse Canvas" class="canvas-image">
+        </div>
+      </div>
+    </div>
+    <div class="catch-title">YOU CAUGHT THE<br>NIGHT WATCH!</div>
+    <div class="stats">
+      <div class="stat-line"><span class="stat-label">Value:</span> <span class="stat-value">6,000 Coins</span></div>
+      <div class="stat-line"><span class="stat-label">Level:</span> <span class="stat-value">Wooden Dock</span></div>
+    </div>
+  </div>
+
+  <!-- CARD 2: Sunrise -->
+  <div class="game-card">
+    <div class="rare-tag">★ RARE ★</div>
+    <div class="digital-frame">
+      <div class="digital-frame-inner">
+        <div class="digital-frame-mat">
+          <img src="https://user-gen-media-assets.s3.amazonaws.com/gemini_images/94a7e61c-2a53-4df6-bb20-43285053770d.png" alt="Sunrise Canvas" class="canvas-image">
+        </div>
+      </div>
+    </div>
+    <div class="catch-title">YOU CAUGHT THE<br>MORNING VOYAGE!</div>
+    <div class="stats">
+      <div class="stat-line"><span class="stat-label">Value:</span> <span class="stat-value">7,500 Coins</span></div>
+      <div class="stat-line"><span class="stat-label">Level:</span> <span class="stat-value">Sunrise</span></div>
+    </div>
+  </div>
+
+  <!-- CARD 3: Coral Reef -->
+  <div class="game-card">
+    <div class="rare-tag">★ RARE ★</div>
+    <div class="digital-frame">
+      <div class="digital-frame-inner">
+        <div class="digital-frame-mat">
+          <img src="https://user-gen-media-assets.s3.amazonaws.com/gemini_images/67f1a21e-6205-4ee6-8f1d-4f6dffc2772f.png" alt="Coral Canvas" class="canvas-image">
+        </div>
+      </div>
+    </div>
+    <div class="catch-title">YOU CAUGHT THE<br>SUNKEN GALLEON!</div>
+    <div class="stats">
+      <div class="stat-line"><span class="stat-label">Value:</span> <span class="stat-value">12,000 Coins</span></div>
+      <div class="stat-line"><span class="stat-label">Level:</span> <span class="stat-value">Coral Reef</span></div>
+    </div>
+  </div>
+
+  <!-- CARD 4: Volcano -->
+  <div class="game-card">
+    <div class="rare-tag">★ RARE ★</div>
+    <div class="digital-frame">
+      <div class="digital-frame-inner">
+        <div class="digital-frame-mat">
+          <img src="https://user-gen-media-assets.s3.amazonaws.com/gemini_images/501d4a09-79fb-492b-921c-a34daeeb50fd.png" alt="Volcano Canvas" class="canvas-image">
+        </div>
+      </div>
+    </div>
+    <div class="catch-title">YOU CAUGHT THE<br>FIRE MOUNTAIN!</div>
+    <div class="stats">
+      <div class="stat-line"><span class="stat-label">Value:</span> <span class="stat-value">15,000 Coins</span></div>
+      <div class="stat-line"><span class="stat-label">Level:</span> <span class="stat-value">Volcano</span></div>
+    </div>
+  </div>
+
+  <!-- CARD 5: Deep Sea -->
+  <div class="game-card">
+    <div class="rare-tag">★ RARE ★</div>
+    <div class="digital-frame">
+      <div class="digital-frame-inner">
+        <div class="digital-frame-mat">
+          <img src="https://user-gen-media-assets.s3.amazonaws.com/gemini_images/f55cfdc5-e275-42a0-a52d-0c5a0f106bea.png" alt="Deep Sea Canvas" class="canvas-image">
+        </div>
+      </div>
+    </div>
+    <div class="catch-title">YOU CAUGHT THE<br>ABYSSAL GLOW!</div>
+    <div class="stats">
+      <div class="stat-line"><span class="stat-label">Value:</span> <span class="stat-value">25,000 Coins</span></div>
+      <div class="stat-line"><span class="stat-label">Level:</span> <span class="stat-value">Deep Sea</span></div>
+    </div>
+  </div>
+
+</body>
+</html>

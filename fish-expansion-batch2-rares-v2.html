@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fish Expansion Batch 2 — Rares v2</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a1628; color: #e0e8f0; font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; }
+  h1 { text-align: center; font-size: 28px; margin-bottom: 8px; background: linear-gradient(135deg, #ff9800, #f44336); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { text-align: center; color: #7a8a9a; font-size: 14px; margin-bottom: 32px; }
+  .tier-header { font-size: 22px; font-weight: 700; padding: 12px 20px; margin: 24px 0 16px 0; border-radius: 8px; display: inline-block; background: #3a2a1a; color: #ffb74d; border: 1px solid #ff980044; }
+  .fish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .fish-card { background: #111e33; border: 1px solid #1e3050; border-radius: 12px; padding: 16px; text-align: center; transition: transform 0.2s, border-color 0.2s; }
+  .fish-card:hover { transform: translateY(-2px); border-color: #ff980066; }
+  .fish-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #ffcc80; }
+  .fish-detail { font-size: 12px; color: #6a7a8a; margin-bottom: 12px; line-height: 1.4; }
+  .fish-sizes { display: flex; align-items: flex-end; justify-content: center; gap: 24px; margin-top: 8px; }
+  .size-label { font-size: 10px; color: #5a6a7a; margin-top: 4px; }
+  .fish-svg-container { display: flex; flex-direction: column; align-items: center; }
+  .notes { background: #1a2a3a; border: 1px solid #2a3a4a; border-radius: 8px; padding: 16px; margin: 16px 0; font-size: 13px; line-height: 1.6; color: #8a9aaa; }
+  .notes strong { color: #b0c0d0; }
+  .fix-badge { display: inline-block; background: #f4433622; color: #ef9a9a; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 600; }
+  .fix-badge.green { background: #4caf5022; color: #a5d6a7; }
+</style>
+</head>
+<body>
+
+<h1>🐟 Fish Expansion Batch 2 — Rares v2</h1>
+<p class="subtitle">10 Rare fish · Reference-corrected · Species-accurate</p>
+
+<div class="notes">
+  <strong>v2 Changes:</strong> Barracuda teeth fixed. Lionfish reworked (brown/cream from reference). Triggerfish eye clarified. 
+  Parrotfish beak reworked (teal, from reference). Coral Tang → Yellow Tang, fins tightened. 
+  Butterflyfish snout shortened (white/navy/yellow from reference). Hawkfish reworked to longnose style (red/white grid, elongated snout, blue eye). 
+  Royal Tang fins tightened.
+</div>
+
+<div class="tier-header">⬤ Rare (10 fish)</div>
+
+<div class="fish-grid">
+
+  <!-- R1: Barracuda -->
+  <div class="fish-card">
+    <div class="fish-name">Barracuda <span class="fix-badge green">teeth fixed</span></div>
+    <div class="fish-detail">Long sleek predator, silver with dark chevron bars, underbite jaw, teeth inside mouth</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r0_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#708090"/><stop offset="40%" stop-color="#a0b0c0"/><stop offset="100%" stop-color="#d0d8e0"/>
+            </linearGradient>
+            <clipPath id="r0_clip"><path d="M18,50 Q18,40 44,36 Q74,32 114,38 Q142,44 142,50 Q142,56 114,62 Q74,68 44,64 Q18,60 18,50Z"/></clipPath>
+          </defs>
+          <path d="M56,38 Q60,28 64,36" fill="#607080" opacity="0.8"/>
+          <path d="M114,40 Q118,32 122,38" fill="#607080" opacity="0.8"/>
+          <path d="M114,60 Q118,68 122,62" fill="#607080" opacity="0.7"/>
+          <path d="M56,62 Q52,70 48,66 Q52,64 56,62Z" fill="#60708066"/>
+          <path d="M138,50 Q150,34 156,26 Q152,42 153,50 Q152,58 156,74 Q150,66 138,50Z" fill="#607080" opacity="0.85"/>
+          <!-- Body -->
+          <path d="M18,50 Q18,40 44,36 Q74,32 114,38 Q142,44 142,50 Q142,56 114,62 Q74,68 44,64 Q18,60 18,50Z" fill="url(#r0_body)"/>
+          <!-- Chevron bars -->
+          <g clip-path="url(#r0_clip)" opacity="0.25">
+            <path d="M54,32 L60,50 L54,68" fill="none" stroke="#2a3a4a" stroke-width="3"/>
+            <path d="M70,32 L76,50 L70,68" fill="none" stroke="#2a3a4a" stroke-width="3"/>
+            <path d="M86,34 L92,50 L86,66" fill="none" stroke="#2a3a4a" stroke-width="2.5"/>
+            <path d="M100,36 L106,50 L100,64" fill="none" stroke="#2a3a4a" stroke-width="2"/>
+            <path d="M112,38 L118,50 L112,62" fill="none" stroke="#2a3a4a" stroke-width="1.5"/>
+          </g>
+          <g clip-path="url(#r0_clip)"><line x1="28" y1="49" x2="136" y2="48" stroke="#b8c8d8" stroke-width="0.8" opacity="0.3"/></g>
+          <!-- Jaw — underbite, mouth slightly open, teeth INSIDE -->
+          <path d="M18,48 Q14,47 12,48 L12,50" fill="#a0b0c0" stroke="#60708044" stroke-width="0.5"/>
+          <path d="M18,52 Q14,53 12,52 L12,50" fill="#c8d0d8" stroke="#60708044" stroke-width="0.5"/>
+          <!-- Teeth inside mouth gap -->
+          <g opacity="0.8">
+            <line x1="13" y1="48.5" x2="13" y2="49.5" stroke="white" stroke-width="0.8"/>
+            <line x1="14.5" y1="48.5" x2="14.5" y2="49.5" stroke="white" stroke-width="0.8"/>
+            <line x1="16" y1="48.5" x2="16" y2="49.5" stroke="white" stroke-width="0.8"/>
+            <line x1="13.5" y1="50.5" x2="13.5" y2="51.5" stroke="white" stroke-width="0.8"/>
+            <line x1="15" y1="50.5" x2="15" y2="51.5" stroke="white" stroke-width="0.8"/>
+            <line x1="16.5" y1="50.5" x2="16.5" y2="51.5" stroke="white" stroke-width="0.8"/>
+          </g>
+          <!-- Eye -->
+          <circle cx="26" cy="46" r="4.5" fill="#ffee88"/>
+          <circle cx="25" cy="45" r="2.8" fill="#1a1a1a"/>
+          <circle cx="24" cy="44" r="1" fill="white"/>
+          <path d="M38,54 Q32,62 28,58 Q34,56 38,54Z" fill="#a0b0c088"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r0s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#708090"/><stop offset="40%" stop-color="#a0b0c0"/><stop offset="100%" stop-color="#d0d8e0"/></linearGradient><clipPath id="r0s_clip"><path d="M18,50 Q18,40 44,36 Q74,32 114,38 Q142,44 142,50 Q142,56 114,62 Q74,68 44,64 Q18,60 18,50Z"/></clipPath></defs>
+          <path d="M138,50 Q150,34 156,26 Q152,42 153,50 Q152,58 156,74 Q150,66 138,50Z" fill="#607080" opacity="0.85"/>
+          <path d="M18,50 Q18,40 44,36 Q74,32 114,38 Q142,44 142,50 Q142,56 114,62 Q74,68 44,64 Q18,60 18,50Z" fill="url(#r0s_body)"/>
+          <g clip-path="url(#r0s_clip)" opacity="0.25"><path d="M54,32 L60,50 L54,68" fill="none" stroke="#2a3a4a" stroke-width="3"/><path d="M70,32 L76,50 L70,68" fill="none" stroke="#2a3a4a" stroke-width="3"/><path d="M86,34 L92,50 L86,66" fill="none" stroke="#2a3a4a" stroke-width="2.5"/></g>
+          <path d="M18,48 Q14,47 12,48 L12,50" fill="#a0b0c0"/><path d="M18,52 Q14,53 12,52 L12,50" fill="#c8d0d8"/>
+          <circle cx="26" cy="46" r="4.5" fill="#ffee88"/><circle cx="25" cy="45" r="2.8" fill="#1a1a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R2: Lionfish — REWORKED from reference (brown/cream) -->
+  <div class="fish-card">
+    <div class="fish-name">Lionfish <span class="fix-badge">reworked from reference</span></div>
+    <div class="fish-detail">Brown/cream banded stripes, banded venomous spines, spotted fan fins, dramatic spread</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r1_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6a3a20"/><stop offset="50%" stop-color="#5a2a18"/><stop offset="100%" stop-color="#4a2010"/>
+            </linearGradient>
+            <clipPath id="r1_clip"><ellipse cx="70" cy="52" rx="28" ry="20"/></clipPath>
+          </defs>
+          <!-- Banded dorsal spines — alternating brown/cream -->
+          <g opacity="0.85">
+            <line x1="46" y1="34" x2="38" y2="4" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="52" y1="32" x2="46" y2="2" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="58" y1="32" x2="54" y2="4" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="64" y1="32" x2="62" y2="2" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="70" y1="32" x2="70" y2="4" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="76" y1="32" x2="78" y2="6" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="82" y1="34" x2="86" y2="8" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+            <line x1="86" y1="36" x2="92" y2="12" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/>
+          </g>
+          <!-- Fan pectoral fins — wide spread, spotted -->
+          <path d="M52,56 Q28,60 14,76 Q20,58 26,50 Q32,44 40,42" fill="#8a6a50" opacity="0.45"/>
+          <path d="M52,56 Q32,54 16,64 Q24,52 32,48 Q40,44 48,44" fill="#8a6a5033"/>
+          <!-- Spots on pectoral fan -->
+          <g opacity="0.35">
+            <circle cx="28" cy="60" r="1.5" fill="#1a1a0a"/>
+            <circle cx="24" cy="66" r="1.2" fill="#1a1a0a"/>
+            <circle cx="32" cy="56" r="1.3" fill="#1a1a0a"/>
+            <circle cx="20" cy="62" r="1" fill="#1a1a0a"/>
+            <circle cx="36" cy="52" r="1" fill="#1a1a0a"/>
+            <circle cx="26" cy="54" r="1.2" fill="#1a1a0a"/>
+          </g>
+          <!-- Anal spines — banded -->
+          <line x1="62" y1="72" x2="56" y2="90" stroke="#5a2a18" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.7"/>
+          <line x1="68" y1="72" x2="64" y2="92" stroke="#5a2a18" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.7"/>
+          <line x1="74" y1="72" x2="74" y2="88" stroke="#5a2a18" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.7"/>
+          <!-- Tail — spotted/translucent -->
+          <path d="M96,52 Q112,38 118,32 Q114,46 115,52 Q114,58 118,72 Q112,66 96,52Z" fill="#8a6a50" opacity="0.6"/>
+          <circle cx="108" cy="42" r="1" fill="#1a1a0a" opacity="0.3"/>
+          <circle cx="112" cy="48" r="1.2" fill="#1a1a0a" opacity="0.3"/>
+          <circle cx="106" cy="56" r="1" fill="#1a1a0a" opacity="0.3"/>
+          <circle cx="110" cy="62" r="1.2" fill="#1a1a0a" opacity="0.3"/>
+          <!-- Body -->
+          <ellipse cx="70" cy="52" rx="28" ry="20" fill="url(#r1_body)"/>
+          <!-- Cream/brown alternating stripes -->
+          <g clip-path="url(#r1_clip)" opacity="0.5">
+            <rect x="46" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+            <rect x="53" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+            <rect x="60" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+            <rect x="67" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+            <rect x="74" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+            <rect x="81" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+            <rect x="88" y="32" width="3.5" height="40" fill="#e8d0b0" rx="1"/>
+          </g>
+          <!-- Eye -->
+          <circle cx="52" cy="48" r="4.5" fill="#ddcc88"/>
+          <circle cx="51" cy="47" r="2.8" fill="#1a0a0a"/>
+          <circle cx="50" cy="46" r="1" fill="white"/>
+          <!-- Mouth -->
+          <path d="M43,54 Q41,56 43,57" fill="none" stroke="#4a201044" stroke-width="1"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r1s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6a3a20"/><stop offset="50%" stop-color="#5a2a18"/><stop offset="100%" stop-color="#4a2010"/></linearGradient><clipPath id="r1s_clip"><ellipse cx="70" cy="52" rx="28" ry="20"/></clipPath></defs>
+          <g opacity="0.85"><line x1="48" y1="34" x2="40" y2="4" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="56" y1="32" x2="52" y2="2" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="64" y1="32" x2="62" y2="4" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="72" y1="32" x2="74" y2="6" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="80" y1="34" x2="86" y2="10" stroke="#5a2a18" stroke-width="1.5" stroke-dasharray="4,3"/></g>
+          <path d="M52,56 Q28,60 14,76 Q20,58 26,50 Q32,44 40,42" fill="#8a6a50" opacity="0.45"/>
+          <path d="M96,52 Q112,38 118,32 Q114,46 115,52 Q114,58 118,72 Q112,66 96,52Z" fill="#8a6a50" opacity="0.6"/>
+          <ellipse cx="70" cy="52" rx="28" ry="20" fill="url(#r1s_body)"/>
+          <g clip-path="url(#r1s_clip)" opacity="0.5"><rect x="48" y="32" width="4" height="40" fill="#e8d0b0" rx="1"/><rect x="56" y="32" width="4" height="40" fill="#e8d0b0" rx="1"/><rect x="64" y="32" width="4" height="40" fill="#e8d0b0" rx="1"/><rect x="72" y="32" width="4" height="40" fill="#e8d0b0" rx="1"/><rect x="80" y="32" width="4" height="40" fill="#e8d0b0" rx="1"/></g>
+          <circle cx="52" cy="48" r="4.5" fill="#ddcc88"/><circle cx="51" cy="47" r="2.8" fill="#1a0a0a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R3: Triggerfish -->
+  <div class="fish-card">
+    <div class="fish-name">Triggerfish <span class="fix-badge green">eye clarified</span></div>
+    <div class="fish-detail">Deep diamond body, trigger spine, blue body, yellow face patch, distinct eye</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r2_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2255aa"/><stop offset="50%" stop-color="#1a4488"/><stop offset="100%" stop-color="#1a3366"/>
+            </linearGradient>
+            <clipPath id="r2_clip"><ellipse cx="72" cy="50" rx="34" ry="30"/></clipPath>
+          </defs>
+          <path d="M62,22 L64,6 L66,20" fill="#1a4488" opacity="0.9"/>
+          <path d="M66,20 Q72,14 78,22" fill="#1a4488" opacity="0.7"/>
+          <path d="M78,22 Q86,18 94,24 Q98,28 100,32" fill="#1a4488" opacity="0.7"/>
+          <path d="M66,78 Q76,84 86,78 Q92,74 96,70" fill="#1a4488" opacity="0.65"/>
+          <path d="M104,50 Q118,36 124,30 Q120,44 121,50 Q120,56 124,70 Q118,64 104,50Z" fill="#1a4488" opacity="0.85"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="34" ry="30" fill="url(#r2_body)"/>
+          <!-- Yellow face area -->
+          <g clip-path="url(#r2_clip)">
+            <path d="M38,40 Q44,32 54,36 Q60,42 56,54 Q50,62 40,58 Q36,52 38,44Z" fill="#eebb22" opacity="0.55"/>
+            <line x1="48" y1="36" x2="98" y2="34" stroke="#44aaff" stroke-width="1.2" opacity="0.3"/>
+            <line x1="48" y1="44" x2="100" y2="42" stroke="#44aaff" stroke-width="0.8" opacity="0.25"/>
+          </g>
+          <!-- Eye — clearly distinct, white ring -->
+          <circle cx="50" cy="44" r="5.5" fill="white"/>
+          <circle cx="50" cy="44" r="4" fill="#1a3366"/>
+          <circle cx="49" cy="43" r="2" fill="#1a1a1a"/>
+          <circle cx="48" cy="42" r="0.8" fill="white"/>
+          <!-- Mouth — clearly below and left -->
+          <path d="M39,56 Q37,54 39,52" fill="none" stroke="#0a1a4488" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M56,56 Q48,64 44,60 Q50,58 56,56Z" fill="#1a448866"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r2s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2255aa"/><stop offset="50%" stop-color="#1a4488"/><stop offset="100%" stop-color="#1a3366"/></linearGradient><clipPath id="r2s_clip"><ellipse cx="72" cy="50" rx="34" ry="30"/></clipPath></defs>
+          <path d="M62,22 L64,6 L66,20" fill="#1a4488" opacity="0.9"/>
+          <path d="M104,50 Q118,36 124,30 Q120,44 121,50 Q120,56 124,70 Q118,64 104,50Z" fill="#1a4488" opacity="0.85"/>
+          <ellipse cx="72" cy="50" rx="34" ry="30" fill="url(#r2s_body)"/>
+          <g clip-path="url(#r2s_clip)"><path d="M38,40 Q44,32 54,36 Q60,42 56,54 Q50,62 40,58 Q36,52 38,44Z" fill="#eebb22" opacity="0.55"/></g>
+          <circle cx="50" cy="44" r="5.5" fill="white"/><circle cx="50" cy="44" r="4" fill="#1a3366"/><circle cx="49" cy="43" r="2" fill="#1a1a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R4: Parrotfish — beak reworked -->
+  <div class="fish-card">
+    <div class="fish-name">Parrotfish <span class="fix-badge green">beak reworked, colors from ref</span></div>
+    <div class="fish-detail">Chunky, teal-green to pink-orange gradient, prominent teal beak, large scales</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r3_body" x1="0" y1="0" x2="1" y2="0.5">
+              <stop offset="0%" stop-color="#44bbaa"/><stop offset="30%" stop-color="#66aa88"/><stop offset="60%" stop-color="#cc8866"/><stop offset="100%" stop-color="#aa6644"/>
+            </linearGradient>
+            <clipPath id="r3_clip"><ellipse cx="74" cy="50" rx="36" ry="26"/></clipPath>
+          </defs>
+          <!-- Dorsal — smooth sail pinned to body (y=34 at x=46, y=36 at x=104) -->
+          <path d="M46,34 Q52,18 66,14 Q80,12 94,20 Q100,28 104,36" fill="#44aa88" opacity="0.75"/>
+          <path d="M62,72 Q72,80 84,74" fill="#aa6644" opacity="0.7"/>
+          <path d="M108,50 Q120,36 126,30 Q122,44 124,50 Q122,56 126,70 Q120,64 108,50Z" fill="#66aa88" opacity="0.85"/>
+          <path d="M56,70 Q50,80 44,74 Q50,72 56,70Z" fill="#66aa8866"/>
+          <!-- Body -->
+          <ellipse cx="74" cy="50" rx="36" ry="26" fill="url(#r3_body)"/>
+          <!-- Large scales -->
+          <g clip-path="url(#r3_clip)" opacity="0.18">
+            <circle cx="52" cy="40" r="7" fill="none" stroke="#88ddcc" stroke-width="0.8"/>
+            <circle cx="66" cy="38" r="7" fill="none" stroke="#88ddcc" stroke-width="0.8"/>
+            <circle cx="80" cy="40" r="7" fill="none" stroke="#88ddcc" stroke-width="0.8"/>
+            <circle cx="94" cy="42" r="7" fill="none" stroke="#88ddcc" stroke-width="0.8"/>
+            <circle cx="52" cy="54" r="7" fill="none" stroke="#cc9988" stroke-width="0.7"/>
+            <circle cx="66" cy="52" r="7" fill="none" stroke="#cc9988" stroke-width="0.7"/>
+            <circle cx="80" cy="54" r="7" fill="none" stroke="#cc9988" stroke-width="0.7"/>
+            <circle cx="94" cy="56" r="7" fill="none" stroke="#cc9988" stroke-width="0.7"/>
+          </g>
+          <!-- Prominent teal beak — two plates, visible gap -->
+          <path d="M39,46 L30,44 Q28,46 30,48 L39,48" fill="#22aa88" stroke="#18886644" stroke-width="0.8"/>
+          <path d="M39,52 L30,52 Q28,54 30,56 L39,54" fill="#22aa88" stroke="#18886644" stroke-width="0.8"/>
+          <!-- Gap between beak plates -->
+          <line x1="30" y1="49" x2="38" y2="50" stroke="#0a4a3a" stroke-width="1" opacity="0.5"/>
+          <!-- Eye -->
+          <circle cx="48" cy="44" r="4.5" fill="#ffaa44"/>
+          <circle cx="47" cy="43" r="2.8" fill="#1a2a1a"/>
+          <circle cx="46" cy="42" r="1" fill="white"/>
+          <path d="M56,56 Q48,64 44,60 Q50,58 56,56Z" fill="#44aa8866"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r3s_body" x1="0" y1="0" x2="1" y2="0.5"><stop offset="0%" stop-color="#44bbaa"/><stop offset="30%" stop-color="#66aa88"/><stop offset="60%" stop-color="#cc8866"/><stop offset="100%" stop-color="#aa6644"/></linearGradient></defs>
+          <!-- Dorsal sail pinned to body -->
+          <path d="M46,34 Q52,18 66,14 Q80,12 94,20 Q100,28 104,36" fill="#44aa88" opacity="0.75"/>
+          <path d="M108,50 Q120,36 126,30 Q122,44 124,50 Q122,56 126,70 Q120,64 108,50Z" fill="#66aa88" opacity="0.85"/>
+          <ellipse cx="74" cy="50" rx="36" ry="26" fill="url(#r3s_body)"/>
+          <path d="M39,46 L30,44 Q28,46 30,48 L39,48" fill="#22aa88"/><path d="M39,52 L30,52 Q28,54 30,56 L39,54" fill="#22aa88"/>
+          <circle cx="48" cy="44" r="4.5" fill="#ffaa44"/><circle cx="47" cy="43" r="2.8" fill="#1a2a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R5: Yellow Tang (renamed) -->
+  <div class="fish-card">
+    <div class="fish-name">Yellow Tang <span class="fix-badge green">renamed, fins tightened</span></div>
+    <div class="fish-detail">Bright yellow oval disc, tiny mouth, scalpel spine near tail base</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r4_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffdd22"/><stop offset="50%" stop-color="#ffcc00"/><stop offset="100%" stop-color="#ddaa00"/>
+            </linearGradient>
+            <radialGradient id="r4_shine" cx="0.4" cy="0.3" r="0.45"><stop offset="0%" stop-color="#ffee8833"/><stop offset="100%" stop-color="#ffee8800"/></radialGradient>
+          </defs>
+          <!-- Dorsal — sail pinned to body edge (y=33 at x=46, y=36 at x=100) -->
+          <path d="M46,33 Q50,28 56,18 Q66,10 80,12 Q92,16 98,28 Q100,32 100,36" fill="#ddaa00" opacity="0.8"/>
+          <!-- Anal — sail pinned to body edge (y=70 at x=48, y=65 at x=100) -->
+          <path d="M48,70 Q52,74 58,82 Q70,88 82,86 Q92,80 98,72 Q100,68 100,65" fill="#ddaa00" opacity="0.75"/>
+          <!-- Tail -->
+          <path d="M102,50 Q116,34 122,28 Q118,44 119,50 Q118,56 122,72 Q116,66 102,50Z" fill="#ddaa00" opacity="0.85"/>
+          <path d="M54,72 Q48,78 44,74 Q48,72 54,72Z" fill="#ddaa0066"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="32" ry="30" fill="url(#r4_body)"/>
+          <ellipse cx="72" cy="50" rx="32" ry="30" fill="url(#r4_shine)"/>
+          <!-- Scalpel spine -->
+          <path d="M98,48 L104,46 L100,50 L104,54 L98,52" fill="white" opacity="0.7"/>
+          <!-- Eye -->
+          <circle cx="50" cy="44" r="4.5" fill="white"/><circle cx="49" cy="43" r="2.8" fill="#1a1a00"/><circle cx="48" cy="42" r="1" fill="white"/>
+          <path d="M41,52 Q39,50 41,48" fill="none" stroke="#aa880044" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M56,56 Q48,62 46,58 Q50,56 56,56Z" fill="#ffcc0066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r4s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffdd22"/><stop offset="50%" stop-color="#ffcc00"/><stop offset="100%" stop-color="#ddaa00"/></linearGradient></defs>
+          <path d="M46,33 Q50,28 56,18 Q66,10 80,12 Q92,16 98,28 Q100,32 100,36" fill="#ddaa00" opacity="0.8"/>
+          <path d="M48,70 Q52,74 58,82 Q70,88 82,86 Q92,80 98,72 Q100,68 100,65" fill="#ddaa00" opacity="0.75"/>
+          <path d="M102,50 Q116,34 122,28 Q118,44 119,50 Q118,56 122,72 Q116,66 102,50Z" fill="#ddaa00" opacity="0.85"/>
+          <ellipse cx="72" cy="50" rx="32" ry="30" fill="url(#r4s_body)"/>
+          <path d="M98,48 L104,46 L100,50 L104,54 L98,52" fill="white" opacity="0.7"/>
+          <circle cx="50" cy="44" r="4.5" fill="white"/><circle cx="49" cy="43" r="2.8" fill="#1a1a00"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R6: Butterflyfish — reworked from reference -->
+  <div class="fish-card">
+    <div class="fish-name">Butterflyfish <span class="fix-badge green">snout fixed, colors from ref</span></div>
+    <div class="fish-detail">Disc-shaped, white/navy body with vertical lines, yellow rear half, black eye band</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r5_body" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#e0e4e8"/>
+              <stop offset="55%" stop-color="#d8dce0"/>
+              <stop offset="65%" stop-color="#ffdd44"/>
+              <stop offset="100%" stop-color="#ffcc00"/>
+            </linearGradient>
+            <clipPath id="r5_clip"><ellipse cx="72" cy="50" rx="30" ry="28"/></clipPath>
+          </defs>
+          <!-- Dorsal — pinned to body (y=26 at x=56, y=33 at x=96), taller peak -->
+          <path d="M56,26 Q62,10 72,8 Q82,10 90,22 Q94,28 96,33" fill="#ffcc00" opacity="0.8"/>
+          <!-- Anal — pinned to body (y=74 at x=58, y=68 at x=90) -->
+          <path d="M58,74 Q68,84 80,78 Q86,74 90,68" fill="#ffcc00" opacity="0.75"/>
+          <!-- Tail — yellow -->
+          <path d="M100,50 Q114,36 120,30 Q116,44 117,50 Q116,56 120,70 Q114,64 100,50Z" fill="#ffcc00" opacity="0.9"/>
+          <path d="M54,70 Q48,78 42,74 Q48,72 54,70Z" fill="#e0e4e866"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="30" ry="28" fill="url(#r5_body)"/>
+          <!-- Black eye band -->
+          <g clip-path="url(#r5_clip)">
+            <rect x="46" y="22" width="8" height="56" fill="#1a1a2a" opacity="0.7"/>
+          </g>
+          <!-- Navy vertical lines on white area -->
+          <g clip-path="url(#r5_clip)" opacity="0.2">
+            <line x1="56" y1="24" x2="56" y2="76" stroke="#1a1a4a" stroke-width="0.8"/>
+            <line x1="60" y1="24" x2="60" y2="76" stroke="#1a1a4a" stroke-width="0.8"/>
+            <line x1="64" y1="24" x2="64" y2="76" stroke="#1a1a4a" stroke-width="0.8"/>
+            <line x1="68" y1="24" x2="68" y2="76" stroke="#1a1a4a" stroke-width="0.8"/>
+            <line x1="72" y1="24" x2="72" y2="76" stroke="#1a1a4a" stroke-width="0.8"/>
+            <line x1="76" y1="24" x2="76" y2="76" stroke="#1a1a4a" stroke-width="0.8"/>
+          </g>
+          <!-- Short snout — NOT protruding far -->
+          <path d="M42,50 Q40,49 39,50 Q40,51 42,51" fill="#d8dce0" stroke="#a0a8b022" stroke-width="0.5"/>
+          <!-- Eye on top of band -->
+          <circle cx="50" cy="44" r="4" fill="white"/>
+          <circle cx="49" cy="43" r="2.5" fill="#1a1a1a"/>
+          <circle cx="48" cy="42" r="1" fill="white"/>
+          <path d="M56,56 Q48,62 46,58 Q50,56 56,56Z" fill="#d8dce066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r5s_body" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#e0e4e8"/><stop offset="55%" stop-color="#d8dce0"/><stop offset="65%" stop-color="#ffdd44"/><stop offset="100%" stop-color="#ffcc00"/></linearGradient><clipPath id="r5s_clip"><ellipse cx="72" cy="50" rx="30" ry="28"/></clipPath></defs>
+          <path d="M56,26 Q62,10 72,8 Q82,10 90,22 Q94,28 96,33" fill="#ffcc00" opacity="0.8"/>
+          <path d="M100,50 Q114,36 120,30 Q116,44 117,50 Q116,56 120,70 Q114,64 100,50Z" fill="#ffcc00" opacity="0.9"/>
+          <ellipse cx="72" cy="50" rx="30" ry="28" fill="url(#r5s_body)"/>
+          <g clip-path="url(#r5s_clip)"><rect x="46" y="22" width="8" height="56" fill="#1a1a2a" opacity="0.7"/></g>
+          <circle cx="50" cy="44" r="4" fill="white"/><circle cx="49" cy="43" r="2.5" fill="#1a1a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R7: Needlefish (unchanged) -->
+  <div class="fish-card">
+    <div class="fish-name">Needlefish</div>
+    <div class="fish-detail">Extremely long and thin, silver-green, long pointed beak jaw with tiny teeth</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r6_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a8868"/><stop offset="40%" stop-color="#88b8a0"/><stop offset="100%" stop-color="#c8d8d0"/>
+            </linearGradient>
+            <clipPath id="r6_clip"><path d="M8,50 Q8,44 30,42 Q60,38 110,42 Q140,46 140,50 Q140,54 110,58 Q60,62 30,58 Q8,56 8,50Z"/></clipPath>
+          </defs>
+          <path d="M116,44 Q120,36 124,42" fill="#4a8868" opacity="0.75"/>
+          <path d="M116,56 Q120,64 124,58" fill="#4a8868" opacity="0.7"/>
+          <path d="M138,50 Q148,40 152,36 Q148,46 149,50 Q148,54 152,64 Q148,60 138,50Z" fill="#4a8868" opacity="0.8"/>
+          <path d="M8,50 Q8,44 30,42 Q60,38 110,42 Q140,46 140,50 Q140,54 110,58 Q60,62 30,58 Q8,56 8,50Z" fill="url(#r6_body)"/>
+          <g clip-path="url(#r6_clip)"><line x1="14" y1="50" x2="134" y2="49" stroke="#44aa88" stroke-width="1.5" opacity="0.3"/></g>
+          <path d="M8,49 L-8,48 L-6,50" fill="#88b8a0" stroke="#4a886844" stroke-width="0.5"/>
+          <path d="M8,51 L-8,52 L-6,50" fill="#c8d8d0" stroke="#4a886844" stroke-width="0.5"/>
+          <g opacity="0.5"><line x1="-4" y1="49.5" x2="-2" y2="49.5" stroke="white" stroke-width="0.5"/><line x1="0" y1="49.5" x2="2" y2="49.5" stroke="white" stroke-width="0.5"/><line x1="4" y1="49.5" x2="6" y2="49.5" stroke="white" stroke-width="0.5"/></g>
+          <circle cx="16" cy="47" r="3.5" fill="#ddeecc"/><circle cx="15" cy="46" r="2.2" fill="#1a2a1a"/><circle cx="14.5" cy="45.5" r="0.8" fill="white"/>
+          <path d="M28,54 Q24,58 22,56 Q24,54 28,54Z" fill="#88b8a066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r6s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4a8868"/><stop offset="40%" stop-color="#88b8a0"/><stop offset="100%" stop-color="#c8d8d0"/></linearGradient></defs>
+          <path d="M138,50 Q148,40 152,36 Q148,46 149,50 Q148,54 152,64 Q148,60 138,50Z" fill="#4a8868" opacity="0.8"/>
+          <path d="M8,50 Q8,44 30,42 Q60,38 110,42 Q140,46 140,50 Q140,54 110,58 Q60,62 30,58 Q8,56 8,50Z" fill="url(#r6s_body)"/>
+          <path d="M8,49 L-8,48 L-6,50" fill="#88b8a0"/><path d="M8,51 L-8,52 L-6,50" fill="#c8d8d0"/>
+          <circle cx="16" cy="47" r="3.5" fill="#ddeecc"/><circle cx="15" cy="46" r="2.2" fill="#1a2a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R8: Sauger (unchanged) -->
+  <div class="fish-card">
+    <div class="fish-name">Sauger</div>
+    <div class="fish-detail">Elongated olive-brown, dark saddle blotches, spiny dorsal with spots, glassy eye</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r7_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7a6a40"/><stop offset="50%" stop-color="#9a8a58"/><stop offset="100%" stop-color="#c0b080"/>
+            </linearGradient>
+            <clipPath id="r7_clip"><path d="M24,50 Q24,36 54,32 Q84,28 114,36 Q136,44 136,50 Q136,56 114,64 Q84,72 54,68 Q24,64 24,50Z"/></clipPath>
+          </defs>
+          <path d="M48,34 L50,20 L54,32 L56,18 L60,30 L62,16 L66,28 L68,20 L72,32 L74,24 L78,34" fill="#7a6a40" opacity="0.8"/>
+          <path d="M48,34 Q64,36 78,34" fill="#9a8a58"/>
+          <circle cx="54" cy="24" r="1.5" fill="#2a2010" opacity="0.5"/><circle cx="62" cy="22" r="1.5" fill="#2a2010" opacity="0.5"/><circle cx="68" cy="26" r="1.5" fill="#2a2010" opacity="0.5"/>
+          <path d="M96,36 Q102,28 110,34" fill="#7a6a40" opacity="0.7"/>
+          <path d="M94,64 Q100,74 108,66" fill="#7a6a40" opacity="0.65"/>
+          <path d="M132,50 Q144,34 150,28 Q146,44 147,50 Q146,56 150,72 Q144,66 132,50Z" fill="#7a6a40" opacity="0.85"/>
+          <path d="M52,64 Q46,74 42,68 Q46,66 52,64Z" fill="#7a6a4066"/>
+          <path d="M24,50 Q24,36 54,32 Q84,28 114,36 Q136,44 136,50 Q136,56 114,64 Q84,72 54,68 Q24,64 24,50Z" fill="url(#r7_body)"/>
+          <g clip-path="url(#r7_clip)" opacity="0.3"><ellipse cx="50" cy="40" rx="8" ry="12" fill="#3a2a10"/><ellipse cx="70" cy="38" rx="8" ry="14" fill="#3a2a10"/><ellipse cx="90" cy="40" rx="8" ry="12" fill="#3a2a10"/><ellipse cx="110" cy="42" rx="6" ry="10" fill="#3a2a10"/></g>
+          <g clip-path="url(#r7_clip)"><line x1="34" y1="48" x2="128" y2="46" stroke="#b0a070" stroke-width="0.8" opacity="0.3"/></g>
+          <circle cx="34" cy="44" r="5" fill="#c8d8e0"/><circle cx="33" cy="43" r="3.2" fill="#1a2020"/><circle cx="32" cy="42" r="1.5" fill="#88aacc" opacity="0.5"/><circle cx="31.5" cy="41.5" r="0.8" fill="white"/>
+          <path d="M24,51 Q22,53 24,55" fill="none" stroke="#5a4a3044" stroke-width="1.2"/>
+          <path d="M42,56 Q34,64 30,60 Q36,58 42,56Z" fill="#9a8a5888"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r7s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7a6a40"/><stop offset="50%" stop-color="#9a8a58"/><stop offset="100%" stop-color="#c0b080"/></linearGradient><clipPath id="r7s_clip"><path d="M24,50 Q24,36 54,32 Q84,28 114,36 Q136,44 136,50 Q136,56 114,64 Q84,72 54,68 Q24,64 24,50Z"/></clipPath></defs>
+          <path d="M48,34 L52,20 L58,32 L62,18 L68,30 L72,22 L78,34" fill="#7a6a40" opacity="0.8"/>
+          <path d="M48,34 Q64,36 78,34" fill="#9a8a58"/>
+          <path d="M132,50 Q144,34 150,28 Q146,44 147,50 Q146,56 150,72 Q144,66 132,50Z" fill="#7a6a40" opacity="0.85"/>
+          <path d="M24,50 Q24,36 54,32 Q84,28 114,36 Q136,44 136,50 Q136,56 114,64 Q84,72 54,68 Q24,64 24,50Z" fill="url(#r7s_body)"/>
+          <g clip-path="url(#r7s_clip)" opacity="0.3"><ellipse cx="50" cy="40" rx="8" ry="12" fill="#3a2a10"/><ellipse cx="70" cy="38" rx="8" ry="14" fill="#3a2a10"/><ellipse cx="90" cy="40" rx="8" ry="12" fill="#3a2a10"/></g>
+          <circle cx="34" cy="44" r="5" fill="#c8d8e0"/><circle cx="33" cy="43" r="3.2" fill="#1a2020"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R9: Hawkfish — REWORKED to longnose from reference -->
+  <div class="fish-card">
+    <div class="fish-name">Hawkfish <span class="fix-badge">reworked — longnose from reference</span></div>
+    <div class="fish-detail">Elongated, red/white grid pattern, long pointed snout, blue eye, tufted dorsal spines</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r8_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#dd3322"/><stop offset="50%" stop-color="#cc2818"/><stop offset="100%" stop-color="#e8c0b0"/>
+            </linearGradient>
+            <clipPath id="r8_clip"><path d="M30,50 Q30,36 58,32 Q86,28 112,36 Q130,44 130,50 Q130,56 112,64 Q86,72 58,68 Q30,64 30,50Z"/></clipPath>
+          </defs>
+          <!-- Tufted dorsal spines -->
+          <g stroke="#cc2818" stroke-width="1.2" stroke-linecap="round" opacity="0.8">
+            <line x1="62" y1="34" x2="58" y2="14"/><line x1="68" y1="32" x2="66" y2="12"/>
+            <line x1="74" y1="32" x2="74" y2="14"/><line x1="80" y1="32" x2="82" y2="16"/>
+            <line x1="86" y1="34" x2="90" y2="18"/><line x1="92" y1="36" x2="96" y2="22"/>
+          </g>
+          <!-- Tufts -->
+          <g fill="#ff8866" opacity="0.5">
+            <circle cx="58" cy="13" r="2"/><circle cx="66" cy="11" r="2"/><circle cx="74" cy="13" r="1.5"/>
+            <circle cx="82" cy="15" r="1.5"/><circle cx="90" cy="17" r="1.5"/>
+          </g>
+          <!-- Soft dorsal (rear) -->
+          <path d="M100,36 Q106,28 114,34" fill="#cc2818" opacity="0.65"/>
+          <!-- Anal -->
+          <path d="M96,64 Q102,74 110,66" fill="#cc2818" opacity="0.6"/>
+          <!-- Tail -->
+          <path d="M126,50 Q138,36 142,32 Q138,44 139,50 Q138,56 142,68 Q138,64 126,50Z" fill="#883040" opacity="0.75"/>
+          <!-- Pelvic -->
+          <path d="M54,64 Q48,74 44,68 Q48,66 54,64Z" fill="#cc281866"/>
+          <!-- Body — elongated (not round) -->
+          <path d="M30,50 Q30,36 58,32 Q86,28 112,36 Q130,44 130,50 Q130,56 112,64 Q86,72 58,68 Q30,64 30,50Z" fill="url(#r8_body)"/>
+          <!-- Red/white grid pattern — horizontal + vertical lines -->
+          <g clip-path="url(#r8_clip)" opacity="0.35">
+            <!-- Vertical red lines -->
+            <line x1="48" y1="28" x2="48" y2="72" stroke="#cc2818" stroke-width="1.5"/>
+            <line x1="60" y1="26" x2="60" y2="74" stroke="#cc2818" stroke-width="1.5"/>
+            <line x1="72" y1="26" x2="72" y2="74" stroke="#cc2818" stroke-width="1.5"/>
+            <line x1="84" y1="26" x2="84" y2="74" stroke="#cc2818" stroke-width="1.5"/>
+            <line x1="96" y1="28" x2="96" y2="72" stroke="#cc2818" stroke-width="1.5"/>
+            <line x1="108" y1="32" x2="108" y2="68" stroke="#cc2818" stroke-width="1.5"/>
+            <!-- Horizontal red lines -->
+            <line x1="36" y1="38" x2="124" y2="38" stroke="#cc2818" stroke-width="1.2"/>
+            <line x1="34" y1="50" x2="126" y2="50" stroke="#cc2818" stroke-width="1.2"/>
+            <line x1="36" y1="62" x2="124" y2="62" stroke="#cc2818" stroke-width="1.2"/>
+          </g>
+          <!-- White/pink patches between grid -->
+          <g clip-path="url(#r8_clip)" opacity="0.15">
+            <rect x="50" y="40" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="62" y="40" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="74" y="40" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="86" y="40" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="50" y="52" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="62" y="52" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="74" y="52" width="8" height="8" fill="#f0d0c0" rx="2"/>
+            <rect x="86" y="52" width="8" height="8" fill="#f0d0c0" rx="2"/>
+          </g>
+          <!-- Long pointed snout -->
+          <path d="M30,50 Q20,48 12,48 Q14,50 12,52 Q20,52 30,50" fill="#e0a898" stroke="#cc281822" stroke-width="0.5"/>
+          <!-- Blue eye! (from reference) -->
+          <circle cx="38" cy="44" r="5" fill="#2244cc"/>
+          <circle cx="37" cy="43" r="3" fill="#0a0a4a"/>
+          <circle cx="36" cy="42" r="1.2" fill="#88aaff" opacity="0.7"/>
+          <circle cx="35.5" cy="41.5" r="0.6" fill="white"/>
+          <!-- Pectoral -->
+          <path d="M48,56 Q40,64 36,60 Q42,58 48,56Z" fill="#cc281866"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r8s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dd3322"/><stop offset="50%" stop-color="#cc2818"/><stop offset="100%" stop-color="#e8c0b0"/></linearGradient><clipPath id="r8s_clip"><path d="M30,50 Q30,36 58,32 Q86,28 112,36 Q130,44 130,50 Q130,56 112,64 Q86,72 58,68 Q30,64 30,50Z"/></clipPath></defs>
+          <g stroke="#cc2818" stroke-width="1.2" stroke-linecap="round" opacity="0.8"><line x1="62" y1="34" x2="58" y2="14"/><line x1="70" y1="32" x2="68" y2="12"/><line x1="78" y1="32" x2="80" y2="16"/><line x1="86" y1="34" x2="90" y2="20"/></g>
+          <g fill="#ff8866" opacity="0.5"><circle cx="58" cy="13" r="2"/><circle cx="68" cy="11" r="2"/><circle cx="80" cy="15" r="1.5"/></g>
+          <path d="M126,50 Q138,36 142,32 Q138,44 139,50 Q138,56 142,68 Q138,64 126,50Z" fill="#883040" opacity="0.75"/>
+          <path d="M30,50 Q30,36 58,32 Q86,28 112,36 Q130,44 130,50 Q130,56 112,64 Q86,72 58,68 Q30,64 30,50Z" fill="url(#r8s_body)"/>
+          <g clip-path="url(#r8s_clip)" opacity="0.35"><line x1="54" y1="26" x2="54" y2="74" stroke="#cc2818" stroke-width="1.5"/><line x1="70" y1="26" x2="70" y2="74" stroke="#cc2818" stroke-width="1.5"/><line x1="86" y1="26" x2="86" y2="74" stroke="#cc2818" stroke-width="1.5"/><line x1="102" y1="30" x2="102" y2="70" stroke="#cc2818" stroke-width="1.5"/><line x1="36" y1="44" x2="124" y2="44" stroke="#cc2818" stroke-width="1.2"/><line x1="36" y1="56" x2="124" y2="56" stroke="#cc2818" stroke-width="1.2"/></g>
+          <path d="M30,50 Q20,48 12,48 Q14,50 12,52 Q20,52 30,50" fill="#e0a898"/>
+          <circle cx="38" cy="44" r="5" fill="#2244cc"/><circle cx="37" cy="43" r="3" fill="#0a0a4a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- R10: Royal Tang — fins tightened -->
+  <div class="fish-card">
+    <div class="fish-name">Royal Tang <span class="fix-badge green">fins tightened</span></div>
+    <div class="fish-detail">Vivid blue oval, black "palette" pattern, bright yellow tail, "Dory" fish</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="r9_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2266ee"/><stop offset="50%" stop-color="#1a55cc"/><stop offset="100%" stop-color="#1144aa"/>
+            </linearGradient>
+            <radialGradient id="r9_glow" cx="0.5" cy="0.5" r="0.6"><stop offset="0%" stop-color="#4488ff22"/><stop offset="100%" stop-color="#4488ff00"/></radialGradient>
+            <clipPath id="r9_clip"><ellipse cx="72" cy="50" rx="34" ry="28"/></clipPath>
+          </defs>
+          <!-- Dorsal — sail pinned to body edge (y=34 at x=44, y=37 at x=102) -->
+          <path d="M44,34 Q48,28 54,18 Q66,8 80,10 Q94,14 100,28 Q102,33 102,37" fill="#1144aa" opacity="0.8"/>
+          <path d="M44,34 Q48,28 54,18 Q66,8 80,10 Q94,14 100,28 Q102,33 102,37" fill="none" stroke="#0a0a2a" stroke-width="1.5" opacity="0.5"/>
+          <!-- Anal — sail pinned to body edge (y=68 at x=46, y=63 at x=102) -->
+          <path d="M46,68 Q50,72 56,80 Q68,86 82,84 Q94,80 100,70 Q102,66 102,63" fill="#1144aa" opacity="0.75"/>
+          <!-- Yellow tail -->
+          <path d="M104,50 Q118,32 124,26 Q120,42 121,50 Q120,58 124,74 Q118,68 104,50Z" fill="#ffcc00" opacity="0.9"/>
+          <path d="M54,72 Q48,78 42,72 Q48,70 54,72Z" fill="#1144aa66"/>
+          <ellipse cx="72" cy="50" rx="44" ry="36" fill="url(#r9_glow)"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="34" ry="28" fill="url(#r9_body)"/>
+          <!-- Black palette pattern -->
+          <g clip-path="url(#r9_clip)">
+            <path d="M44,40 Q50,30 70,28 Q90,26 100,36 Q106,44 104,52 Q100,64 90,68 Q80,72 68,68 Q58,64 52,56 Q48,50 44,46Z" fill="#0a0a2a" opacity="0.5"/>
+          </g>
+          <!-- Yellow scalpel spine -->
+          <path d="M96,48 L102,46 L98,50 L102,54 L96,52" fill="#ffcc00" opacity="0.8"/>
+          <!-- Eye -->
+          <circle cx="48" cy="44" r="5" fill="#ffee44"/><circle cx="47" cy="43" r="3" fill="#0a0a2a"/><circle cx="46" cy="42" r="1.2" fill="white"/>
+          <path d="M39,52 Q37,50 39,48" fill="none" stroke="#0a0a4466" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M54,56 Q46,62 44,58 Q48,56 54,56Z" fill="#1a55cc66"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="r9s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2266ee"/><stop offset="50%" stop-color="#1a55cc"/><stop offset="100%" stop-color="#1144aa"/></linearGradient><clipPath id="r9s_clip"><ellipse cx="72" cy="50" rx="34" ry="28"/></clipPath></defs>
+          <path d="M44,34 Q48,28 54,18 Q66,8 80,10 Q94,14 100,28 Q102,33 102,37" fill="#1144aa" opacity="0.8"/>
+          <path d="M46,68 Q50,72 56,80 Q68,86 82,84 Q94,80 100,70 Q102,66 102,63" fill="#1144aa" opacity="0.75"/>
+          <path d="M104,50 Q118,32 124,26 Q120,42 121,50 Q120,58 124,74 Q118,68 104,50Z" fill="#ffcc00" opacity="0.9"/>
+          <ellipse cx="72" cy="50" rx="34" ry="28" fill="url(#r9s_body)"/>
+          <g clip-path="url(#r9s_clip)"><path d="M44,40 Q50,30 70,28 Q90,26 100,36 Q106,44 104,52 Q100,64 90,68 Q80,72 68,68 Q58,64 52,56 Q48,50 44,46Z" fill="#0a0a2a" opacity="0.5"/></g>
+          <path d="M96,48 L102,46 L98,50 L102,54 L96,52" fill="#ffcc00" opacity="0.8"/>
+          <circle cx="48" cy="44" r="5" fill="#ffee44"/><circle cx="47" cy="43" r="3" fill="#0a0a2a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes" style="margin-top:32px;">
+  <strong>v2 Review Checklist:</strong><br>
+  ✅ Barracuda — teeth inside mouth gap, not protruding from head<br>
+  ✅ Lionfish — brown/cream stripes (from reference), banded spines, spotted fan fins<br>
+  ✅ Triggerfish — eye clearly white-ringed, distinct from yellow face patch, mouth below<br>
+  ✅ Parrotfish — teal two-plate beak with gap line, teal-to-pink gradient (from reference)<br>
+  ✅ Yellow Tang — renamed from "Coral Tang", dorsal + anal hugging body closer<br>
+  ✅ Butterflyfish — short snout, white/navy front with vertical lines, yellow rear (from reference)<br>
+  ✅ Needlefish — unchanged (approved)<br>
+  ✅ Sauger — unchanged (approved)<br>
+  ✅ Hawkfish — reworked to longnose style: elongated body, red/white grid, long snout, blue eye, tufted spines<br>
+  ✅ Royal Tang — dorsal + anal hugging body closer
+</div>
+
+</body>
+</html>

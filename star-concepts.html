@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monster Rally — Star/Coin Collectible Concepts</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0B0E18;
+    color: #fff;
+    font-family: 'Arial Black', 'Impact', sans-serif;
+    padding: 30px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    font-family: Arial, sans-serif;
+    margin-bottom: 40px;
+  }
+  .concept-section {
+    margin-bottom: 50px;
+  }
+  .concept-title {
+    font-size: 18px;
+    margin-bottom: 4px;
+    color: #ffd700;
+  }
+  .concept-desc {
+    color: #888;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    margin-bottom: 16px;
+  }
+  .concepts-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .concept {
+    text-align: center;
+  }
+  .concept-label {
+    font-size: 11px;
+    color: #666;
+    margin-top: 8px;
+    font-family: Arial, sans-serif;
+  }
+  canvas { border-radius: 8px; background: rgba(255,255,255,0.02); }
+  .game-context {
+    margin-top: 40px;
+    text-align: center;
+  }
+  .game-context canvas {
+    background: linear-gradient(180deg, #1a1a3e 0%, #302b63 50%, #5a4a3a 85%);
+    border-radius: 12px;
+  }
+  .context-label {
+    font-size: 12px;
+    color: #666;
+    font-family: Arial, sans-serif;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>⭐ Star / Coin Collectible Concepts</h1>
+<p class="subtitle">Each shown at 3 sizes: Large (detail), Medium (in-game), Small (mini). Plus a game-context preview at the bottom.</p>
+
+<!-- CONCEPT A: Golden Coin -->
+<div class="concept-section">
+  <div class="concept-title">A: Golden Coin</div>
+  <div class="concept-desc">Classic arcade coin — gold gradient, embossed star on face, rim edge, shimmer highlight. Clean and readable.</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="coin-a-lg" width="100" height="100"></canvas>
+      <div class="concept-label">Large</div>
+    </div>
+    <div class="concept">
+      <canvas id="coin-a-md" width="60" height="60"></canvas>
+      <div class="concept-label">In-Game</div>
+    </div>
+    <div class="concept">
+      <canvas id="coin-a-sm" width="40" height="40"></canvas>
+      <div class="concept-label">Small</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT B: Glowing Star -->
+<div class="concept-section">
+  <div class="concept-title">B: Glowing Star</div>
+  <div class="concept-desc">Upgraded classic star — gold gradient fill, outer glow aura, inner bright core, subtle sparkle points. Familiar but premium.</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="star-b-lg" width="100" height="100"></canvas>
+      <div class="concept-label">Large</div>
+    </div>
+    <div class="concept">
+      <canvas id="star-b-md" width="60" height="60"></canvas>
+      <div class="concept-label">In-Game</div>
+    </div>
+    <div class="concept">
+      <canvas id="star-b-sm" width="40" height="40"></canvas>
+      <div class="concept-label">Small</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT C: Star Coin (hybrid) -->
+<div class="concept-section">
+  <div class="concept-title">C: Star Coin</div>
+  <div class="concept-desc">Best of both — coin body with a star cutout/emboss. Chunky metallic rim, star shape in the center with glow. Feels collectible.</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="hybrid-c-lg" width="100" height="100"></canvas>
+      <div class="concept-label">Large</div>
+    </div>
+    <div class="concept">
+      <canvas id="hybrid-c-md" width="60" height="60"></canvas>
+      <div class="concept-label">In-Game</div>
+    </div>
+    <div class="concept">
+      <canvas id="hybrid-c-sm" width="40" height="40"></canvas>
+      <div class="concept-label">Small</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT D: Crystal Star -->
+<div class="concept-section">
+  <div class="concept-title">D: Crystal Star</div>
+  <div class="concept-desc">Faceted gem look — angular star with light/dark faces like a cut jewel. Prismatic highlight. Feels rare and precious.</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="crystal-d-lg" width="100" height="100"></canvas>
+      <div class="concept-label">Large</div>
+    </div>
+    <div class="concept">
+      <canvas id="crystal-d-md" width="60" height="60"></canvas>
+      <div class="concept-label">In-Game</div>
+    </div>
+    <div class="concept">
+      <canvas id="crystal-d-sm" width="40" height="40"></canvas>
+      <div class="concept-label">Small</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT E: Bouncy Ring Coin -->
+<div class="concept-section">
+  <div class="concept-title">E: Ring Coin (Sonic-style)</div>
+  <div class="concept-desc">Thick golden ring with a bright center void — Sonic ring energy. Simple, iconic, instantly recognizable as "collect me."</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="ring-e-lg" width="100" height="100"></canvas>
+      <div class="concept-label">Large</div>
+    </div>
+    <div class="concept">
+      <canvas id="ring-e-md" width="60" height="60"></canvas>
+      <div class="concept-label">In-Game</div>
+    </div>
+    <div class="concept">
+      <canvas id="ring-e-sm" width="40" height="40"></canvas>
+      <div class="concept-label">Small</div>
+    </div>
+  </div>
+</div>
+
+<!-- Game Context Preview -->
+<div class="game-context">
+  <div class="concept-title" style="margin-bottom:12px;">In-Game Context (all 5 side by side)</div>
+  <canvas id="context" width="700" height="200"></canvas>
+  <div class="context-label">How each concept looks against the game background with the ground and a truck silhouette</div>
+</div>
+
+<script>
+// =============================================
+// CONCEPT A: Golden Coin
+// =============================================
+function drawCoinA(ctx, r) {
+  // Outer glow
+  const glow = ctx.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 1.4);
+  glow.addColorStop(0, 'rgba(255,215,0,0.25)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rim (darker gold edge)
+  ctx.fillStyle = '#b8860b';
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Main coin face
+  const coinGrad = ctx.createRadialGradient(-r * 0.2, -r * 0.2, 0, 0, 0, r * 0.85);
+  coinGrad.addColorStop(0, '#ffe44d');
+  coinGrad.addColorStop(0.5, '#ffc800');
+  coinGrad.addColorStop(1, '#cc9900');
+  ctx.fillStyle = coinGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner ring detail
+  ctx.strokeStyle = 'rgba(184,134,11,0.4)';
+  ctx.lineWidth = r * 0.04;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.7, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Embossed star
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  drawStarShape(ctx, 0, 0, r * 0.45, r * 0.22, 5);
+  ctx.fill();
+  
+  // Darker star shadow offset
+  ctx.fillStyle = 'rgba(150,100,0,0.2)';
+  drawStarShape(ctx, r * 0.03, r * 0.03, r * 0.42, r * 0.2, 5);
+  ctx.fill();
+
+  // Top highlight shimmer
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.15, -r * 0.3, r * 0.35, r * 0.15, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// =============================================
+// CONCEPT B: Glowing Star
+// =============================================
+function drawStarB(ctx, r) {
+  // Outer glow aura
+  const glow = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 1.5);
+  glow.addColorStop(0, 'rgba(255,215,0,0.35)');
+  glow.addColorStop(0.5, 'rgba(255,170,0,0.12)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Star body — gold gradient
+  const starGrad = ctx.createRadialGradient(-r * 0.1, -r * 0.15, 0, 0, 0, r);
+  starGrad.addColorStop(0, '#fff44f');
+  starGrad.addColorStop(0.4, '#ffd700');
+  starGrad.addColorStop(1, '#cc8800');
+  ctx.fillStyle = starGrad;
+  drawStarShape(ctx, 0, 0, r * 0.95, r * 0.42, 5);
+  ctx.fill();
+
+  // Star outline
+  ctx.strokeStyle = '#aa7700';
+  ctx.lineWidth = r * 0.04;
+  drawStarShape(ctx, 0, 0, r * 0.95, r * 0.42, 5);
+  ctx.stroke();
+
+  // Inner bright core
+  ctx.fillStyle = 'rgba(255,255,200,0.4)';
+  ctx.beginPath();
+  ctx.arc(0, -r * 0.05, r * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Top-left highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.12, -r * 0.35, r * 0.18, r * 0.08, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sparkle points (small bright dots at tips)
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  for (let i = 0; i < 5; i++) {
+    const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
+    const sx = Math.cos(a) * r * 0.85;
+    const sy = Math.sin(a) * r * 0.85;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// =============================================
+// CONCEPT C: Star Coin (Hybrid)
+// =============================================
+function drawHybridC(ctx, r) {
+  // Glow
+  const glow = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.4);
+  glow.addColorStop(0, 'rgba(255,200,0,0.3)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Thick metallic rim
+  const rimGrad = ctx.createLinearGradient(-r, -r, r, r);
+  rimGrad.addColorStop(0, '#ddaa00');
+  rimGrad.addColorStop(0.3, '#ffdd44');
+  rimGrad.addColorStop(0.5, '#ddaa00');
+  rimGrad.addColorStop(0.7, '#ffdd44');
+  rimGrad.addColorStop(1, '#aa7700');
+  ctx.fillStyle = rimGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner face (darker recessed area)
+  const faceGrad = ctx.createRadialGradient(-r * 0.1, -r * 0.1, 0, 0, 0, r * 0.78);
+  faceGrad.addColorStop(0, '#ffcc00');
+  faceGrad.addColorStop(1, '#b38600');
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.78, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Notched rim (small dashes around the edge)
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = r * 0.03;
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.82, Math.sin(a) * r * 0.82);
+    ctx.lineTo(Math.cos(a) * r * 0.92, Math.sin(a) * r * 0.92);
+    ctx.stroke();
+  }
+
+  // Star in center — raised/embossed
+  // Shadow
+  ctx.fillStyle = 'rgba(100,70,0,0.3)';
+  drawStarShape(ctx, r * 0.02, r * 0.03, r * 0.52, r * 0.24, 5);
+  ctx.fill();
+  // Bright star
+  const starG = ctx.createRadialGradient(0, -r * 0.1, 0, 0, 0, r * 0.5);
+  starG.addColorStop(0, '#fff566');
+  starG.addColorStop(1, '#ffbb00');
+  ctx.fillStyle = starG;
+  drawStarShape(ctx, 0, 0, r * 0.5, r * 0.22, 5);
+  ctx.fill();
+
+  // Star outline
+  ctx.strokeStyle = 'rgba(180,130,0,0.5)';
+  ctx.lineWidth = r * 0.03;
+  drawStarShape(ctx, 0, 0, r * 0.5, r * 0.22, 5);
+  ctx.stroke();
+
+  // Shimmer
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.18, -r * 0.32, r * 0.3, r * 0.12, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// =============================================
+// CONCEPT D: Crystal Star
+// =============================================
+function drawCrystalD(ctx, r) {
+  // Glow
+  const glow = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 1.4);
+  glow.addColorStop(0, 'rgba(255,230,100,0.3)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Get star points
+  const points = getStarPoints(0, 0, r * 0.95, r * 0.42, 5);
+  
+  // Draw faceted star — each triangle from center to edge has a different shade
+  const shades = ['#ffd700', '#eec200', '#ffdd33', '#ccaa00', '#ffe44d',
+                  '#ddb800', '#ffcc00', '#bb9900', '#ffe855', '#cc9900'];
+  for (let i = 0; i < points.length; i++) {
+    const next = (i + 1) % points.length;
+    ctx.fillStyle = shades[i % shades.length];
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(points[i].x, points[i].y);
+    ctx.lineTo(points[next].x, points[next].y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Facet edge lines
+  ctx.strokeStyle = 'rgba(150,100,0,0.3)';
+  ctx.lineWidth = r * 0.02;
+  for (let i = 0; i < points.length; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(points[i].x, points[i].y);
+    ctx.stroke();
+  }
+
+  // Outer edge
+  ctx.strokeStyle = '#aa8800';
+  ctx.lineWidth = r * 0.04;
+  drawStarShape(ctx, 0, 0, r * 0.95, r * 0.42, 5);
+  ctx.stroke();
+
+  // Prismatic highlight — small white diamond shape
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.05, -r * 0.4);
+  ctx.lineTo(r * 0.05, -r * 0.28);
+  ctx.lineTo(r * 0.15, -r * 0.4);
+  ctx.lineTo(r * 0.05, -r * 0.52);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small sparkle at top point
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(0, -r * 0.85, r * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// =============================================
+// CONCEPT E: Ring Coin (Sonic-style)
+// =============================================
+function drawRingE(ctx, r) {
+  // Outer glow
+  const glow = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.4);
+  glow.addColorStop(0, 'rgba(255,215,0,0.25)');
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer ring
+  const ringGrad = ctx.createLinearGradient(-r, -r, r, r);
+  ringGrad.addColorStop(0, '#ffee55');
+  ringGrad.addColorStop(0.3, '#ffd700');
+  ringGrad.addColorStop(0.6, '#cc9900');
+  ringGrad.addColorStop(1, '#ffdd33');
+  ctx.fillStyle = ringGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner void (cut out the center)
+  ctx.fillStyle = '#0B0E18';
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner ring edge (gold ring inside the void)
+  ctx.strokeStyle = '#aa7700';
+  ctx.lineWidth = r * 0.06;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.52, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Ring highlight (top-left crescent)
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = r * 0.12;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.75, -Math.PI * 0.8, -Math.PI * 0.2);
+  ctx.stroke();
+
+  // Small sparkle
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.beginPath();
+  ctx.arc(-r * 0.35, -r * 0.55, r * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner glow in the center void
+  const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.45);
+  innerGlow.addColorStop(0, 'rgba(255,215,0,0.15)');
+  innerGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = innerGlow;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function drawStarShape(ctx, cx, cy, outerR, innerR, points) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (i * Math.PI / points) - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function getStarPoints(cx, cy, outerR, innerR, numPoints) {
+  const pts = [];
+  for (let i = 0; i < numPoints * 2; i++) {
+    const a = (i * Math.PI / numPoints) - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+  }
+  return pts;
+}
+
+function renderConcept(canvasId, drawFn, size) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  ctx.save();
+  ctx.translate(c.width / 2, c.height / 2);
+  drawFn(ctx, size);
+  ctx.restore();
+}
+
+// Render all sizes
+// A: Golden Coin
+renderConcept('coin-a-lg', drawCoinA, 38);
+renderConcept('coin-a-md', drawCoinA, 22);
+renderConcept('coin-a-sm', drawCoinA, 14);
+
+// B: Glowing Star
+renderConcept('star-b-lg', drawStarB, 38);
+renderConcept('star-b-md', drawStarB, 22);
+renderConcept('star-b-sm', drawStarB, 14);
+
+// C: Star Coin
+renderConcept('hybrid-c-lg', drawHybridC, 38);
+renderConcept('hybrid-c-md', drawHybridC, 22);
+renderConcept('hybrid-c-sm', drawHybridC, 14);
+
+// D: Crystal Star
+renderConcept('crystal-d-lg', drawCrystalD, 38);
+renderConcept('crystal-d-md', drawCrystalD, 22);
+renderConcept('crystal-d-sm', drawCrystalD, 14);
+
+// E: Ring Coin
+renderConcept('ring-e-lg', drawRingE, 38);
+renderConcept('ring-e-md', drawRingE, 22);
+renderConcept('ring-e-sm', drawRingE, 14);
+
+// =============================================
+// GAME CONTEXT PREVIEW
+// =============================================
+(function() {
+  const c = document.getElementById('context');
+  const ctx = c.getContext('2d');
+  const W = 700, H = 200;
+  
+  // Ground
+  ctx.fillStyle = '#5a4a3a';
+  ctx.fillRect(0, 155, W, 45);
+  ctx.fillStyle = '#4a3a2a';
+  ctx.fillRect(0, 155, W, 4);
+  
+  // Mountains
+  ctx.fillStyle = '#1a1a3e';
+  const mts = [[50,70],[180,55],[310,80],[440,50],[570,65],[660,45]];
+  for (const [mx, mh] of mts) {
+    ctx.beginPath();
+    ctx.moveTo(mx - 40, 155);
+    ctx.lineTo(mx, 155 - mh);
+    ctx.lineTo(mx + 40, 155);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  // Clouds
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.beginPath(); ctx.ellipse(150, 50, 60, 15, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(450, 35, 50, 12, 0, 0, Math.PI * 2); ctx.fill();
+  
+  // Simple truck silhouette
+  ctx.fillStyle = '#ff5500';
+  ctx.fillRect(30, 120, 55, 25);
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(45, 150, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(72, 150, 10, 0, Math.PI * 2); ctx.fill();
+  
+  // Draw each concept at in-game size
+  const concepts = [drawCoinA, drawStarB, drawHybridC, drawCrystalD, drawRingE];
+  const labels = ['A: Coin', 'B: Star', 'C: Star Coin', 'D: Crystal', 'E: Ring'];
+  const startX = 180;
+  const gap = 110;
+  
+  for (let i = 0; i < concepts.length; i++) {
+    const x = startX + i * gap;
+    const y = 90 + Math.sin(i * 1.2) * 15;
+    ctx.save();
+    ctx.translate(x, y);
+    concepts[i](ctx, 20);
+    ctx.restore();
+    
+    // Label
+    ctx.fillStyle = '#555';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(labels[i], x, 185);
+  }
+})();
+
+</script>
+</body>
+</html>

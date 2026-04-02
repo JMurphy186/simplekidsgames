@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Dodge — Weapon & Shield Effects Rework</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a12;
+    color: #fff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 20px;
+  }
+  h1 { text-align: center; font-size: 22px; color: #42A5F5; letter-spacing: 3px; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #666; font-size: 12px; margin-bottom: 30px; }
+  .section { margin-bottom: 40px; }
+  .section-label {
+    text-align: center; font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .compare-row {
+    display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+  }
+  .compare-item { text-align: center; }
+  .compare-item .tag {
+    font-size: 11px; color: #888; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 6px;
+  }
+  .compare-item .desc {
+    font-size: 10px; color: #666; max-width: 200px; margin: 6px auto 0;
+    line-height: 1.4;
+  }
+  canvas { border-radius: 10px; border: 1px solid #1a1a3a; }
+  hr { border: none; border-top: 1px solid #1a1a3a; margin: 10px auto 30px; max-width: 800px; }
+</style>
+</head>
+<body>
+
+<h1>WEAPON & SHIELD EFFECTS</h1>
+<p class="subtitle">Before → After for plasma bolts and shield. Plus new Mega Beam effect.</p>
+
+<!-- STANDARD BLASTERS (no change, reference only) -->
+<div class="section">
+  <div class="section-label" style="color:#42A5F5">Standard Blasters (unchanged — for reference)</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Current</div>
+      <canvas id="std-blasters" width="200" height="350"></canvas>
+      <div class="desc">Blue gradient pills with glow. Clean, effective. No changes needed.</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- PLASMA BOLTS -->
+<div class="section">
+  <div class="section-label" style="color:#00E5FF">Plasma Laser Bolts</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Before (current)</div>
+      <canvas id="plasma-before" width="200" height="350"></canvas>
+      <div class="desc">Wider cyan rect with outer aura. Decent but reads like a bigger version of standard.</div>
+    </div>
+    <div class="compare-item">
+      <div class="tag">After (concept)</div>
+      <canvas id="plasma-after" width="200" height="350"></canvas>
+      <div class="desc">Bright core + electric side arcs + trailing energy particles. Feels like a different weapon.</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- SHIELD EFFECT -->
+<div class="section">
+  <div class="section-label" style="color:#69F0AE">Energy Shield Effect</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Before (current)</div>
+      <canvas id="shield-before" width="200" height="350"></canvas>
+      <div class="desc">Translucent green circle + dashed ring. Basic bubble.</div>
+    </div>
+    <div class="compare-item">
+      <div class="tag">After (concept)</div>
+      <canvas id="shield-after" width="200" height="350"></canvas>
+      <div class="desc">Hex mesh pattern, layered glow, energy crackle arcs, bright edge ring.</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- MEGA BEAM -->
+<div class="section">
+  <div class="section-label" style="color:#FF1744">Mega Beam Effect (NEW)</div>
+  <div class="compare-row">
+    <div class="compare-item">
+      <div class="tag">Mega Beam Active</div>
+      <canvas id="mega-beam" width="200" height="350"></canvas>
+      <div class="desc">Full-height beam from ship to top. Bright white core, red outer glow, energy rings travel up the beam. Ship is 1.5x size.</div>
+    </div>
+    <div class="compare-item">
+      <div class="tag">Mega Beam — Asteroid Hit</div>
+      <canvas id="mega-hit" width="200" height="350"></canvas>
+      <div class="desc">Asteroids contacting the beam flash white and disintegrate. Radial burst particles at contact point.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// SHARED
+// ============================================
+function drawSpaceBg(ctx, W, H) {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#050510');
+  grad.addColorStop(0.5, '#0B0B1A');
+  grad.addColorStop(1, '#121225');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 50; i++) {
+    ctx.fillStyle = `rgba(255,255,255,${0.2 + Math.random() * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * W, Math.random() * H, 0.3 + Math.random() * 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawMiniShip(ctx, x, y, w, h, scale) {
+  // Simplified Nova Wing silhouette
+  ctx.save();
+  ctx.translate(x, y);
+  // Wings
+  const wingGrad = ctx.createLinearGradient(-w*0.7, 0, w*0.7, 0);
+  wingGrad.addColorStop(0, '#1565C0');
+  wingGrad.addColorStop(0.5, '#42A5F5');
+  wingGrad.addColorStop(1, '#1565C0');
+  ctx.fillStyle = wingGrad;
+  ctx.beginPath();
+  ctx.moveTo(-w*0.15, h*0.1);
+  ctx.lineTo(-w*0.7, h*0.4);
+  ctx.lineTo(-w*0.55, h*0.45);
+  ctx.lineTo(-w*0.1, h*0.25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(w*0.15, h*0.1);
+  ctx.lineTo(w*0.7, h*0.4);
+  ctx.lineTo(w*0.55, h*0.45);
+  ctx.lineTo(w*0.1, h*0.25);
+  ctx.closePath();
+  ctx.fill();
+  // Nacelles
+  ctx.fillStyle = '#42A5F5';
+  ctx.fillRect(-w*0.62, h*0.2, w*0.14, h*0.25);
+  ctx.fillRect(w*0.48, h*0.2, w*0.14, h*0.25);
+  // Body
+  const bodyGrad = ctx.createLinearGradient(-w*0.25, 0, w*0.25, 0);
+  bodyGrad.addColorStop(0, '#BDBDBD');
+  bodyGrad.addColorStop(0.5, '#F5F5F5');
+  bodyGrad.addColorStop(1, '#BDBDBD');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, -h*0.5);
+  ctx.bezierCurveTo(w*0.2, -h*0.3, w*0.22, h*0.2, w*0.2, h*0.35);
+  ctx.lineTo(-w*0.2, h*0.35);
+  ctx.bezierCurveTo(-w*0.22, h*0.2, -w*0.2, -h*0.3, 0, -h*0.5);
+  ctx.closePath();
+  ctx.fill();
+  // Nose
+  ctx.fillStyle = '#FF9800';
+  ctx.beginPath();
+  ctx.moveTo(0, -h*0.5);
+  ctx.bezierCurveTo(w*0.08, -h*0.4, w*0.1, -h*0.3, w*0.08, -h*0.25);
+  ctx.lineTo(-w*0.08, -h*0.25);
+  ctx.bezierCurveTo(-w*0.1, -h*0.3, -w*0.08, -h*0.4, 0, -h*0.5);
+  ctx.closePath();
+  ctx.fill();
+  // Cockpit
+  ctx.fillStyle = '#4FC3F7';
+  ctx.beginPath();
+  ctx.ellipse(0, -h*0.05, w*0.12, h*0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Engine flames
+  ctx.fillStyle = '#FF9800';
+  ctx.beginPath();
+  ctx.moveTo(-w*0.08, h*0.35);
+  ctx.quadraticCurveTo(0, h*0.55, w*0.08, h*0.35);
+  ctx.fill();
+  ctx.fillStyle = '#FFCC80';
+  ctx.beginPath();
+  ctx.moveTo(-w*0.04, h*0.35);
+  ctx.quadraticCurveTo(0, h*0.48, w*0.04, h*0.35);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAsteroid(ctx, x, y, r) {
+  ctx.save();
+  ctx.translate(x, y);
+  const ag = ctx.createRadialGradient(-r*0.2, -r*0.2, 0, 0, 0, r);
+  ag.addColorStop(0, '#A1887F');
+  ag.addColorStop(0.5, '#795548');
+  ag.addColorStop(1, '#3E2723');
+  ctx.fillStyle = ag;
+  ctx.beginPath();
+  const verts = 8;
+  for (let i = 0; i < verts; i++) {
+    const a = (i / verts) * Math.PI * 2;
+    const rv = r * (0.75 + Math.sin(a * 2.7 + 1) * 0.25);
+    if (i === 0) ctx.moveTo(Math.cos(a) * rv, Math.sin(a) * rv);
+    else ctx.lineTo(Math.cos(a) * rv, Math.sin(a) * rv);
+  }
+  ctx.closePath();
+  ctx.fill();
+  // Crater
+  ctx.fillStyle = 'rgba(62,39,35,0.6)';
+  ctx.beginPath();
+  ctx.arc(r*0.2, -r*0.1, r*0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ============================================
+// STANDARD BLASTERS (reference)
+// ============================================
+(function() {
+  const c = document.getElementById('std-blasters');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+  drawMiniShip(ctx, W/2, H*0.75, 60, 70, 1);
+
+  // 3 standard bolts in flight
+  const bolts = [[W/2, H*0.55], [W/2, H*0.35], [W/2, H*0.15]];
+  bolts.forEach(([bx, by]) => {
+    ctx.shadowColor = '#42A5F5';
+    ctx.shadowBlur = 8;
+    const g = ctx.createLinearGradient(bx, by - 7, bx, by + 7);
+    g.addColorStop(0, '#90caf9');
+    g.addColorStop(0.5, '#42A5F5');
+    g.addColorStop(1, '#1565C0');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(bx - 2, by - 7, 4, 14, 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+})();
+
+// ============================================
+// PLASMA — BEFORE
+// ============================================
+(function() {
+  const c = document.getElementById('plasma-before');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+  drawMiniShip(ctx, W/2, H*0.75, 60, 70, 1);
+  drawAsteroid(ctx, W*0.35, H*0.2, 22);
+  drawAsteroid(ctx, W*0.7, H*0.4, 18);
+
+  // Current plasma bolts — wider cyan rects with aura
+  const bolts = [[W/2, H*0.55], [W/2, H*0.35], [W/2, H*0.15]];
+  bolts.forEach(([bx, by]) => {
+    const bw = 8, bh = 22;
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 12;
+    // Outer aura
+    ctx.fillStyle = 'rgba(0,176,255,0.3)';
+    ctx.beginPath();
+    ctx.roundRect(bx - bw*0.8, by - bh/2, bw*1.6, bh, bw);
+    ctx.fill();
+    // Core
+    const g = ctx.createLinearGradient(bx, by - bh/2, bx, by + bh/2);
+    g.addColorStop(0, '#FFFFFF');
+    g.addColorStop(0.5, '#E0F7FA');
+    g.addColorStop(1, '#00E5FF');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(bx - bw/2, by - bh/2, bw, bh, bw/2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+})();
+
+// ============================================
+// PLASMA — AFTER
+// ============================================
+(function() {
+  const c = document.getElementById('plasma-after');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+  drawMiniShip(ctx, W/2, H*0.75, 60, 70, 1);
+  drawAsteroid(ctx, W*0.35, H*0.2, 22);
+  drawAsteroid(ctx, W*0.7, H*0.4, 18);
+
+  const bolts = [[W/2, H*0.55], [W/2, H*0.33], [W/2, H*0.12]];
+  bolts.forEach(([bx, by], idx) => {
+    const bw = 8, bh = 24;
+
+    // Wide outer energy glow
+    ctx.shadowColor = '#00E5FF';
+    ctx.shadowBlur = 18;
+    const outerGlow = ctx.createRadialGradient(bx, by, 0, bx, by, bw * 2.5);
+    outerGlow.addColorStop(0, 'rgba(0,229,255,0.25)');
+    outerGlow.addColorStop(0.5, 'rgba(0,229,255,0.08)');
+    outerGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(bx, by, bw * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Electric side arcs (2 per bolt)
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.5;
+    // Left arc
+    ctx.beginPath();
+    ctx.moveTo(bx - bw*0.5, by - bh*0.3);
+    ctx.quadraticCurveTo(bx - bw*1.8, by, bx - bw*0.5, by + bh*0.3);
+    ctx.stroke();
+    // Right arc
+    ctx.beginPath();
+    ctx.moveTo(bx + bw*0.5, by - bh*0.25);
+    ctx.quadraticCurveTo(bx + bw*1.6, by + bh*0.1, bx + bw*0.5, by + bh*0.35);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Bright core bolt (pointed ends)
+    const coreGrad = ctx.createLinearGradient(bx, by - bh/2, bx, by + bh/2);
+    coreGrad.addColorStop(0, '#FFFFFF');
+    coreGrad.addColorStop(0.2, '#E0F7FA');
+    coreGrad.addColorStop(0.5, '#80DEEA');
+    coreGrad.addColorStop(0.8, '#00E5FF');
+    coreGrad.addColorStop(1, '#00B8D4');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.moveTo(bx, by - bh/2);  // pointed top
+    ctx.bezierCurveTo(bx + bw*0.6, by - bh*0.25, bx + bw*0.6, by + bh*0.25, bx, by + bh/2);  // right curve
+    ctx.bezierCurveTo(bx - bw*0.6, by + bh*0.25, bx - bw*0.6, by - bh*0.25, bx, by - bh/2);  // left curve
+    ctx.closePath();
+    ctx.fill();
+
+    // White hot center line
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(bx, by - bh*0.35);
+    ctx.lineTo(bx, by + bh*0.35);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Trailing energy particles (behind each bolt)
+    for (let p = 0; p < 4; p++) {
+      const px = bx + (Math.random() - 0.5) * bw * 2;
+      const py = by + bh*0.5 + p * 5 + Math.random() * 6;
+      const pa = 0.3 - p * 0.06;
+      ctx.fillStyle = '#00E5FF';
+      ctx.globalAlpha = pa;
+      ctx.beginPath();
+      ctx.arc(px, py, 1 + Math.random(), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  });
+})();
+
+// ============================================
+// SHIELD — BEFORE
+// ============================================
+(function() {
+  const c = document.getElementById('shield-before');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+  drawAsteroid(ctx, W*0.25, H*0.25, 20);
+  drawAsteroid(ctx, W*0.75, H*0.5, 16);
+
+  const sx = W/2, sy = H*0.6;
+  const sr = 42;
+
+  // Current shield: translucent circle + dashed ring
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = '#69F0AE';
+  ctx.beginPath();
+  ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = '#69F0AE';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 4]);
+  ctx.beginPath();
+  ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+
+  drawMiniShip(ctx, sx, sy, 60, 70, 1);
+})();
+
+// ============================================
+// SHIELD — AFTER
+// ============================================
+(function() {
+  const c = document.getElementById('shield-after');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+  drawAsteroid(ctx, W*0.25, H*0.25, 20);
+  drawAsteroid(ctx, W*0.75, H*0.5, 16);
+
+  const sx = W/2, sy = H*0.6;
+  const sr = 44;
+
+  // LAYER 1: Outer ambient glow
+  const outerGlow = ctx.createRadialGradient(sx, sy, sr * 0.7, sx, sy, sr * 1.5);
+  outerGlow.addColorStop(0, 'rgba(105,240,174,0.08)');
+  outerGlow.addColorStop(0.5, 'rgba(105,240,174,0.03)');
+  outerGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = outerGlow;
+  ctx.beginPath();
+  ctx.arc(sx, sy, sr * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // LAYER 2: Shield bubble fill (gradient — brighter at edges)
+  const bubbleGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+  bubbleGrad.addColorStop(0, 'rgba(105,240,174,0.02)');
+  bubbleGrad.addColorStop(0.6, 'rgba(105,240,174,0.05)');
+  bubbleGrad.addColorStop(0.85, 'rgba(105,240,174,0.12)');
+  bubbleGrad.addColorStop(1, 'rgba(105,240,174,0.2)');
+  ctx.fillStyle = bubbleGrad;
+  ctx.beginPath();
+  ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+  ctx.fill();
+
+  // LAYER 3: Hex mesh pattern (subtle)
+  ctx.strokeStyle = '#69F0AE';
+  ctx.lineWidth = 0.6;
+  ctx.globalAlpha = 0.12;
+  const hexR = 10;
+  for (let row = -4; row <= 4; row++) {
+    for (let col = -4; col <= 4; col++) {
+      const hx = sx + col * hexR * 1.75 + (row % 2) * hexR * 0.875;
+      const hy = sy + row * hexR * 1.5;
+      const dist = Math.sqrt((hx-sx)*(hx-sx) + (hy-sy)*(hy-sy));
+      if (dist > sr - 4) continue;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 - Math.PI / 6;
+        const px = hx + Math.cos(a) * hexR * 0.5;
+        const py = hy + Math.sin(a) * hexR * 0.5;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // LAYER 4: Bright edge ring
+  ctx.strokeStyle = '#69F0AE';
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Secondary thin ring
+  ctx.strokeStyle = '#B9F6CA';
+  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.arc(sx, sy, sr + 3, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // LAYER 5: Energy crackle arcs (3-4 small arcs on the bubble surface)
+  ctx.strokeStyle = '#B9F6CA';
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  const arcs = [
+    { a1: -0.8, a2: -0.4 },
+    { a1: 0.6, a2: 1.1 },
+    { a1: 2.2, a2: 2.6 },
+    { a1: -2.5, a2: -2.1 },
+  ];
+  arcs.forEach(arc => {
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    const midA = (arc.a1 + arc.a2) / 2;
+    const wobble = 5;
+    ctx.moveTo(sx + Math.cos(arc.a1) * sr, sy + Math.sin(arc.a1) * sr);
+    ctx.quadraticCurveTo(
+      sx + Math.cos(midA) * (sr + wobble),
+      sy + Math.sin(midA) * (sr + wobble),
+      sx + Math.cos(arc.a2) * sr,
+      sy + Math.sin(arc.a2) * sr
+    );
+    ctx.stroke();
+    // Bright node at arc endpoints
+    ctx.fillStyle = '#FFFFFF';
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(sx + Math.cos(arc.a1) * sr, sy + Math.sin(arc.a1) * sr, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(sx + Math.cos(arc.a2) * sr, sy + Math.sin(arc.a2) * sr, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // LAYER 6: Top highlight (light reflection on bubble)
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy - sr * 0.5, sr * 0.5, sr * 0.2, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  drawMiniShip(ctx, sx, sy, 60, 70, 1);
+})();
+
+// ============================================
+// MEGA BEAM — ACTIVE
+// ============================================
+(function() {
+  const c = document.getElementById('mega-beam');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+
+  // Asteroids in the scene (some in beam path)
+  drawAsteroid(ctx, W*0.2, H*0.3, 18);
+  drawAsteroid(ctx, W*0.8, H*0.2, 22);
+
+  const sx = W/2, sy = H*0.72;
+  const beamW = 28; // wide beam
+  const beamTop = 0;
+  const beamBot = sy - 35;
+
+  // LAYER 1: Wide outer glow (red ambient light)
+  const ambGrad = ctx.createLinearGradient(sx - beamW*2, 0, sx + beamW*2, 0);
+  ambGrad.addColorStop(0, 'transparent');
+  ambGrad.addColorStop(0.2, 'rgba(255,23,68,0.04)');
+  ambGrad.addColorStop(0.5, 'rgba(255,23,68,0.08)');
+  ambGrad.addColorStop(0.8, 'rgba(255,23,68,0.04)');
+  ambGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = ambGrad;
+  ctx.fillRect(sx - beamW*2, beamTop, beamW*4, beamBot - beamTop);
+
+  // LAYER 2: Outer beam (red glow)
+  const outerGrad = ctx.createLinearGradient(sx - beamW, 0, sx + beamW, 0);
+  outerGrad.addColorStop(0, 'transparent');
+  outerGrad.addColorStop(0.1, 'rgba(255,23,68,0.05)');
+  outerGrad.addColorStop(0.25, 'rgba(255,23,68,0.15)');
+  outerGrad.addColorStop(0.5, 'rgba(255,23,68,0.25)');
+  outerGrad.addColorStop(0.75, 'rgba(255,23,68,0.15)');
+  outerGrad.addColorStop(0.9, 'rgba(255,23,68,0.05)');
+  outerGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = outerGrad;
+  ctx.fillRect(sx - beamW, beamTop, beamW*2, beamBot - beamTop);
+
+  // LAYER 3: Inner beam (bright hot)
+  const innerW = beamW * 0.4;
+  const innerGrad = ctx.createLinearGradient(sx - innerW, 0, sx + innerW, 0);
+  innerGrad.addColorStop(0, 'rgba(255,138,128,0.3)');
+  innerGrad.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+  innerGrad.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+  innerGrad.addColorStop(0.7, 'rgba(255,255,255,0.6)');
+  innerGrad.addColorStop(1, 'rgba(255,138,128,0.3)');
+  ctx.fillStyle = innerGrad;
+  ctx.fillRect(sx - innerW, beamTop, innerW*2, beamBot - beamTop);
+
+  // LAYER 4: Energy rings traveling up the beam
+  ctx.strokeStyle = '#FF1744';
+  ctx.lineWidth = 1.5;
+  const ringPositions = [0.15, 0.35, 0.55, 0.75, 0.9];
+  ringPositions.forEach((pct, i) => {
+    const ry = beamBot - (beamBot - beamTop) * pct;
+    const ringW = beamW * (0.6 + pct * 0.3);
+    ctx.globalAlpha = 0.3 + pct * 0.2;
+    ctx.beginPath();
+    ctx.ellipse(sx, ry, ringW, 4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // White core ring
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 0.5;
+    ctx.globalAlpha = 0.2 + pct * 0.15;
+    ctx.beginPath();
+    ctx.ellipse(sx, ry, ringW * 0.5, 2, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#FF1744';
+    ctx.lineWidth = 1.5;
+  });
+  ctx.globalAlpha = 1;
+
+  // LAYER 5: Beam origin glow (at ship nose)
+  const originGlow = ctx.createRadialGradient(sx, beamBot, 0, sx, beamBot, 30);
+  originGlow.addColorStop(0, 'rgba(255,255,255,0.5)');
+  originGlow.addColorStop(0.3, 'rgba(255,23,68,0.3)');
+  originGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = originGlow;
+  ctx.beginPath();
+  ctx.arc(sx, beamBot, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ship at 1.5x size
+  drawMiniShip(ctx, sx, sy, 90, 105, 1.5);
+
+  // Size indicator arrows
+  ctx.strokeStyle = '#FF8A80';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.5;
+  ctx.setLineDash([3, 2]);
+  // Left
+  ctx.beginPath();
+  ctx.moveTo(sx - 52, sy - 10);
+  ctx.lineTo(sx - 52, sy + 10);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(sx - 56, sy);
+  ctx.lineTo(sx - 52, sy - 6);
+  ctx.moveTo(sx - 56, sy);
+  ctx.lineTo(sx - 52, sy + 6);
+  ctx.stroke();
+  // Right
+  ctx.beginPath();
+  ctx.moveTo(sx + 52, sy - 10);
+  ctx.lineTo(sx + 52, sy + 10);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(sx + 56, sy);
+  ctx.lineTo(sx + 52, sy - 6);
+  ctx.moveTo(sx + 56, sy);
+  ctx.lineTo(sx + 52, sy + 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+})();
+
+// ============================================
+// MEGA BEAM — ASTEROID HIT
+// ============================================
+(function() {
+  const c = document.getElementById('mega-hit');
+  const ctx = c.getContext('2d');
+  const W = c.width, H = c.height;
+  drawSpaceBg(ctx, W, H);
+
+  const sx = W/2, sy = H*0.72;
+  const beamW = 28;
+  const beamTop = 0;
+  const beamBot = sy - 35;
+
+  // Side asteroid (safe)
+  drawAsteroid(ctx, W*0.8, H*0.35, 18);
+
+  // Beam (simplified version)
+  const outerGrad = ctx.createLinearGradient(sx - beamW, 0, sx + beamW, 0);
+  outerGrad.addColorStop(0, 'transparent');
+  outerGrad.addColorStop(0.25, 'rgba(255,23,68,0.15)');
+  outerGrad.addColorStop(0.5, 'rgba(255,23,68,0.25)');
+  outerGrad.addColorStop(0.75, 'rgba(255,23,68,0.15)');
+  outerGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = outerGrad;
+  ctx.fillRect(sx - beamW, beamTop, beamW*2, beamBot);
+
+  const innerW = beamW * 0.4;
+  const innerGrad = ctx.createLinearGradient(sx - innerW, 0, sx + innerW, 0);
+  innerGrad.addColorStop(0, 'rgba(255,138,128,0.3)');
+  innerGrad.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+  innerGrad.addColorStop(1, 'rgba(255,138,128,0.3)');
+  ctx.fillStyle = innerGrad;
+  ctx.fillRect(sx - innerW, beamTop, innerW*2, beamBot);
+
+  // ASTEROID IN BEAM — flashing white, breaking apart
+  const hitY = H * 0.3;
+  const hitR = 22;
+
+  // Flash white circle (asteroid turning white on contact)
+  ctx.fillStyle = '#FFFFFF';
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  ctx.arc(sx, hitY, hitR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Disintegration particles bursting outward
+  const burstColors = ['#FF1744', '#FF8A80', '#FFFFFF', '#FFD740', '#FF6E40'];
+  for (let i = 0; i < 24; i++) {
+    const angle = (i / 24) * Math.PI * 2;
+    const dist = hitR * 0.5 + Math.random() * hitR * 1.2;
+    const px = sx + Math.cos(angle) * dist;
+    const py = hitY + Math.sin(angle) * dist;
+    const ps = 1 + Math.random() * 3;
+    ctx.fillStyle = burstColors[Math.floor(Math.random() * burstColors.length)];
+    ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+    ctx.beginPath();
+    ctx.arc(px, py, ps, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Radial burst ring
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath();
+  ctx.arc(sx, hitY, hitR * 1.5, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 0.2;
+  ctx.beginPath();
+  ctx.arc(sx, hitY, hitR * 2.2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Origin glow
+  const og = ctx.createRadialGradient(sx, beamBot, 0, sx, beamBot, 30);
+  og.addColorStop(0, 'rgba(255,255,255,0.5)');
+  og.addColorStop(0.3, 'rgba(255,23,68,0.3)');
+  og.addColorStop(1, 'transparent');
+  ctx.fillStyle = og;
+  ctx.beginPath();
+  ctx.arc(sx, beamBot, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  drawMiniShip(ctx, sx, sy, 90, 105, 1.5);
+})();
+
+</script>
+</body>
+</html>

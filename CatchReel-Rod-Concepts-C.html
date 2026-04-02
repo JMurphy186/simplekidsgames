@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Character-Themed Fishing Rods — Concept C Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0B0E18;
+    color: #fff;
+    font-family: 'Baloo 2', cursive;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-family: 'Luckiest Guy', cursive;
+    text-align: center;
+    font-size: clamp(20px, 4vw, 28px);
+    color: #FFE135;
+    text-shadow: 0 0 10px #FFE13544;
+    margin-bottom: 4px;
+  }
+  .sub {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (max-width: 800px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+  }
+  .card h3 {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .card .desc {
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+  canvas {
+    width: 100%;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #0a0e1a 0%, #0d1225 40%, #1a3a5a 70%, #1e4a6a 100%);
+  }
+  .legend {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎣 Character-Themed Rods</h1>
+<p class="sub">Each character gets a unique fishing rod — spinning reel + animated cast + bobber</p>
+
+<div class="grid">
+  <div class="card">
+    <h3 style="color:#FFD700;">🏴‍☠️ Captain Hook Jr.</h3>
+    <p class="desc">Driftwood rod, weathered & knotted<br>Rusty iron reel, frayed rope line</p>
+    <canvas id="c1" width="360" height="300"></canvas>
+  </div>
+  <div class="card">
+    <h3 style="color:#00E5FF;">🤖 Robo-Fisher 3000</h3>
+    <p class="desc">Chrome antenna rod, segmented<br>Brushed steel reel, blue energy line</p>
+    <canvas id="c2" width="360" height="300"></canvas>
+  </div>
+  <div class="card">
+    <h3 style="color:#9B7ED8;">🧙 Merlin the Caster</h3>
+    <p class="desc">Purple magic staff, rune carvings<br>No reel — orb tip channels the line</p>
+    <canvas id="c3" width="360" height="300"></canvas>
+  </div>
+  <div class="card">
+    <h3 style="color:#e74c3c;">🥷 Shadow Ninja</h3>
+    <p class="desc">Black bamboo rod, red cord wrap<br>Dark matte reel, near-invisible line</p>
+    <canvas id="c4" width="360" height="300"></canvas>
+  </div>
+  <div class="card">
+    <h3 style="color:#FF69B4;">👸 Princess Pearl</h3>
+    <p class="desc">Pink crystal rod with ribbon bow<br>Rose gold reel, sparkle line</p>
+    <canvas id="c5" width="360" height="300"></canvas>
+  </div>
+  <div class="card">
+    <h3 style="color:#39FF14;">👽 Zork the Angler</h3>
+    <p class="desc">Alien tech rod, floating segments<br>Energy core reel, plasma line</p>
+    <canvas id="c6" width="360" height="300"></canvas>
+  </div>
+</div>
+
+<p class="legend">All rods extend outward from character's right hand • Reel spins during reel state • Line casts and bobs</p>
+
+<script>
+const DPR = window.devicePixelRatio || 1;
+const canvases = {};
+const W = 360, H = 300;
+
+function setupCanvas(id) {
+  const c = document.getElementById(id);
+  c.width = W * DPR;
+  c.height = H * DPR;
+  const ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  return ctx;
+}
+
+// Shared animation state
+let t = 0;
+const rodDefs = {
+  pirate: {
+    shaftColors: ['#8B6914', '#6B4226', '#5a3820', '#4a2e18'],
+    shaftWidths: [5, 4.5, 3.5, 2],
+    reelColor: '#8B4513',
+    reelRust: '#a0522d',
+    reelRadius: 10,
+    lineColor: 'rgba(180, 160, 120, LINE_ALPHA)',
+    lineWidth: 1.8,
+    bobberMain: '#c0392b',
+    bobberTop: '#ddd',
+    grip: 'rope',
+    gripColor: '#a08040',
+    tipFeature: null,
+    name: 'pirate'
+  },
+  robot: {
+    shaftColors: ['#888', '#999', '#aaa', '#bbb'],
+    shaftWidths: [5, 4, 3, 1.5],
+    reelColor: '#777',
+    reelRust: null,
+    reelRadius: 11,
+    lineColor: 'rgba(78, 205, 196, LINE_ALPHA)',
+    lineWidth: 1.5,
+    bobberMain: '#4ecdc4',
+    bobberTop: '#fff',
+    grip: 'tech',
+    gripColor: '#555',
+    tipFeature: 'antenna',
+    name: 'robot'
+  },
+  wizard: {
+    shaftColors: ['#6B4E97', '#7B5EA7', '#8B6EB7', '#9B7ED8'],
+    shaftWidths: [5.5, 4.5, 3.5, 2.5],
+    reelColor: null,
+    reelRadius: 0,
+    lineColor: 'rgba(155, 126, 216, LINE_ALPHA)',
+    lineWidth: 1.5,
+    bobberMain: '#9B7ED8',
+    bobberTop: '#ddc8ff',
+    grip: 'wrap',
+    gripColor: '#FFD700',
+    tipFeature: 'orb',
+    name: 'wizard'
+  },
+  ninja: {
+    shaftColors: ['#222', '#2a2a2a', '#333', '#3a3a3a'],
+    shaftWidths: [4.5, 4, 3, 1.5],
+    reelColor: '#333',
+    reelRust: null,
+    reelRadius: 9,
+    lineColor: 'rgba(180, 180, 180, LINE_ALPHA)',
+    lineWidth: 1,
+    bobberMain: '#e74c3c',
+    bobberTop: '#222',
+    grip: 'cord',
+    gripColor: '#c0392b',
+    tipFeature: null,
+    name: 'ninja'
+  },
+  princess: {
+    shaftColors: ['#FF69B4', '#FF85C8', '#FF9FD5', '#FFB8E0'],
+    shaftWidths: [4.5, 4, 3, 2],
+    reelColor: '#d4a0c0',
+    reelRust: null,
+    reelRadius: 10,
+    lineColor: 'rgba(255, 182, 220, LINE_ALPHA)',
+    lineWidth: 1.5,
+    bobberMain: '#FF69B4',
+    bobberTop: '#fff0f8',
+    grip: 'ribbon',
+    gripColor: '#FFD700',
+    tipFeature: 'bow',
+    name: 'princess'
+  },
+  alien: {
+    shaftColors: ['#1a5a3a', '#207040', '#2a8a4a', '#39FF14'],
+    shaftWidths: [5, 3, 2, 1],
+    reelColor: '#1a3a2a',
+    reelRust: null,
+    reelRadius: 11,
+    lineColor: 'rgba(57, 255, 20, LINE_ALPHA)',
+    lineWidth: 1.5,
+    bobberMain: '#39FF14',
+    bobberTop: '#c0ffa0',
+    grip: 'energy',
+    gripColor: '#4ecdc4',
+    tipFeature: 'plasma',
+    name: 'alien'
+  }
+};
+
+// Shaft control points (hand → tip, extending right and up)
+function getShaftPoints(handX, handY) {
+  return [
+    { x: handX, y: handY },
+    { x: handX + 30, y: handY - 15 },
+    { x: handX + 100, y: handY - 55 },
+    { x: handX + 190, y: handY - 80 },
+  ];
+}
+
+function drawRod(ctx, def, time) {
+  const handX = 60, handY = 180;
+  const pts = getShaftPoints(handX, handY);
+  const tipX = pts[3].x, tipY = pts[3].y;
+
+  // Water line
+  const waterY = 225;
+  ctx.fillStyle = 'rgba(30, 74, 106, 0.4)';
+  for (let i = 0; i < W; i += 2) {
+    const wy = waterY + Math.sin(i * 0.03 + time * 1.5) * 3;
+    ctx.fillRect(i, wy, 2, H - wy);
+  }
+  ctx.fillStyle = 'rgba(60, 130, 180, 0.15)';
+  for (let i = 0; i < W; i += 3) {
+    const wy = waterY + Math.sin(i * 0.05 + time * 2) * 2;
+    ctx.fillRect(i, wy, 3, 1);
+  }
+
+  // Dock edge
+  ctx.fillStyle = '#5a3a20';
+  ctx.fillRect(0, 195, 100, 12);
+  ctx.fillStyle = '#4a2a15';
+  ctx.fillRect(0, 207, 100, 6);
+  // Dock planks
+  ctx.strokeStyle = '#3a2210';
+  ctx.lineWidth = 0.5;
+  for (let px = 10; px < 100; px += 22) {
+    ctx.beginPath(); ctx.moveTo(px, 195); ctx.lineTo(px, 207); ctx.stroke();
+  }
+  // Dock posts
+  ctx.fillStyle = '#4a2a15';
+  ctx.fillRect(85, 195, 10, 25);
+
+  // Character placeholder
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath();
+  ctx.arc(42, 150, 35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.font = '11px "Baloo 2"';
+  ctx.textAlign = 'center';
+
+  // --- GRIP ---
+  if (def.grip === 'rope') {
+    // Frayed rope wrap
+    for (let i = 0; i < 6; i++) {
+      const gx = handX + i * 3.5;
+      const gy = handY - i * 1.8;
+      ctx.strokeStyle = def.gripColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(gx - 4, gy + 2); ctx.lineTo(gx + 4, gy - 2);
+      ctx.stroke();
+    }
+  } else if (def.grip === 'tech') {
+    ctx.fillStyle = def.gripColor;
+    ctx.fillRect(handX - 3, handY - 8, 12, 18);
+    ctx.strokeStyle = '#4ecdc4';
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(handX - 3, handY - 8, 12, 18);
+    // LED dots
+    ctx.fillStyle = '#4ecdc4';
+    ctx.fillRect(handX, handY - 4, 2, 2);
+    ctx.fillRect(handX + 4, handY, 2, 2);
+  } else if (def.grip === 'wrap') {
+    // Golden wrap bands
+    for (let i = 0; i < 5; i++) {
+      const gx = handX + i * 5;
+      const gy = handY - i * 2.5;
+      ctx.strokeStyle = def.gripColor;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(gx - 4, gy + 3); ctx.lineTo(gx + 5, gy - 3);
+      ctx.stroke();
+    }
+  } else if (def.grip === 'cord') {
+    // Red cord X-wrap
+    for (let i = 0; i < 4; i++) {
+      const gx = handX + i * 6;
+      const gy = handY - i * 3;
+      ctx.strokeStyle = def.gripColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gx - 3, gy - 3); ctx.lineTo(gx + 5, gy + 3); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(gx - 3, gy + 3); ctx.lineTo(gx + 5, gy - 3); ctx.stroke();
+    }
+  } else if (def.grip === 'ribbon') {
+    // Pink ribbon wrap with trailing bow
+    ctx.strokeStyle = '#FF69B4';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+      const gx = handX + i * 5;
+      const gy = handY - i * 2.5;
+      ctx.beginPath();
+      ctx.moveTo(gx - 4, gy + 2); ctx.lineTo(gx + 5, gy - 2);
+      ctx.stroke();
+    }
+    // Trailing ribbons
+    ctx.strokeStyle = 'rgba(255, 105, 180, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(handX + 2, handY + 4);
+    ctx.quadraticCurveTo(handX - 8, handY + 15 + Math.sin(time * 3) * 4, handX - 14, handY + 26);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(handX + 4, handY + 4);
+    ctx.quadraticCurveTo(handX + 14, handY + 18 + Math.sin(time * 3 + 1) * 4, handX + 8, handY + 30);
+    ctx.stroke();
+  } else if (def.grip === 'energy') {
+    // Pulsing energy field
+    const pulse = 0.5 + Math.sin(time * 4) * 0.3;
+    ctx.fillStyle = `rgba(78, 205, 196, ${pulse * 0.3})`;
+    ctx.beginPath();
+    ctx.ellipse(handX + 6, handY - 4, 10, 14, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(57, 255, 20, ${pulse * 0.6})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // --- SHAFT ---
+  for (let i = 0; i < pts.length - 1; i++) {
+    ctx.strokeStyle = def.shaftColors[i];
+    ctx.lineWidth = def.shaftWidths[i];
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[i].x, pts[i].y);
+    ctx.lineTo(pts[i+1].x, pts[i+1].y);
+    ctx.stroke();
+  }
+
+  // Pirate: knots on shaft
+  if (def.name === 'pirate') {
+    ctx.fillStyle = '#4a2e18';
+    ctx.beginPath(); ctx.arc(pts[1].x + 15, pts[1].y - 8, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pts[2].x - 10, pts[2].y + 2, 2, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Robot: segment joints
+  if (def.name === 'robot') {
+    for (let i = 1; i < pts.length; i++) {
+      ctx.fillStyle = '#666';
+      ctx.beginPath();
+      ctx.arc(pts[i].x, pts[i].y, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#4ecdc4';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+  }
+
+  // Wizard: rune marks along staff
+  if (def.name === 'wizard') {
+    const runeAlpha = 0.4 + Math.sin(time * 2) * 0.3;
+    ctx.fillStyle = `rgba(200, 168, 255, ${runeAlpha})`;
+    ctx.font = '8px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✦', pts[1].x + 20, pts[1].y - 12);
+    ctx.fillText('⟡', pts[2].x - 15, pts[2].y + 4);
+    ctx.fillText('✧', pts[2].x + 20, pts[2].y - 10);
+  }
+
+  // Ninja: subtle binding marks
+  if (def.name === 'ninja') {
+    ctx.strokeStyle = 'rgba(200, 50, 50, 0.4)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+      const mx = pts[1].x + 20 + i * 25;
+      const my = pts[1].y - 10 - i * 8;
+      ctx.beginPath();
+      ctx.moveTo(mx - 3, my + 2); ctx.lineTo(mx + 3, my - 2);
+      ctx.stroke();
+    }
+  }
+
+  // Alien: floating gaps between segments
+  if (def.name === 'alien') {
+    const gapPulse = 0.5 + Math.sin(time * 5) * 0.4;
+    ctx.fillStyle = `rgba(57, 255, 20, ${gapPulse})`;
+    ctx.beginPath(); ctx.arc(pts[1].x + 15, pts[1].y - 8, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(pts[2].x + 10, pts[2].y - 5, 1.5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // --- REEL (spinning) ---
+  if (def.reelRadius > 0) {
+    const reelX = handX + 18;
+    const reelY = handY - 8;
+    const rr = def.reelRadius;
+
+    // Reel body
+    ctx.fillStyle = def.reelColor;
+    ctx.beginPath();
+    ctx.arc(reelX, reelY, rr, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reel ring
+    ctx.strokeStyle = def.reelRust || (def.name === 'princess' ? '#e8b0d0' : def.name === 'alien' ? '#4ecdc4' : '#999');
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Spinning handle
+    const angle = time * 3;
+    const hx = reelX + Math.cos(angle) * (rr - 2);
+    const hy = reelY + Math.sin(angle) * (rr - 2);
+    ctx.fillStyle = def.name === 'pirate' ? '#a0522d' :
+                    def.name === 'robot' ? '#4ecdc4' :
+                    def.name === 'ninja' ? '#c0392b' :
+                    def.name === 'princess' ? '#FFD700' :
+                    def.name === 'alien' ? '#39FF14' : '#999';
+    ctx.beginPath();
+    ctx.arc(hx, hy, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Center axle
+    ctx.fillStyle = def.name === 'robot' ? '#bbb' : def.name === 'alien' ? '#207040' : '#aaa';
+    ctx.beginPath();
+    ctx.arc(reelX, reelY, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rust spots for pirate
+    if (def.reelRust) {
+      ctx.fillStyle = 'rgba(139, 90, 43, 0.4)';
+      ctx.beginPath(); ctx.arc(reelX - 3, reelY + 2, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(reelX + 4, reelY - 1, 1, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Line from reel to first guide
+    ctx.strokeStyle = def.lineColor.replace('LINE_ALPHA', '0.4');
+    ctx.lineWidth = def.lineWidth * 0.7;
+    ctx.beginPath();
+    ctx.moveTo(reelX, reelY - rr);
+    ctx.lineTo(pts[1].x + 5, pts[1].y - 3);
+    ctx.stroke();
+  }
+
+  // --- TIP FEATURES ---
+  if (def.tipFeature === 'antenna') {
+    // Blue LED at tip
+    const glow = 0.5 + Math.sin(time * 4) * 0.3;
+    ctx.fillStyle = `rgba(78, 205, 196, ${glow})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (def.tipFeature === 'orb') {
+    // Glowing magic orb
+    const orbPulse = 0.4 + Math.sin(time * 2.5) * 0.3;
+    ctx.fillStyle = `rgba(155, 126, 216, ${orbPulse})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(200, 168, 255, ${orbPulse + 0.3})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.beginPath();
+    ctx.arc(tipX - 2, tipY - 2, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Particles
+    for (let i = 0; i < 3; i++) {
+      const pa = time * 2 + i * 2.1;
+      const pr = 12 + Math.sin(time + i) * 4;
+      const px = tipX + Math.cos(pa) * pr;
+      const py = tipY + Math.sin(pa) * pr;
+      ctx.fillStyle = `rgba(200, 168, 255, ${0.3 + Math.sin(time * 3 + i) * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(px, py, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (def.tipFeature === 'bow') {
+    // Pink ribbon bow at tip
+    ctx.fillStyle = '#FF69B4';
+    // Left loop
+    ctx.beginPath();
+    ctx.ellipse(tipX - 6, tipY - 2, 5, 3, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Right loop
+    ctx.beginPath();
+    ctx.ellipse(tipX + 6, tipY - 2, 5, 3, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Center knot
+    ctx.fillStyle = '#e0559a';
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (def.tipFeature === 'plasma') {
+    // Alien plasma energy
+    const pulse = 0.5 + Math.sin(time * 5) * 0.4;
+    ctx.fillStyle = `rgba(57, 255, 20, ${pulse * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(78, 205, 196, ${pulse})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+    // Energy arcs
+    ctx.strokeStyle = `rgba(57, 255, 20, ${pulse * 0.5})`;
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < 2; i++) {
+      const aa = time * 4 + i * Math.PI;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 10 + i * 3, aa, aa + 1.2);
+      ctx.stroke();
+    }
+  }
+
+  // --- FISHING LINE (catenary from tip to bobber, animated cast + bob) ---
+  const castPhase = (Math.sin(time * 0.3) + 1) / 2; // 0-1 slow cycle for gentle bob
+  const bobberX = tipX + 60 + castPhase * 10;
+  const bobberY = waterY + 5 + Math.sin(time * 1.8) * 4;
+
+  // Catenary line from rod tip to bobber
+  const lineAlpha = def.name === 'ninja' ? 0.35 : 0.7;
+  ctx.strokeStyle = def.lineColor.replace('LINE_ALPHA', String(lineAlpha));
+  ctx.lineWidth = def.lineWidth;
+  ctx.beginPath();
+  ctx.moveTo(tipX, tipY);
+  // Sag point
+  const sagX = (tipX + bobberX) / 2;
+  const sagY = Math.max(tipY, bobberY) + 20 + Math.sin(time * 1.2) * 5;
+  ctx.quadraticCurveTo(sagX, sagY, bobberX, bobberY);
+  ctx.stroke();
+
+  // Princess: sparkles on line
+  if (def.name === 'princess') {
+    for (let i = 0; i < 4; i++) {
+      const lt = 0.15 + i * 0.2;
+      const lx = tipX + (bobberX - tipX) * lt;
+      const ly = tipY + (sagY - tipY) * lt * 2 * (1 - lt) + (bobberY - tipY) * lt * lt;
+      const sp = 0.3 + Math.sin(time * 5 + i * 1.5) * 0.3;
+      ctx.fillStyle = `rgba(255, 215, 0, ${sp})`;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Alien: energy pulses along line
+  if (def.name === 'alien') {
+    for (let i = 0; i < 3; i++) {
+      const lt = ((time * 0.5 + i * 0.33) % 1);
+      const lx = tipX + (bobberX - tipX) * lt;
+      const ly = tipY + (sagY - tipY) * lt * 2 * (1 - lt) + (bobberY - tipY) * lt * lt;
+      const sp = 0.3 + Math.sin(time * 3 + i) * 0.25;
+      ctx.fillStyle = `rgba(57, 255, 20, ${sp})`;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // --- BOBBER ---
+  // Ripples
+  const rippleR = 8 + Math.sin(time * 2) * 3;
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.ellipse(bobberX, bobberY + 4, rippleR, rippleR * 0.3, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(bobberX, bobberY + 4, rippleR * 1.5, rippleR * 0.45, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bobber body
+  ctx.fillStyle = def.bobberTop;
+  ctx.beginPath();
+  ctx.ellipse(bobberX, bobberY - 3, 5, 4, 0, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = def.bobberMain;
+  ctx.beginPath();
+  ctx.ellipse(bobberX, bobberY + 1, 5, 4, 0, 0, Math.PI);
+  ctx.fill();
+
+  // Bobber highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.arc(bobberX - 2, bobberY - 4, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bobber stick
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bobberX, bobberY - 7);
+  ctx.lineTo(bobberX, bobberY - 11);
+  ctx.stroke();
+
+  // Line below bobber (into water)
+  ctx.strokeStyle = def.lineColor.replace('LINE_ALPHA', '0.25');
+  ctx.lineWidth = def.lineWidth * 0.6;
+  ctx.beginPath();
+  ctx.moveTo(bobberX, bobberY + 5);
+  ctx.lineTo(bobberX + Math.sin(time) * 3, bobberY + 35);
+  ctx.stroke();
+}
+
+function animate() {
+  t += 1/60;
+
+  const defs = ['pirate', 'robot', 'wizard', 'ninja', 'princess', 'alien'];
+  const ids = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
+
+  for (let i = 0; i < 6; i++) {
+    const ctx = setupCanvas(ids[i]);
+    ctx.clearRect(0, 0, W, H);
+    drawRod(ctx, rodDefs[defs[i]], t);
+  }
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>

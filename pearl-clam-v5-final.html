@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pearl Clam — v5 Barely Open</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a1628; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+  h1 { text-align: center; font-size: 22px; margin-bottom: 6px; }
+  .subtitle { text-align: center; font-size: 13px; color: #888; margin-bottom: 30px; }
+  .fish-row { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 20px; }
+  .fish-card {
+    text-align: center; background: rgba(20,30,50,0.8); border: 2px solid #334;
+    border-radius: 12px; padding: 20px; width: 340px;
+  }
+  .fish-card h2 { font-size: 18px; margin-bottom: 4px; }
+  .fish-card .tier { font-size: 12px; color: #ab47bc; margin-bottom: 14px; }
+  .sizes { display: flex; justify-content: center; align-items: flex-end; gap: 24px; margin-top: 18px; }
+  .size-label { font-size: 10px; color: #666; margin-top: 4px; text-align: center; }
+  .notes { font-size: 11px; color: #888; margin-top: 14px; text-align: left; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>Pearl Clam — v5 Final</h1>
+<div class="subtitle">Barely cracked open. Guarding its treasure. Pearl peeking through the gap.</div>
+
+<div class="fish-row">
+  <div class="fish-card">
+    <h2>Pearl Clam v5</h2>
+    <div class="tier">★ ULTRA RARE</div>
+    
+    <svg width="160" height="100" viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Top shell -->
+        <radialGradient id="v5_top" cx="50%" cy="65%" r="60%">
+          <stop offset="0%" stop-color="#7AD4D0"/>
+          <stop offset="40%" stop-color="#58C0BC"/>
+          <stop offset="75%" stop-color="#3EA8A4"/>
+          <stop offset="100%" stop-color="#2E8A86"/>
+        </radialGradient>
+        <!-- Bottom shell (slightly darker) -->
+        <radialGradient id="v5_bot" cx="50%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#68C8C4"/>
+          <stop offset="40%" stop-color="#4CB4B0"/>
+          <stop offset="75%" stop-color="#389C98"/>
+          <stop offset="100%" stop-color="#2A8480"/>
+        </radialGradient>
+        <!-- Inner glow visible through crack -->
+        <radialGradient id="v5_inner" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FFFFF0"/>
+          <stop offset="40%" stop-color="#F0E8D8"/>
+          <stop offset="100%" stop-color="#D0C0A8"/>
+        </radialGradient>
+        <!-- Pearl -->
+        <radialGradient id="v5_pearl" cx="38%" cy="30%" r="58%">
+          <stop offset="0%" stop-color="#FFFFFF"/>
+          <stop offset="25%" stop-color="#F8F4F8"/>
+          <stop offset="55%" stop-color="#E8E0E8"/>
+          <stop offset="100%" stop-color="#C8C0CC"/>
+        </radialGradient>
+        <!-- Pearl glow emanating from crack -->
+        <radialGradient id="v5_glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FFFFF8" stop-opacity="0.5"/>
+          <stop offset="40%" stop-color="#F0E8D0" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#F0E8D0" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      
+      <!-- ===== BOTTOM SHELL ===== -->
+      
+      <!-- Bottom shell body -->
+      <path d="M16,54 Q18,64 28,72 Q42,82 62,88 Q80,90 98,88 Q118,82 132,72 Q142,64 144,54" fill="url(#v5_bot)" stroke="#26807C" stroke-width="0.8"/>
+      
+      <!-- Bottom shell deep fan ridges -->
+      <path d="M80,54 L28,72" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L36,78" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L48,84" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L62,88" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L80,90" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L98,88" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L112,84" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L124,78" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,54 L132,72" fill="none" stroke="#26807C" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <!-- Ridge highlights -->
+      <path d="M80,54 L29,71" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L37,77" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L49,83" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L63,87" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L81,89" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L99,87" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L113,83" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      <path d="M80,54 L125,77" fill="none" stroke="#8EDED8" stroke-width="0.7" opacity="0.2"/>
+      
+      <!-- Bottom scalloped edge -->
+      <path d="M16,54 Q24,58 30,54 Q38,58 46,54 Q54,58 62,54 Q70,58 80,54 Q90,58 98,54 Q106,58 114,54 Q122,58 130,54 Q138,58 144,54" fill="none" stroke="#26807C" stroke-width="1.3" stroke-linecap="round"/>
+      
+      <!-- ===== CRACK / GAP — the treasure reveal ===== -->
+      
+      <!-- Warm inner glow radiating out from the crack -->
+      <ellipse cx="80" cy="50" rx="50" ry="8" fill="url(#v5_glow)"/>
+      
+      <!-- Inner shell surface visible through crack -->
+      <path d="M20,50 Q50,53 80,54 Q110,53 140,50 Q110,51 80,52 Q50,51 20,50Z" fill="url(#v5_inner)" opacity="0.8"/>
+      
+      <!-- The pearl — peeking through the crack -->
+      <ellipse cx="80" cy="50" rx="8" ry="5.5" fill="url(#v5_pearl)" stroke="#B8B0C0" stroke-width="0.3"/>
+      <!-- Pearl highlight -->
+      <ellipse cx="77" cy="48" rx="3" ry="2" fill="white" opacity="0.8"/>
+      <circle cx="76" cy="47" r="1.2" fill="white" opacity="0.95"/>
+      <!-- Pearl subtle glow -->
+      <ellipse cx="80" cy="50" rx="12" ry="6" fill="rgba(255,255,240,0.1)"/>
+      
+      <!-- ===== TOP SHELL (resting on top, barely lifted) ===== -->
+      
+      <!-- Top shell body -->
+      <path d="M16,50 Q18,40 28,30 Q42,20 62,14 Q80,12 98,14 Q118,20 132,30 Q142,40 144,50" fill="url(#v5_top)" stroke="#2E8A86" stroke-width="0.8"/>
+      
+      <!-- Top shell deep fan ridges (same count, aligned with bottom) -->
+      <path d="M80,50 L28,30" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L36,24" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L48,18" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L62,14" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L80,12" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L98,14" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L112,18" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L124,24" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <path d="M80,50 L132,30" fill="none" stroke="#2A8884" stroke-width="2.2" opacity="0.3" stroke-linecap="round"/>
+      <!-- Ridge highlights -->
+      <path d="M80,50 L29,31" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L37,25" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L49,19" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L63,15" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L81,13" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L99,15" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L113,19" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      <path d="M80,50 L125,25" fill="none" stroke="#90E0DA" stroke-width="0.7" opacity="0.25"/>
+      
+      <!-- Top scalloped edge (mirrors bottom — interlocking) -->
+      <path d="M16,50 Q24,46 30,50 Q38,46 46,50 Q54,46 62,50 Q70,46 80,50 Q90,46 98,50 Q106,46 114,50 Q122,46 130,50 Q138,46 144,50" fill="none" stroke="#2E8A86" stroke-width="1.3" stroke-linecap="round"/>
+      
+      <!-- ===== HINGE (right side — where shells connect) ===== -->
+      <ellipse cx="142" cy="52" rx="4" ry="5" fill="#2E8A86" stroke="#26807C" stroke-width="0.6"/>
+      <line x1="142" y1="48" x2="142" y2="56" stroke="#1E706C" stroke-width="0.5" opacity="0.4"/>
+      
+      <!-- Barnacles -->
+      <circle cx="30" cy="26" r="2" fill="#6CC4BE" stroke="#4AA8A2" stroke-width="0.4"/>
+      <circle cx="34" cy="30" r="1.2" fill="#6CC4BE" stroke="#4AA8A2" stroke-width="0.3"/>
+      <circle cx="126" cy="28" r="1.6" fill="#6CC4BE" stroke="#4AA8A2" stroke-width="0.4"/>
+      <circle cx="38" cy="72" r="1.8" fill="#58BAB4" stroke="#3EA0A0" stroke-width="0.4"/>
+      
+      <!-- Tiny seaweed -->
+      <path d="M22,82 Q19,76 22,72 Q20,68 23,64" fill="none" stroke="#3A8858" stroke-width="0.8" stroke-linecap="round" opacity="0.25"/>
+      <path d="M136,80 Q138,74 135,70" fill="none" stroke="#3A8858" stroke-width="0.7" stroke-linecap="round" opacity="0.2"/>
+    </svg>
+    
+    <div class="sizes">
+      <div>
+        <!-- Trophy: 80x50 -->
+        <svg width="80" height="50" viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="v5t_top" cx="50%" cy="65%" r="60%"><stop offset="0%" stop-color="#7AD4D0"/><stop offset="100%" stop-color="#2E8A86"/></radialGradient>
+            <radialGradient id="v5t_bot" cx="50%" cy="35%" r="60%"><stop offset="0%" stop-color="#68C8C4"/><stop offset="100%" stop-color="#2A8480"/></radialGradient>
+            <radialGradient id="v5t_pearl" cx="38%" cy="30%" r="58%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#C8C0CC"/></radialGradient>
+          </defs>
+          <!-- Bottom shell -->
+          <path d="M16,54 Q18,64 62,88 Q118,82 144,54" fill="url(#v5t_bot)"/>
+          <path d="M80,54 L36,78" fill="none" stroke="#26807C" stroke-width="2" opacity="0.25"/>
+          <path d="M80,54 L62,88" fill="none" stroke="#26807C" stroke-width="2" opacity="0.25"/>
+          <path d="M80,54 L98,88" fill="none" stroke="#26807C" stroke-width="2" opacity="0.25"/>
+          <path d="M80,54 L124,78" fill="none" stroke="#26807C" stroke-width="2" opacity="0.25"/>
+          <path d="M16,54 Q46,58 80,54 Q114,58 144,54" fill="none" stroke="#26807C" stroke-width="1.2"/>
+          <!-- Crack glow -->
+          <ellipse cx="80" cy="50" rx="40" ry="6" fill="rgba(255,255,240,0.15)"/>
+          <!-- Inner surface -->
+          <path d="M24,50 Q80,54 136,50 Q80,52 24,50Z" fill="#E8DCC8" opacity="0.6"/>
+          <!-- Pearl peeking -->
+          <ellipse cx="80" cy="50" rx="8" ry="5" fill="url(#v5t_pearl)"/>
+          <ellipse cx="77" cy="48" rx="3" ry="2" fill="white" opacity="0.7"/>
+          <!-- Top shell -->
+          <path d="M16,50 Q18,40 62,14 Q118,20 144,50" fill="url(#v5t_top)"/>
+          <path d="M80,50 L36,24" fill="none" stroke="#2A8884" stroke-width="2" opacity="0.25"/>
+          <path d="M80,50 L62,14" fill="none" stroke="#2A8884" stroke-width="2" opacity="0.25"/>
+          <path d="M80,50 L98,14" fill="none" stroke="#2A8884" stroke-width="2" opacity="0.25"/>
+          <path d="M80,50 L124,24" fill="none" stroke="#2A8884" stroke-width="2" opacity="0.25"/>
+          <path d="M16,50 Q46,46 80,50 Q114,46 144,50" fill="none" stroke="#2E8A86" stroke-width="1.2"/>
+          <!-- Hinge -->
+          <ellipse cx="142" cy="52" rx="3" ry="4" fill="#2E8A86"/>
+        </svg>
+        <div class="size-label">Trophy (80×50)</div>
+      </div>
+      <div>
+        <!-- HUD tiny -->
+        <svg width="48" height="30" viewBox="0 0 160 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Bottom -->
+          <path d="M16,54 Q80,90 144,54" fill="#4CB4B0"/>
+          <path d="M16,54 Q80,58 144,54" fill="none" stroke="#26807C" stroke-width="1.5"/>
+          <!-- Crack glow -->
+          <ellipse cx="80" cy="50" rx="30" ry="4" fill="rgba(255,255,240,0.2)"/>
+          <!-- Pearl peek -->
+          <ellipse cx="80" cy="50" rx="7" ry="4" fill="#F0E8F0"/>
+          <!-- Top -->
+          <path d="M16,50 Q80,12 144,50" fill="#58C0BC"/>
+          <path d="M16,50 Q80,46 144,50" fill="none" stroke="#2E8A86" stroke-width="1.5"/>
+          <!-- Hinge -->
+          <circle cx="142" cy="52" r="3" fill="#2E8A86"/>
+        </svg>
+        <div class="size-label">HUD (tiny)</div>
+      </div>
+    </div>
+    
+    <div class="notes">
+      <strong>v5 — Barely cracked open:</strong><br>
+      • Two mirror-image shells — top and bottom with matching ridges, scallops, and proportions<br>
+      • Thin crack between them with warm inner glow leaking out<br>
+      • Pearl barely visible through the gap — oval, peeking, mysterious<br>
+      • Hinge on the right connecting both shells<br>
+      • No iridescent rainbow — clean teal shells, warm golden glow at the seam<br>
+      • Barnacles and seaweed for character<br>
+      • Reads clearly at all 3 sizes — the crack and pearl glow are the tell even at HUD scale
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

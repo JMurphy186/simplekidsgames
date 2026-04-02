@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fish Expansion Batch 1 — v6 Review (All Fin Fixes)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a1628;
+    color: #e0e8f0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 24px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #4fc3f7, #81c784);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #7a8a9a;
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .tier-header {
+    font-size: 22px;
+    font-weight: 700;
+    padding: 12px 20px;
+    margin: 32px 0 16px 0;
+    border-radius: 8px;
+    display: inline-block;
+  }
+  .tier-common { background: #2a3a2a; color: #81c784; border: 1px solid #4caf5044; }
+  .tier-uncommon { background: #2a2a3a; color: #64b5f6; border: 1px solid #42a5f544; }
+  .fish-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .fish-card {
+    background: #111e33;
+    border: 1px solid #1e3050;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .fish-card:hover { transform: translateY(-2px); border-color: #3a5a7a; }
+  .fish-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .fish-detail { font-size: 12px; color: #6a7a8a; margin-bottom: 12px; line-height: 1.4; }
+  .fish-sizes { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin-top: 8px; }
+  .size-label { font-size: 10px; color: #5a6a7a; margin-top: 4px; }
+  .fish-svg-container { display: flex; flex-direction: column; align-items: center; }
+  .notes { background: #1a2a3a; border: 1px solid #2a3a4a; border-radius: 8px; padding: 16px; margin: 16px 0; font-size: 13px; line-height: 1.6; color: #8a9aaa; }
+  .notes strong { color: #b0c0d0; }
+  .fix-badge { display: inline-block; background: #f4433622; color: #ef9a9a; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 600; }
+  .fix-badge.green { background: #4caf5022; color: #a5d6a7; }
+</style>
+</head>
+<body>
+
+<h1>🐟 Fish Expansion Batch 1 — v6 All Fin Fixes</h1>
+<p class="subtitle">10 Common + 11 Uncommon · All fins hugging body lines · Sunfish→Mola · Cardinalfish→Banggai rework</p>
+
+<div class="notes">
+  <strong>v6 Changes from v5:</strong> Every fish reviewed — dorsal/anal fins lowered to hug body contour. 
+  Sunfish completely reworked to Mola mola shape (single triangle fins, clavus pseudo-tail). 
+  Cardinalfish reworked to Banggai style (tall dramatic dorsal, flowing pelvic fins, white spots on black). 
+  Cichlid egg spots removed. Crawfish tail closed up + claws redesigned. Hermit Crab claws adjusted. 
+  Anemonefish dorsal centered.
+</div>
+
+<!-- ==================== COMMON TIER ==================== -->
+<div class="tier-header tier-common">⬤ Common (10 fish)</div>
+
+<div class="fish-grid">
+
+  <!-- C1: Goldfish -->
+  <div class="fish-card">
+    <div class="fish-name">Goldfish <span class="fix-badge green">fin rear lowered</span></div>
+    <div class="fish-detail">Bright orange, flowing fantail, gold scales</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c0_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff8c00"/>
+              <stop offset="50%" stop-color="#ff6600"/>
+              <stop offset="100%" stop-color="#cc4400"/>
+            </linearGradient>
+            <radialGradient id="c0_shine" cx="0.35" cy="0.3" r="0.5">
+              <stop offset="0%" stop-color="#ffcc6644"/>
+              <stop offset="100%" stop-color="#ffcc6600"/>
+            </radialGradient>
+            <clipPath id="c0_clip"><ellipse cx="72" cy="50" rx="38" ry="24"/></clipPath>
+          </defs>
+          <!-- Dorsal - rear lowered to meet body -->
+          <path d="M58,30 Q66,14 74,20 Q80,16 86,28" fill="#ff7700" opacity="0.85"/>
+          <!-- Anal fin -->
+          <path d="M65,70 Q72,82 80,72" fill="#ff7700" opacity="0.8"/>
+          <!-- Flowing fantail -->
+          <path d="M108,50 Q132,28 138,22 Q134,40 136,50 Q134,60 138,78 Q132,72 108,50Z" fill="#ff8800" opacity="0.9"/>
+          <path d="M110,50 Q128,34 134,28" fill="none" stroke="#ffaa4433" stroke-width="1"/>
+          <path d="M110,50 Q128,66 134,72" fill="none" stroke="#ffaa4433" stroke-width="1"/>
+          <!-- Pelvic fin -->
+          <path d="M60,68 Q55,76 50,72 Q55,70 60,68Z" fill="#ff7700" opacity="0.7"/>
+          <!-- Body ON TOP -->
+          <ellipse cx="72" cy="50" rx="38" ry="24" fill="url(#c0_body)"/>
+          <!-- Scale arcs clipped -->
+          <g clip-path="url(#c0_clip)" opacity="0.2">
+            <circle cx="55" cy="42" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="67" cy="40" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="79" cy="42" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="91" cy="44" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="55" cy="52" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="67" cy="50" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="79" cy="52" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+            <circle cx="91" cy="54" r="6" fill="none" stroke="#ffdd88" stroke-width="0.7"/>
+          </g>
+          <ellipse cx="72" cy="50" rx="38" ry="24" fill="url(#c0_shine)"/>
+          <!-- Eye -->
+          <circle cx="48" cy="46" r="5" fill="white"/>
+          <circle cx="47" cy="45" r="3" fill="#1a1a1a"/>
+          <circle cx="46" cy="44" r="1" fill="white"/>
+          <ellipse cx="35" cy="51" rx="2" ry="1.5" fill="#cc440088"/>
+          <path d="M56,54 Q48,62 44,60 Q50,56 56,54Z" fill="#ff880088"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c0s_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff8c00"/><stop offset="50%" stop-color="#ff6600"/><stop offset="100%" stop-color="#cc4400"/>
+            </linearGradient>
+          </defs>
+          <path d="M58,30 Q66,14 74,20 Q80,16 86,28" fill="#ff7700" opacity="0.85"/>
+          <path d="M65,70 Q72,82 80,72" fill="#ff7700" opacity="0.8"/>
+          <path d="M108,50 Q132,28 138,22 Q134,40 136,50 Q134,60 138,78 Q132,72 108,50Z" fill="#ff8800" opacity="0.9"/>
+          <ellipse cx="72" cy="50" rx="38" ry="24" fill="url(#c0s_body)"/>
+          <circle cx="48" cy="46" r="5" fill="white"/>
+          <circle cx="47" cy="45" r="3" fill="#1a1a1a"/>
+          <circle cx="46" cy="44" r="1" fill="white"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C2: Sunfish — FULL REWORK to Mola mola -->
+  <div class="fish-card">
+    <div class="fish-name">Sunfish <span class="fix-badge">REWORKED → Mola shape</span></div>
+    <div class="fish-detail">Mola mola — disc body, single triangle dorsal + anal, clavus pseudo-tail</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c1_body" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7a9ab0"/>
+              <stop offset="40%" stop-color="#5a7a90"/>
+              <stop offset="100%" stop-color="#3a5a70"/>
+            </linearGradient>
+            <radialGradient id="c1_shimmer" cx="0.4" cy="0.35" r="0.5">
+              <stop offset="0%" stop-color="#88ccff22"/>
+              <stop offset="100%" stop-color="#88ccff00"/>
+            </radialGradient>
+            <clipPath id="c1_clip"><ellipse cx="70" cy="50" rx="34" ry="30"/></clipPath>
+          </defs>
+          <!-- Single tall triangle dorsal fin -->
+          <path d="M80,22 Q86,2 92,20 Q90,22 84,24" fill="#4a6a80" opacity="0.85"/>
+          <line x1="86" y1="6" x2="86" y2="22" stroke="#3a5a7044" stroke-width="0.5"/>
+          <!-- Single triangle anal fin (mirror) -->
+          <path d="M80,78 Q86,98 92,80 Q90,78 84,76" fill="#4a6a80" opacity="0.85"/>
+          <line x1="86" y1="94" x2="86" y2="78" stroke="#3a5a7044" stroke-width="0.5"/>
+          <!-- Clavus (pseudo-tail) — wavy rear edge -->
+          <path d="M100,36 Q108,40 110,44 Q112,48 112,50 Q112,52 110,56 Q108,60 100,64" fill="#4a6a80" opacity="0.8"/>
+          <!-- Pectoral fin (small, mid-body) -->
+          <path d="M52,56 Q44,64 40,60 Q46,58 52,56Z" fill="#5a7a9088"/>
+          <!-- Body — tall disc/oval -->
+          <ellipse cx="70" cy="50" rx="34" ry="30" fill="url(#c1_body)"/>
+          <ellipse cx="70" cy="50" rx="34" ry="30" fill="url(#c1_shimmer)"/>
+          <!-- Subtle mottled texture clipped -->
+          <g clip-path="url(#c1_clip)" opacity="0.1">
+            <circle cx="55" cy="40" r="6" fill="#3a5a70"/>
+            <circle cx="70" cy="36" r="7" fill="#3a5a70"/>
+            <circle cx="85" cy="42" r="5" fill="#3a5a70"/>
+            <circle cx="60" cy="56" r="6" fill="#3a5a70"/>
+            <circle cx="78" cy="58" r="5" fill="#3a5a70"/>
+          </g>
+          <!-- Eye (small, forward) -->
+          <circle cx="46" cy="46" r="4.5" fill="white"/>
+          <circle cx="45" cy="45" r="2.8" fill="#1a1a2a"/>
+          <circle cx="44" cy="44" r="1" fill="white"/>
+          <!-- Mouth -->
+          <path d="M37,52 Q35,54 37,55" fill="none" stroke="#3a5a7066" stroke-width="1.2" stroke-linecap="round"/>
+          <!-- Gill slit -->
+          <path d="M50,42 Q48,48 50,52" fill="none" stroke="#2a4a6044" stroke-width="1"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c1s_body" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7a9ab0"/><stop offset="40%" stop-color="#5a7a90"/><stop offset="100%" stop-color="#3a5a70"/>
+            </linearGradient>
+          </defs>
+          <path d="M80,22 Q86,2 92,20 Q90,22 84,24" fill="#4a6a80" opacity="0.85"/>
+          <path d="M80,78 Q86,98 92,80 Q90,78 84,76" fill="#4a6a80" opacity="0.85"/>
+          <path d="M100,36 Q108,40 110,44 Q112,48 112,50 Q112,52 110,56 Q108,60 100,64" fill="#4a6a80" opacity="0.8"/>
+          <ellipse cx="70" cy="50" rx="34" ry="30" fill="url(#c1s_body)"/>
+          <circle cx="46" cy="46" r="4.5" fill="white"/>
+          <circle cx="45" cy="45" r="2.8" fill="#1a1a2a"/>
+          <circle cx="44" cy="44" r="1" fill="white"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C3: Shad — REWORKED from reference -->
+  <div class="fish-card">
+    <div class="fish-name">Shad <span class="fix-badge green">reworked — deeper body, olive-green back</span></div>
+    <div class="fish-detail">Deep-bodied silver, olive-green back, row of dark shoulder spots, golden jaw</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c2_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6a8060"/>
+              <stop offset="25%" stop-color="#8a9a78"/>
+              <stop offset="50%" stop-color="#b8c4c0"/>
+              <stop offset="100%" stop-color="#d8dce0"/>
+            </linearGradient>
+            <radialGradient id="c2_belly" cx="0.5" cy="0.8" r="0.5">
+              <stop offset="0%" stop-color="#e8ecf022"/><stop offset="100%" stop-color="#e8ecf000"/>
+            </radialGradient>
+            <clipPath id="c2_clip"><path d="M28,50 Q28,32 58,26 Q88,22 112,32 Q132,40 132,50 Q132,60 112,68 Q88,78 58,74 Q28,68 28,50Z"/></clipPath>
+          </defs>
+          <!-- Dorsal — tall, spiny rays -->
+          <path d="M70,28 Q74,14 78,20 Q82,12 86,26" fill="#6a8060" opacity="0.85"/>
+          <line x1="74" y1="16" x2="74" y2="26" stroke="#5a7050" stroke-width="0.5" opacity="0.4"/>
+          <line x1="80" y1="14" x2="80" y2="24" stroke="#5a7050" stroke-width="0.5" opacity="0.4"/>
+          <!-- Anal -->
+          <path d="M92,68 Q98,78 104,70" fill="#8a9a78" opacity="0.7"/>
+          <!-- Pelvic -->
+          <path d="M56,68 Q50,78 44,72 Q50,70 56,68Z" fill="#8a9a7888"/>
+          <!-- Forked tail -->
+          <path d="M128,50 Q142,30 148,24 Q144,42 145,50 Q144,58 148,76 Q142,70 128,50Z" fill="#8a9a78" opacity="0.85"/>
+          <!-- Body — deeper/rounder than before -->
+          <path d="M28,50 Q28,32 58,26 Q88,22 112,32 Q132,40 132,50 Q132,60 112,68 Q88,78 58,74 Q28,68 28,50Z" fill="url(#c2_body)"/>
+          <path d="M28,50 Q28,32 58,26 Q88,22 112,32 Q132,40 132,50 Q132,60 112,68 Q88,78 58,74 Q28,68 28,50Z" fill="url(#c2_belly)"/>
+          <!-- Prominent scale arcs -->
+          <g clip-path="url(#c2_clip)" opacity="0.15">
+            <circle cx="50" cy="38" r="5" fill="none" stroke="#a0b098" stroke-width="0.7"/>
+            <circle cx="62" cy="36" r="5" fill="none" stroke="#a0b098" stroke-width="0.7"/>
+            <circle cx="74" cy="34" r="5" fill="none" stroke="#a0b098" stroke-width="0.7"/>
+            <circle cx="86" cy="36" r="5" fill="none" stroke="#a0b098" stroke-width="0.7"/>
+            <circle cx="98" cy="38" r="5" fill="none" stroke="#a0b098" stroke-width="0.7"/>
+            <circle cx="110" cy="40" r="5" fill="none" stroke="#a0b098" stroke-width="0.7"/>
+            <circle cx="50" cy="48" r="5" fill="none" stroke="#c0c8c4" stroke-width="0.6"/>
+            <circle cx="62" cy="46" r="5" fill="none" stroke="#c0c8c4" stroke-width="0.6"/>
+            <circle cx="74" cy="44" r="5" fill="none" stroke="#c0c8c4" stroke-width="0.6"/>
+            <circle cx="86" cy="46" r="5" fill="none" stroke="#c0c8c4" stroke-width="0.6"/>
+            <circle cx="98" cy="48" r="5" fill="none" stroke="#c0c8c4" stroke-width="0.6"/>
+            <circle cx="110" cy="50" r="5" fill="none" stroke="#c0c8c4" stroke-width="0.6"/>
+            <circle cx="56" cy="58" r="5" fill="none" stroke="#d0d4d0" stroke-width="0.5"/>
+            <circle cx="68" cy="56" r="5" fill="none" stroke="#d0d4d0" stroke-width="0.5"/>
+            <circle cx="80" cy="54" r="5" fill="none" stroke="#d0d4d0" stroke-width="0.5"/>
+            <circle cx="92" cy="56" r="5" fill="none" stroke="#d0d4d0" stroke-width="0.5"/>
+            <circle cx="104" cy="58" r="5" fill="none" stroke="#d0d4d0" stroke-width="0.5"/>
+          </g>
+          <!-- Row of dark shoulder spots -->
+          <g clip-path="url(#c2_clip)">
+            <circle cx="48" cy="44" r="3" fill="#2a3a2a" opacity="0.45"/>
+            <circle cx="56" cy="42" r="2.5" fill="#2a3a2a" opacity="0.35"/>
+            <circle cx="63" cy="41" r="2" fill="#2a3a2a" opacity="0.25"/>
+          </g>
+          <!-- Lateral line -->
+          <g clip-path="url(#c2_clip)"><line x1="40" y1="48" x2="124" y2="46" stroke="#a0b098" stroke-width="0.8" opacity="0.3"/></g>
+          <!-- Golden jaw tint -->
+          <path d="M28,50 Q30,54 34,56 Q32,58 28,56" fill="#c0a860" opacity="0.3"/>
+          <!-- Eye -->
+          <circle cx="36" cy="44" r="4.5" fill="#d0d8c0"/>
+          <circle cx="35" cy="43" r="2.8" fill="#3a4a2a"/>
+          <circle cx="34" cy="42" r="1" fill="white"/>
+          <!-- Mouth -->
+          <path d="M28,50 Q26,52 28,54" fill="none" stroke="#5a6a5044" stroke-width="1.2"/>
+          <!-- Pectoral -->
+          <path d="M44,54 Q38,62 34,58 Q40,56 44,54Z" fill="#8a9a7888"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c2s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6a8060"/><stop offset="25%" stop-color="#8a9a78"/><stop offset="50%" stop-color="#b8c4c0"/><stop offset="100%" stop-color="#d8dce0"/></linearGradient><clipPath id="c2s_clip"><path d="M28,50 Q28,32 58,26 Q88,22 112,32 Q132,40 132,50 Q132,60 112,68 Q88,78 58,74 Q28,68 28,50Z"/></clipPath></defs>
+          <path d="M70,28 Q74,14 78,20 Q82,12 86,26" fill="#6a8060" opacity="0.85"/>
+          <path d="M128,50 Q142,30 148,24 Q144,42 145,50 Q144,58 148,76 Q142,70 128,50Z" fill="#8a9a78" opacity="0.85"/>
+          <path d="M28,50 Q28,32 58,26 Q88,22 112,32 Q132,40 132,50 Q132,60 112,68 Q88,78 58,74 Q28,68 28,50Z" fill="url(#c2s_body)"/>
+          <g clip-path="url(#c2s_clip)"><circle cx="48" cy="44" r="3" fill="#2a3a2a" opacity="0.45"/><circle cx="56" cy="42" r="2.5" fill="#2a3a2a" opacity="0.35"/></g>
+          <circle cx="36" cy="44" r="4.5" fill="#d0d8c0"/><circle cx="35" cy="43" r="2.8" fill="#3a4a2a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C4: Smelt — REWORKED from reference -->
+  <div class="fish-card">
+    <div class="fish-name">Smelt <span class="fix-badge green">reworked — slender, huge eye, warm silver</span></div>
+    <div class="fish-detail">Very slender, pale warm-silver, huge eye, adipose fin (species trademark)</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c3_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c8b8b0"/>
+              <stop offset="40%" stop-color="#d8ccc4"/>
+              <stop offset="100%" stop-color="#e8e0d8"/>
+            </linearGradient>
+            <radialGradient id="c3_shine" cx="0.4" cy="0.35" r="0.4">
+              <stop offset="0%" stop-color="#f0e8e422"/><stop offset="100%" stop-color="#f0e8e400"/>
+            </radialGradient>
+            <clipPath id="c3_clip"><path d="M22,50 Q22,40 50,36 Q80,32 112,40 Q134,46 134,50 Q134,54 112,60 Q80,68 50,64 Q22,60 22,50Z"/></clipPath>
+          </defs>
+          <!-- Dorsal — small, delicate -->
+          <path d="M72,38 Q76,28 80,36" fill="#b8a8a0" opacity="0.75"/>
+          <!-- Adipose fin — species trademark, slightly bigger for visibility -->
+          <ellipse cx="108" cy="42" rx="5" ry="3.5" fill="#c0b0a8" opacity="0.65"/>
+          <!-- Anal — delicate -->
+          <path d="M92,60 Q98,68 104,62" fill="#b8a8a0" opacity="0.65"/>
+          <!-- Pelvic — tiny -->
+          <path d="M58,60 Q54,66 50,62 Q54,60 58,60Z" fill="#b8a8a066"/>
+          <!-- Forked tail — delicate -->
+          <path d="M130,50 Q142,36 146,30 Q142,44 143,50 Q142,56 146,70 Q142,64 130,50Z" fill="#b8a8a0" opacity="0.8"/>
+          <!-- Body — very slender, elongated -->
+          <path d="M22,50 Q22,40 50,36 Q80,32 112,40 Q134,46 134,50 Q134,54 112,60 Q80,68 50,64 Q22,60 22,50Z" fill="url(#c3_body)"/>
+          <path d="M22,50 Q22,40 50,36 Q80,32 112,40 Q134,46 134,50 Q134,54 112,60 Q80,68 50,64 Q22,60 22,50Z" fill="url(#c3_shine)"/>
+          <!-- Subtle scale texture -->
+          <g clip-path="url(#c3_clip)" opacity="0.1">
+            <circle cx="50" cy="46" r="4" fill="none" stroke="#a09088" stroke-width="0.6"/>
+            <circle cx="62" cy="44" r="4" fill="none" stroke="#a09088" stroke-width="0.6"/>
+            <circle cx="74" cy="44" r="4" fill="none" stroke="#a09088" stroke-width="0.6"/>
+            <circle cx="86" cy="46" r="4" fill="none" stroke="#a09088" stroke-width="0.6"/>
+            <circle cx="98" cy="46" r="4" fill="none" stroke="#a09088" stroke-width="0.6"/>
+            <circle cx="110" cy="48" r="4" fill="none" stroke="#a09088" stroke-width="0.6"/>
+            <circle cx="56" cy="54" r="4" fill="none" stroke="#a09088" stroke-width="0.5"/>
+            <circle cx="68" cy="52" r="4" fill="none" stroke="#a09088" stroke-width="0.5"/>
+            <circle cx="80" cy="52" r="4" fill="none" stroke="#a09088" stroke-width="0.5"/>
+            <circle cx="92" cy="54" r="4" fill="none" stroke="#a09088" stroke-width="0.5"/>
+            <circle cx="104" cy="54" r="4" fill="none" stroke="#a09088" stroke-width="0.5"/>
+          </g>
+          <!-- Lateral line — faint -->
+          <g clip-path="url(#c3_clip)"><line x1="36" y1="49" x2="126" y2="48" stroke="#d0c8c0" stroke-width="0.6" opacity="0.3"/></g>
+          <!-- HUGE eye (proportionally larger than Shad) -->
+          <circle cx="30" cy="46" r="6.5" fill="white"/>
+          <circle cx="29" cy="45" r="4.5" fill="#1a2020"/>
+          <circle cx="27.5" cy="44" r="1.8" fill="white"/>
+          <!-- Mouth — small, slightly open -->
+          <path d="M22,50 Q20,52 22,53" fill="none" stroke="#90807044" stroke-width="1"/>
+          <!-- Pectoral — small, delicate -->
+          <path d="M36,54 Q30,60 28,56 Q32,54 36,54Z" fill="#c8b8b066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c3s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c8b8b0"/><stop offset="40%" stop-color="#d8ccc4"/><stop offset="100%" stop-color="#e8e0d8"/></linearGradient></defs>
+          <path d="M72,38 Q76,28 80,36" fill="#b8a8a0" opacity="0.75"/>
+          <ellipse cx="108" cy="42" rx="5" ry="3.5" fill="#c0b0a8" opacity="0.65"/>
+          <path d="M130,50 Q142,36 146,30 Q142,44 143,50 Q142,56 146,70 Q142,64 130,50Z" fill="#b8a8a0" opacity="0.8"/>
+          <path d="M22,50 Q22,40 50,36 Q80,32 112,40 Q134,46 134,50 Q134,54 112,60 Q80,68 50,64 Q22,60 22,50Z" fill="url(#c3s_body)"/>
+          <ellipse cx="108" cy="42" rx="5" ry="3.5" fill="#c0b0a8" opacity="0.65"/>
+          <circle cx="30" cy="46" r="6.5" fill="white"/><circle cx="29" cy="45" r="4.5" fill="#1a2020"/>
+          <circle cx="27.5" cy="44" r="1.8" fill="white"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C5: Crappie -->
+  <div class="fish-card">
+    <div class="fish-name">Crappie <span class="fix-badge green">fins hugging body</span></div>
+    <div class="fish-detail">Deep speckled body (17 speckles), jagged spiny dorsal, red eye</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c4_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#b8c8b8"/><stop offset="50%" stop-color="#8a9a88"/><stop offset="100%" stop-color="#607060"/>
+            </linearGradient>
+            <clipPath id="c4_clip"><ellipse cx="75" cy="50" rx="36" ry="28"/></clipPath>
+          </defs>
+          <!-- Jagged spiny dorsal — lowered to hug body -->
+          <path d="M56,26 L59,16 L62,24 L65,14 L68,22 L71,12 L74,20 L77,14 L80,22 L83,16 L86,24 L89,18 L92,26 L95,24" fill="#708068" opacity="0.85"/>
+          <path d="M56,26 Q76,28 95,24" fill="#8a9a88"/>
+          <!-- Anal — raised -->
+          <path d="M68,74 L72,82 L76,76 L80,84 L84,76" fill="#708068" opacity="0.75"/>
+          <!-- Tail -->
+          <path d="M108,50 Q124,32 130,26 Q126,44 127,50 Q126,56 130,74 Q124,68 108,50Z" fill="#708068" opacity="0.85"/>
+          <path d="M58,72 Q52,80 48,76 Q53,74 58,72Z" fill="#70806866"/>
+          <!-- Body -->
+          <ellipse cx="75" cy="50" rx="36" ry="28" fill="url(#c4_body)"/>
+          <!-- 17 Speckles -->
+          <g clip-path="url(#c4_clip)" opacity="0.5">
+            <circle cx="50" cy="38" r="1.8" fill="#2a3a2a"/><circle cx="58" cy="42" r="1.5" fill="#2a3a2a"/>
+            <circle cx="66" cy="36" r="2" fill="#2a3a2a"/><circle cx="74" cy="40" r="1.6" fill="#2a3a2a"/>
+            <circle cx="82" cy="38" r="1.8" fill="#2a3a2a"/><circle cx="90" cy="42" r="1.5" fill="#2a3a2a"/>
+            <circle cx="96" cy="46" r="1.7" fill="#2a3a2a"/><circle cx="52" cy="50" r="1.6" fill="#2a3a2a"/>
+            <circle cx="62" cy="48" r="2" fill="#2a3a2a"/><circle cx="72" cy="52" r="1.5" fill="#2a3a2a"/>
+            <circle cx="82" cy="50" r="1.8" fill="#2a3a2a"/><circle cx="92" cy="54" r="1.5" fill="#2a3a2a"/>
+            <circle cx="56" cy="58" r="1.7" fill="#2a3a2a"/><circle cx="66" cy="60" r="1.5" fill="#2a3a2a"/>
+            <circle cx="76" cy="62" r="1.8" fill="#2a3a2a"/><circle cx="86" cy="58" r="1.6" fill="#2a3a2a"/>
+            <circle cx="98" cy="56" r="1.4" fill="#2a3a2a"/>
+          </g>
+          <circle cx="48" cy="44" r="5" fill="#cc2222"/><circle cx="47" cy="43" r="3" fill="#1a1a1a"/><circle cx="46" cy="42" r="1.2" fill="white"/>
+          <path d="M40,52 Q38,54 40,55" fill="none" stroke="#50605044" stroke-width="1.2"/>
+          <path d="M54,56 Q46,64 42,60 Q48,58 54,56Z" fill="#8a9a8888"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c4s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b8c8b8"/><stop offset="50%" stop-color="#8a9a88"/><stop offset="100%" stop-color="#607060"/></linearGradient><clipPath id="c4s_clip"><ellipse cx="75" cy="50" rx="36" ry="28"/></clipPath></defs>
+          <path d="M56,26 L59,16 L62,24 L65,14 L68,22 L71,12 L74,20 L77,14 L80,22 L83,16 L86,24 L89,18 L92,26 L95,24" fill="#708068" opacity="0.85"/>
+          <path d="M56,26 Q76,28 95,24" fill="#8a9a88"/>
+          <path d="M108,50 Q124,32 130,26 Q126,44 127,50 Q126,56 130,74 Q124,68 108,50Z" fill="#708068" opacity="0.85"/>
+          <ellipse cx="75" cy="50" rx="36" ry="28" fill="url(#c4s_body)"/>
+          <g clip-path="url(#c4s_clip)" opacity="0.5"><circle cx="66" cy="36" r="2" fill="#2a3a2a"/><circle cx="74" cy="40" r="1.6" fill="#2a3a2a"/><circle cx="82" cy="50" r="1.8" fill="#2a3a2a"/><circle cx="62" cy="48" r="2" fill="#2a3a2a"/><circle cx="72" cy="52" r="1.5" fill="#2a3a2a"/></g>
+          <circle cx="48" cy="44" r="5" fill="#cc2222"/><circle cx="47" cy="43" r="3" fill="#1a1a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C6: Goby -->
+  <div class="fish-card">
+    <div class="fish-name">Goby <span class="fix-badge green">twins evened, anal raised</span></div>
+    <div class="fish-detail">Warm amber (NOT gray), oversized eyes, twin dorsals, suction belly</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c5_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d4a050"/><stop offset="50%" stop-color="#c08838"/><stop offset="100%" stop-color="#906828"/>
+            </linearGradient>
+            <clipPath id="c5_clip"><path d="M28,48 Q28,36 50,32 Q80,28 105,36 Q124,42 124,50 Q124,58 105,64 Q80,72 50,68 Q28,64 28,54Z"/></clipPath>
+          </defs>
+          <!-- Twin dorsals — even height, both hugging body -->
+          <path d="M56,34 Q62,24 68,34" fill="#b07828" opacity="0.8"/>
+          <path d="M80,34 Q86,24 92,34" fill="#b07828" opacity="0.8"/>
+          <!-- Anal — raised to hug body -->
+          <path d="M86,64 Q92,72 98,66" fill="#b07828" opacity="0.7"/>
+          <!-- Rounded tail -->
+          <path d="M120,50 Q132,36 136,32 Q134,44 135,50 Q134,56 136,68 Q132,64 120,50Z" fill="#b07828" opacity="0.8"/>
+          <!-- Body -->
+          <path d="M28,48 Q28,36 50,32 Q80,28 105,36 Q124,42 124,50 Q124,58 105,64 Q80,72 50,68 Q28,64 28,54Z" fill="url(#c5_body)"/>
+          <g clip-path="url(#c5_clip)" opacity="0.2">
+            <rect x="48" y="30" width="6" height="40" fill="#805020" rx="2"/>
+            <rect x="62" y="28" width="6" height="44" fill="#805020" rx="2"/>
+            <rect x="76" y="28" width="6" height="44" fill="#805020" rx="2"/>
+            <rect x="90" y="30" width="6" height="40" fill="#805020" rx="2"/>
+            <rect x="104" y="32" width="6" height="36" fill="#805020" rx="2"/>
+          </g>
+          <ellipse cx="72" cy="62" rx="18" ry="4" fill="#d0a06022"/>
+          <circle cx="36" cy="42" r="7" fill="white"/><circle cx="35" cy="41" r="4.5" fill="#2a2200"/><circle cx="33.5" cy="40" r="1.8" fill="white"/>
+          <path d="M28,50 Q26,52 28,53" fill="none" stroke="#80602844" stroke-width="1.2"/>
+          <ellipse cx="44" cy="58" rx="8" ry="5" fill="#c0883888" transform="rotate(-15,44,58)"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c5s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d4a050"/><stop offset="50%" stop-color="#c08838"/><stop offset="100%" stop-color="#906828"/></linearGradient></defs>
+          <path d="M56,34 Q62,24 68,34" fill="#b07828" opacity="0.8"/>
+          <path d="M80,34 Q86,24 92,34" fill="#b07828" opacity="0.8"/>
+          <path d="M120,50 Q132,36 136,32 Q134,44 135,50 Q134,56 136,68 Q132,64 120,50Z" fill="#b07828" opacity="0.8"/>
+          <path d="M28,48 Q28,36 50,32 Q80,28 105,36 Q124,42 124,50 Q124,58 105,64 Q80,72 50,68 Q28,64 28,54Z" fill="url(#c5s_body)"/>
+          <circle cx="36" cy="42" r="7" fill="white"/><circle cx="35" cy="41" r="4.5" fill="#2a2200"/><circle cx="33.5" cy="40" r="1.8" fill="white"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C7: Bream -->
+  <div class="fish-card">
+    <div class="fish-name">Bream <span class="fix-badge green">dorsal lowered</span></div>
+    <div class="fish-detail">Bronze-gold shimmer, deep body, red-tinged pelvic fins</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c6_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c8a848"/><stop offset="50%" stop-color="#a88830"/><stop offset="100%" stop-color="#806820"/>
+            </linearGradient>
+            <radialGradient id="c6_shine" cx="0.4" cy="0.3" r="0.45">
+              <stop offset="0%" stop-color="#ffe08833"/><stop offset="100%" stop-color="#ffe08800"/>
+            </radialGradient>
+            <clipPath id="c6_clip"><ellipse cx="75" cy="50" rx="36" ry="30"/></clipPath>
+          </defs>
+          <!-- Dorsal — lowered to hug body -->
+          <path d="M58,24 Q66,12 76,18 Q84,14 92,24" fill="#a07828" opacity="0.8"/>
+          <!-- Anal — centered, hugging body -->
+          <path d="M66,76 Q75,86 84,76" fill="#a07828" opacity="0.75"/>
+          <!-- Tail -->
+          <path d="M108,50 Q126,30 132,24 Q128,42 129,50 Q128,58 132,76 Q126,70 108,50Z" fill="#a07828" opacity="0.85"/>
+          <path d="M56,74 Q50,84 44,78 Q50,76 56,74Z" fill="#cc665588"/>
+          <!-- Body -->
+          <ellipse cx="75" cy="50" rx="36" ry="30" fill="url(#c6_body)"/>
+          <ellipse cx="75" cy="50" rx="36" ry="30" fill="url(#c6_shine)"/>
+          <g clip-path="url(#c6_clip)" opacity="0.18">
+            <circle cx="55" cy="40" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="65" cy="38" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="75" cy="40" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="85" cy="42" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="55" cy="50" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="65" cy="48" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="75" cy="50" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+            <circle cx="85" cy="52" r="5.5" fill="none" stroke="#ffe088" stroke-width="0.6"/>
+          </g>
+          <circle cx="50" cy="44" r="5" fill="white"/><circle cx="49" cy="43" r="3" fill="#2a2200"/><circle cx="48" cy="42" r="1.2" fill="white"/>
+          <path d="M40,52 Q38,55 40,56" fill="none" stroke="#70580044" stroke-width="1.2"/>
+          <path d="M56,56 Q48,64 44,60 Q50,58 56,56Z" fill="#a0882888"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c6s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c8a848"/><stop offset="50%" stop-color="#a88830"/><stop offset="100%" stop-color="#806820"/></linearGradient></defs>
+          <path d="M58,24 Q66,12 76,18 Q84,14 92,24" fill="#a07828" opacity="0.8"/>
+          <path d="M108,50 Q126,30 132,24 Q128,42 129,50 Q128,58 132,76 Q126,70 108,50Z" fill="#a07828" opacity="0.85"/>
+          <path d="M56,74 Q50,84 44,78 Q50,76 56,74Z" fill="#cc665588"/>
+          <ellipse cx="75" cy="50" rx="36" ry="30" fill="url(#c6s_body)"/>
+          <circle cx="50" cy="44" r="5" fill="white"/><circle cx="49" cy="43" r="3" fill="#2a2200"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C8: Minnow -->
+  <div class="fish-card">
+    <div class="fish-name">Minnow <span class="fix-badge green">fins hugging body</span></div>
+    <div class="fish-detail">Blue-green (NOT gray), big eyes, shimmery teal lateral stripe</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c7_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a9090"/><stop offset="50%" stop-color="#387878"/><stop offset="100%" stop-color="#286060"/>
+            </linearGradient>
+            <linearGradient id="c7_stripe" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#44ddcc00"/><stop offset="20%" stop-color="#44ddccaa"/><stop offset="80%" stop-color="#44ddccaa"/><stop offset="100%" stop-color="#44ddcc00"/>
+            </linearGradient>
+            <clipPath id="c7_clip"><path d="M26,50 Q26,38 52,34 Q78,30 104,38 Q122,44 122,50 Q122,56 104,62 Q78,70 52,66 Q26,62 26,50Z"/></clipPath>
+          </defs>
+          <!-- Dorsal — rear lowered -->
+          <path d="M66,36 Q72,24 78,34" fill="#2a6868" opacity="0.8"/>
+          <!-- Anal — rear raised -->
+          <path d="M82,64 Q88,74 94,66" fill="#2a6868" opacity="0.7"/>
+          <!-- Forked tail -->
+          <path d="M118,50 Q132,34 136,28 Q132,44 133,50 Q132,56 136,72 Q132,66 118,50Z" fill="#2a6868" opacity="0.85"/>
+          <!-- Body -->
+          <path d="M26,50 Q26,38 52,34 Q78,30 104,38 Q122,44 122,50 Q122,56 104,62 Q78,70 52,66 Q26,62 26,50Z" fill="url(#c7_body)"/>
+          <g clip-path="url(#c7_clip)"><rect x="30" y="47" width="90" height="4" fill="url(#c7_stripe)" rx="2"/></g>
+          <circle cx="34" cy="44" r="6" fill="white"/><circle cx="33" cy="43" r="4" fill="#1a2a2a"/><circle cx="31.5" cy="42" r="1.5" fill="white"/>
+          <path d="M26,50 Q24,52 26,53" fill="none" stroke="#20505044" stroke-width="1"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c7s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4a9090"/><stop offset="50%" stop-color="#387878"/><stop offset="100%" stop-color="#286060"/></linearGradient><linearGradient id="c7s_stripe" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#44ddcc00"/><stop offset="20%" stop-color="#44ddccaa"/><stop offset="80%" stop-color="#44ddccaa"/><stop offset="100%" stop-color="#44ddcc00"/></linearGradient><clipPath id="c7s_clip"><path d="M26,50 Q26,38 52,34 Q78,30 104,38 Q122,44 122,50 Q122,56 104,62 Q78,70 52,66 Q26,62 26,50Z"/></clipPath></defs>
+          <path d="M66,36 Q72,24 78,34" fill="#2a6868" opacity="0.8"/>
+          <path d="M118,50 Q132,34 136,28 Q132,44 133,50 Q132,56 136,72 Q132,66 118,50Z" fill="#2a6868" opacity="0.85"/>
+          <path d="M26,50 Q26,38 52,34 Q78,30 104,38 Q122,44 122,50 Q122,56 104,62 Q78,70 52,66 Q26,62 26,50Z" fill="url(#c7s_body)"/>
+          <g clip-path="url(#c7s_clip)"><rect x="30" y="47" width="90" height="4" fill="url(#c7s_stripe)" rx="2"/></g>
+          <circle cx="34" cy="44" r="6" fill="white"/><circle cx="33" cy="43" r="4" fill="#1a2a2a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C9: Blue Chromis -->
+  <div class="fish-card">
+    <div class="fish-name">Blue Chromis <span class="fix-badge green">dorsal lowered</span></div>
+    <div class="fish-detail">Electric neon blue with glow, deeply forked tail</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c8_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#22aaff"/><stop offset="50%" stop-color="#0088ee"/><stop offset="100%" stop-color="#0066bb"/>
+            </linearGradient>
+            <radialGradient id="c8_glow" cx="0.5" cy="0.5" r="0.6">
+              <stop offset="0%" stop-color="#44ccff33"/><stop offset="100%" stop-color="#44ccff00"/>
+            </radialGradient>
+            <clipPath id="c8_clip"><ellipse cx="72" cy="50" rx="34" ry="24"/></clipPath>
+          </defs>
+          <ellipse cx="72" cy="50" rx="44" ry="34" fill="url(#c8_glow)"/>
+          <!-- Dorsal — lowered to hug body -->
+          <path d="M54,30 Q62,18 70,24 Q78,18 86,28" fill="#0088dd" opacity="0.85"/>
+          <!-- Anal -->
+          <path d="M62,70 Q70,80 78,72" fill="#0088dd" opacity="0.75"/>
+          <!-- Deeply forked tail -->
+          <path d="M104,50 Q120,26 128,18 Q122,40 124,48" fill="#0088dd" opacity="0.85"/>
+          <path d="M104,50 Q120,74 128,82 Q122,60 124,52" fill="#0088dd" opacity="0.85"/>
+          <path d="M56,68 Q50,76 46,72 Q50,70 56,68Z" fill="#0088dd66"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="34" ry="24" fill="url(#c8_body)"/>
+          <g clip-path="url(#c8_clip)" opacity="0.25">
+            <line x1="44" y1="42" x2="98" y2="40" stroke="#88ddff" stroke-width="1.5"/>
+            <line x1="44" y1="50" x2="100" y2="48" stroke="#66ccff" stroke-width="1"/>
+          </g>
+          <circle cx="48" cy="46" r="5" fill="white"/><circle cx="47" cy="45" r="3" fill="#001a44"/><circle cx="46" cy="44" r="1.2" fill="white"/>
+          <path d="M39,52 Q37,54 39,55" fill="none" stroke="#005599" stroke-width="1"/>
+          <path d="M54,56 Q46,62 44,58 Q50,56 54,56Z" fill="#0088dd66"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c8s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22aaff"/><stop offset="50%" stop-color="#0088ee"/><stop offset="100%" stop-color="#0066bb"/></linearGradient><radialGradient id="c8s_glow" cx="0.5" cy="0.5" r="0.6"><stop offset="0%" stop-color="#44ccff33"/><stop offset="100%" stop-color="#44ccff00"/></radialGradient></defs>
+          <ellipse cx="72" cy="50" rx="44" ry="34" fill="url(#c8s_glow)"/>
+          <path d="M54,30 Q62,18 70,24 Q78,18 86,28" fill="#0088dd" opacity="0.85"/>
+          <path d="M104,50 Q120,26 128,18 Q122,40 124,48" fill="#0088dd" opacity="0.85"/>
+          <path d="M104,50 Q120,74 128,82 Q122,60 124,52" fill="#0088dd" opacity="0.85"/>
+          <ellipse cx="72" cy="50" rx="34" ry="24" fill="url(#c8s_body)"/>
+          <circle cx="48" cy="46" r="5" fill="white"/><circle cx="47" cy="45" r="3" fill="#001a44"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C10: Damselfish -->
+  <div class="fish-card">
+    <div class="fish-name">Damselfish <span class="fix-badge green">dorsal lowered</span></div>
+    <div class="fish-detail">Fiery yellow-orange, blue accent dots, black pectoral spot</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="c9_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffbb22"/><stop offset="50%" stop-color="#ff9900"/><stop offset="100%" stop-color="#dd7700"/>
+            </linearGradient>
+            <clipPath id="c9_clip"><ellipse cx="72" cy="50" rx="32" ry="26"/></clipPath>
+          </defs>
+          <!-- Dorsal — rear lowered to body line -->
+          <path d="M54,28 Q60,16 68,22 Q74,14 82,22 Q88,22 94,32" fill="#dd8800" opacity="0.85"/>
+          <!-- Anal -->
+          <path d="M62,72 Q70,84 80,74" fill="#dd8800" opacity="0.75"/>
+          <!-- Tail -->
+          <path d="M102,50 Q118,32 124,26 Q120,44 121,50 Q120,56 124,74 Q118,68 102,50Z" fill="#dd8800" opacity="0.85"/>
+          <path d="M56,70 Q50,78 46,74 Q50,72 56,70Z" fill="#dd880066"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="32" ry="26" fill="url(#c9_body)"/>
+          <g clip-path="url(#c9_clip)" opacity="0.6">
+            <circle cx="54" cy="40" r="1.5" fill="#4488ff"/><circle cx="62" cy="36" r="1.3" fill="#4488ff"/>
+            <circle cx="70" cy="38" r="1.5" fill="#4488ff"/><circle cx="78" cy="40" r="1.3" fill="#4488ff"/>
+            <circle cx="86" cy="42" r="1.2" fill="#4488ff"/><circle cx="58" cy="48" r="1.4" fill="#4488ff"/>
+            <circle cx="66" cy="46" r="1.3" fill="#4488ff"/><circle cx="74" cy="48" r="1.5" fill="#4488ff"/>
+            <circle cx="82" cy="50" r="1.2" fill="#4488ff"/>
+          </g>
+          <circle cx="54" cy="52" r="4" fill="#1a1a1a" opacity="0.6"/>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#1a2200"/><circle cx="46" cy="42" r="1.2" fill="white"/>
+          <path d="M41,52 Q39,54 41,55" fill="none" stroke="#aa660044" stroke-width="1"/>
+          <path d="M56,56 Q48,64 44,60 Q50,58 56,56Z" fill="#dd880066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="c9s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffbb22"/><stop offset="50%" stop-color="#ff9900"/><stop offset="100%" stop-color="#dd7700"/></linearGradient><clipPath id="c9s_clip"><ellipse cx="72" cy="50" rx="32" ry="26"/></clipPath></defs>
+          <path d="M54,28 Q60,16 68,22 Q74,14 82,22 Q88,22 94,32" fill="#dd8800" opacity="0.85"/>
+          <path d="M102,50 Q118,32 124,26 Q120,44 121,50 Q120,56 124,74 Q118,68 102,50Z" fill="#dd8800" opacity="0.85"/>
+          <ellipse cx="72" cy="50" rx="32" ry="26" fill="url(#c9s_body)"/>
+          <g clip-path="url(#c9s_clip)" opacity="0.6"><circle cx="62" cy="36" r="1.3" fill="#4488ff"/><circle cx="70" cy="38" r="1.5" fill="#4488ff"/><circle cx="78" cy="40" r="1.3" fill="#4488ff"/><circle cx="66" cy="46" r="1.3" fill="#4488ff"/><circle cx="74" cy="48" r="1.5" fill="#4488ff"/></g>
+          <circle cx="54" cy="52" r="4" fill="#1a1a1a" opacity="0.6"/>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#1a2200"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== UNCOMMON TIER ==================== -->
+<div class="tier-header tier-uncommon">⬤ Uncommon (11 fish)</div>
+
+<div class="fish-grid">
+
+  <!-- U1: Cichlid -->
+  <div class="fish-card">
+    <div class="fish-name">Cichlid <span class="fix-badge green">dorsal lowered, egg spots removed</span></div>
+    <div class="fish-detail">Red-orange, 5 iridescent bars, blue lips</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u0_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e86030"/><stop offset="50%" stop-color="#cc4420"/><stop offset="100%" stop-color="#993318"/>
+            </linearGradient>
+            <clipPath id="u0_clip"><ellipse cx="75" cy="50" rx="36" ry="26"/></clipPath>
+          </defs>
+          <!-- Dorsal — front lowered to body line -->
+          <path d="M50,32 Q54,18 60,24 Q64,18 70,22 Q74,16 80,20 Q84,18 88,24 Q92,20 96,28" fill="#cc3818" opacity="0.85"/>
+          <!-- Anal — no egg spots -->
+          <path d="M64,72 Q72,84 84,74" fill="#cc3818" opacity="0.8"/>
+          <!-- Tail -->
+          <path d="M108,50 Q124,32 130,26 Q126,44 127,50 Q126,56 130,74 Q124,68 108,50Z" fill="#cc3818" opacity="0.85"/>
+          <path d="M56,70 Q50,78 46,74 Q50,72 56,70Z" fill="#cc381866"/>
+          <!-- Body -->
+          <ellipse cx="75" cy="50" rx="36" ry="26" fill="url(#u0_body)"/>
+          <g clip-path="url(#u0_clip)" opacity="0.25">
+            <rect x="50" y="28" width="5" height="44" fill="#88ccff" rx="2"/>
+            <rect x="62" y="26" width="5" height="48" fill="#88ccff" rx="2"/>
+            <rect x="74" y="26" width="5" height="48" fill="#88ccff" rx="2"/>
+            <rect x="86" y="28" width="5" height="44" fill="#88ccff" rx="2"/>
+            <rect x="98" y="32" width="5" height="36" fill="#88ccff" rx="2"/>
+          </g>
+          <path d="M40,50 Q36,48 34,50 Q36,52 40,52" fill="#4488cc" opacity="0.7"/>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#2a1100"/><circle cx="46" cy="42" r="1.2" fill="white"/>
+          <path d="M54,56 Q46,64 42,60 Q48,58 54,56Z" fill="#cc442088"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u0s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e86030"/><stop offset="50%" stop-color="#cc4420"/><stop offset="100%" stop-color="#993318"/></linearGradient><clipPath id="u0s_clip"><ellipse cx="75" cy="50" rx="36" ry="26"/></clipPath></defs>
+          <path d="M50,32 Q54,18 60,24 Q64,18 70,22 Q74,16 80,20 Q84,18 88,24 Q92,20 96,28" fill="#cc3818" opacity="0.85"/>
+          <path d="M108,50 Q124,32 130,26 Q126,44 127,50 Q126,56 130,74 Q124,68 108,50Z" fill="#cc3818" opacity="0.85"/>
+          <ellipse cx="75" cy="50" rx="36" ry="26" fill="url(#u0s_body)"/>
+          <g clip-path="url(#u0s_clip)" opacity="0.25"><rect x="50" y="28" width="5" height="44" fill="#88ccff" rx="2"/><rect x="62" y="26" width="5" height="48" fill="#88ccff" rx="2"/><rect x="74" y="26" width="5" height="48" fill="#88ccff" rx="2"/><rect x="86" y="28" width="5" height="44" fill="#88ccff" rx="2"/><rect x="98" y="32" width="5" height="36" fill="#88ccff" rx="2"/></g>
+          <path d="M40,50 Q36,48 34,50 Q36,52 40,52" fill="#4488cc" opacity="0.7"/>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#2a1100"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U2: Gourami -->
+  <div class="fish-card">
+    <div class="fish-name">Gourami <span class="fix-badge green">dorsal lowered</span></div>
+    <div class="fish-detail">Blue-to-purple gradient, 17 pearl spots, thread pelvic feelers</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u1_body" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#5588cc"/><stop offset="50%" stop-color="#6666bb"/><stop offset="100%" stop-color="#7744aa"/>
+            </linearGradient>
+            <clipPath id="u1_clip"><ellipse cx="75" cy="50" rx="36" ry="28"/></clipPath>
+          </defs>
+          <!-- Dorsal — lowered to hug body -->
+          <path d="M60,26 Q68,14 78,22 Q86,16 94,26" fill="#5566aa" opacity="0.85"/>
+          <!-- Anal — long -->
+          <path d="M52,72 Q60,86 70,82 Q80,88 90,74 Q95,72 98,70" fill="#5566aa" opacity="0.75"/>
+          <!-- Tail -->
+          <path d="M108,50 Q122,34 128,30 Q124,44 125,50 Q124,56 128,70 Q122,66 108,50Z" fill="#5566aa" opacity="0.85"/>
+          <!-- Thread pelvic feelers -->
+          <line x1="56" y1="66" x2="44" y2="90" stroke="#8888cc" stroke-width="1.2" opacity="0.7"/>
+          <line x1="60" y1="66" x2="50" y2="92" stroke="#8888cc" stroke-width="1.2" opacity="0.7"/>
+          <!-- Body -->
+          <ellipse cx="75" cy="50" rx="36" ry="28" fill="url(#u1_body)"/>
+          <g clip-path="url(#u1_clip)" opacity="0.4">
+            <circle cx="48" cy="38" r="2" fill="#ddeeff"/><circle cx="58" cy="36" r="2" fill="#ddeeff"/>
+            <circle cx="68" cy="34" r="2" fill="#ddeeff"/><circle cx="78" cy="36" r="2" fill="#ddeeff"/>
+            <circle cx="88" cy="38" r="2" fill="#ddeeff"/><circle cx="98" cy="40" r="2" fill="#ddeeff"/>
+            <circle cx="48" cy="48" r="2" fill="#ddeeff"/><circle cx="58" cy="46" r="2" fill="#ddeeff"/>
+            <circle cx="68" cy="44" r="2" fill="#ddeeff"/><circle cx="78" cy="46" r="2" fill="#ddeeff"/>
+            <circle cx="88" cy="48" r="2" fill="#ddeeff"/><circle cx="98" cy="50" r="2" fill="#ddeeff"/>
+            <circle cx="52" cy="58" r="2" fill="#ddeeff"/><circle cx="62" cy="56" r="2" fill="#ddeeff"/>
+            <circle cx="72" cy="54" r="2" fill="#ddeeff"/><circle cx="82" cy="56" r="2" fill="#ddeeff"/>
+            <circle cx="92" cy="58" r="2" fill="#ddeeff"/>
+          </g>
+          <circle cx="50" cy="44" r="5" fill="white"/><circle cx="49" cy="43" r="3" fill="#1a1a2a"/><circle cx="48" cy="42" r="1.2" fill="white"/>
+          <path d="M40,52 Q38,54 40,55" fill="none" stroke="#44449944" stroke-width="1"/>
+          <path d="M56,56 Q48,64 44,60 Q50,58 56,56Z" fill="#6666bb66"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u1s_body" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5588cc"/><stop offset="50%" stop-color="#6666bb"/><stop offset="100%" stop-color="#7744aa"/></linearGradient><clipPath id="u1s_clip"><ellipse cx="75" cy="50" rx="36" ry="28"/></clipPath></defs>
+          <path d="M60,26 Q68,14 78,22 Q86,16 94,26" fill="#5566aa" opacity="0.85"/>
+          <path d="M108,50 Q122,34 128,30 Q124,44 125,50 Q124,56 128,70 Q122,66 108,50Z" fill="#5566aa" opacity="0.85"/>
+          <line x1="56" y1="66" x2="44" y2="90" stroke="#8888cc" stroke-width="1.2" opacity="0.7"/>
+          <line x1="60" y1="66" x2="50" y2="92" stroke="#8888cc" stroke-width="1.2" opacity="0.7"/>
+          <ellipse cx="75" cy="50" rx="36" ry="28" fill="url(#u1s_body)"/>
+          <g clip-path="url(#u1s_clip)" opacity="0.4"><circle cx="58" cy="36" r="2" fill="#ddeeff"/><circle cx="68" cy="34" r="2" fill="#ddeeff"/><circle cx="78" cy="36" r="2" fill="#ddeeff"/><circle cx="88" cy="38" r="2" fill="#ddeeff"/><circle cx="58" cy="46" r="2" fill="#ddeeff"/><circle cx="68" cy="44" r="2" fill="#ddeeff"/><circle cx="78" cy="46" r="2" fill="#ddeeff"/><circle cx="88" cy="48" r="2" fill="#ddeeff"/></g>
+          <circle cx="50" cy="44" r="5" fill="white"/><circle cx="49" cy="43" r="3" fill="#1a1a2a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U3: Cod -->
+  <div class="fish-card">
+    <div class="fish-name">Cod <span class="fix-badge green">all fins hugging body</span></div>
+    <div class="fish-detail">Chunky, 3 dorsal fins, chin barbel, mottled spots</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u2_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#8a9a6a"/><stop offset="50%" stop-color="#6a7a50"/><stop offset="100%" stop-color="#4a5a38"/>
+            </linearGradient>
+            <clipPath id="u2_clip"><path d="M26,50 Q26,34 55,30 Q85,26 110,34 Q130,42 130,50 Q130,58 110,66 Q85,74 55,70 Q26,66 26,50Z"/></clipPath>
+          </defs>
+          <!-- 3 Dorsals — all lowered to hug body -->
+          <path d="M44,34 Q50,22 58,32" fill="#5a6a40" opacity="0.8"/>
+          <path d="M66,32 Q72,20 80,30" fill="#5a6a40" opacity="0.8"/>
+          <path d="M88,34 Q94,22 102,32" fill="#5a6a40" opacity="0.8"/>
+          <!-- Anal fins — raised -->
+          <path d="M72,66 Q78,76 86,68" fill="#5a6a40" opacity="0.7"/>
+          <path d="M92,66 Q98,74 106,68" fill="#5a6a40" opacity="0.7"/>
+          <!-- Tail -->
+          <path d="M126,50 Q140,32 146,26 Q142,44 143,50 Q142,56 146,74 Q140,68 126,50Z" fill="#5a6a40" opacity="0.85"/>
+          <!-- Body -->
+          <path d="M26,50 Q26,34 55,30 Q85,26 110,34 Q130,42 130,50 Q130,58 110,66 Q85,74 55,70 Q26,66 26,50Z" fill="url(#u2_body)"/>
+          <g clip-path="url(#u2_clip)" opacity="0.3">
+            <circle cx="50" cy="40" r="3" fill="#3a4a28"/><circle cx="65" cy="38" r="4" fill="#3a4a28"/>
+            <circle cx="80" cy="42" r="3.5" fill="#3a4a28"/><circle cx="95" cy="40" r="3" fill="#3a4a28"/>
+            <circle cx="110" cy="44" r="2.5" fill="#3a4a28"/><circle cx="58" cy="52" r="3" fill="#3a4a28"/>
+            <circle cx="72" cy="54" r="3.5" fill="#3a4a28"/><circle cx="88" cy="52" r="3" fill="#3a4a28"/>
+            <circle cx="102" cy="56" r="2.5" fill="#3a4a28"/>
+          </g>
+          <g clip-path="url(#u2_clip)"><line x1="38" y1="48" x2="122" y2="46" stroke="#a0b080" stroke-width="0.8" opacity="0.3"/></g>
+          <line x1="30" y1="56" x2="28" y2="64" stroke="#6a7a50" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="28" cy="65" r="1.5" fill="#6a7a50"/>
+          <circle cx="36" cy="44" r="5" fill="white"/><circle cx="35" cy="43" r="3" fill="#1a2a0a"/><circle cx="34" cy="42" r="1.2" fill="white"/>
+          <path d="M26,52 Q24,54 26,56" fill="none" stroke="#4a5a3844" stroke-width="1.2"/>
+          <path d="M42,56 Q34,64 30,60 Q36,58 42,56Z" fill="#6a7a5088"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u2s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8a9a6a"/><stop offset="50%" stop-color="#6a7a50"/><stop offset="100%" stop-color="#4a5a38"/></linearGradient></defs>
+          <path d="M44,34 Q50,22 58,32" fill="#5a6a40" opacity="0.8"/>
+          <path d="M66,32 Q72,20 80,30" fill="#5a6a40" opacity="0.8"/>
+          <path d="M88,34 Q94,22 102,32" fill="#5a6a40" opacity="0.8"/>
+          <path d="M126,50 Q140,32 146,26 Q142,44 143,50 Q142,56 146,74 Q140,68 126,50Z" fill="#5a6a40" opacity="0.85"/>
+          <path d="M26,50 Q26,34 55,30 Q85,26 110,34 Q130,42 130,50 Q130,58 110,66 Q85,74 55,70 Q26,66 26,50Z" fill="url(#u2s_body)"/>
+          <line x1="30" y1="56" x2="28" y2="64" stroke="#6a7a50" stroke-width="1.5" stroke-linecap="round"/><circle cx="28" cy="65" r="1.5" fill="#6a7a50"/>
+          <circle cx="36" cy="44" r="5" fill="white"/><circle cx="35" cy="43" r="3" fill="#1a2a0a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U4: Crawfish — REWORKED -->
+  <div class="fish-card">
+    <div class="fish-name">Crawfish <span class="fix-badge">tail closed, claws redesigned</span></div>
+    <div class="fish-detail">Full crustacean — segmented body, snapping claws, stalked eyes, legs</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u3_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#cc4422"/><stop offset="50%" stop-color="#aa3318"/><stop offset="100%" stop-color="#882210"/>
+            </linearGradient>
+          </defs>
+          <!-- Fan tail — flush with body -->
+          <ellipse cx="120" cy="50" rx="10" ry="14" fill="#aa3318" opacity="0.8"/>
+          <path d="M116,38 Q124,34 128,38 Q126,42 120,40Z" fill="#993020" opacity="0.7"/>
+          <path d="M116,62 Q124,66 128,62 Q126,58 120,60Z" fill="#993020" opacity="0.7"/>
+          <!-- Segments — tight, no gaps -->
+          <rect x="100" y="42" width="12" height="16" rx="3" fill="#993020"/>
+          <rect x="88" y="40" width="14" height="20" rx="3" fill="#aa3318"/>
+          <rect x="74" y="38" width="16" height="24" rx="4" fill="#bb3818"/>
+          <!-- Walking legs -->
+          <line x1="80" y1="62" x2="74" y2="74" stroke="#993020" stroke-width="1.5"/>
+          <line x1="86" y1="60" x2="82" y2="72" stroke="#993020" stroke-width="1.5"/>
+          <line x1="92" y1="60" x2="90" y2="72" stroke="#993020" stroke-width="1.5"/>
+          <line x1="98" y1="58" x2="98" y2="70" stroke="#993020" stroke-width="1.5"/>
+          <!-- Carapace -->
+          <ellipse cx="56" cy="50" rx="26" ry="18" fill="url(#u3_body)"/>
+          <!-- Segment lines -->
+          <line x1="112" y1="42" x2="112" y2="58" stroke="#772010" stroke-width="0.8" opacity="0.5"/>
+          <line x1="102" y1="40" x2="102" y2="60" stroke="#772010" stroke-width="0.8" opacity="0.5"/>
+          <!-- Claws — proper pincers -->
+          <!-- Left claw (upper) -->
+          <line x1="36" y1="42" x2="18" y2="30" stroke="#bb3818" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M18,30 Q14,24 10,28 Q8,32 14,34 Z" fill="#cc4422"/>
+          <path d="M18,30 Q20,24 16,22 Q12,24 14,28 Z" fill="#dd5533"/>
+          <!-- Right claw (lower) -->
+          <line x1="36" y1="58" x2="20" y2="68" stroke="#bb3818" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M20,68 Q16,74 12,70 Q10,66 16,64 Z" fill="#cc4422"/>
+          <path d="M20,68 Q22,74 18,76 Q14,74 16,70 Z" fill="#dd5533"/>
+          <!-- Stalked eyes -->
+          <line x1="42" y1="38" x2="36" y2="28" stroke="#aa3318" stroke-width="2"/>
+          <circle cx="36" cy="27" r="3.5" fill="#1a1a1a"/><circle cx="35" cy="26" r="1.5" fill="white"/>
+          <line x1="48" y1="36" x2="44" y2="26" stroke="#aa3318" stroke-width="2"/>
+          <circle cx="44" cy="25" r="3.5" fill="#1a1a1a"/><circle cx="43" cy="24" r="1.5" fill="white"/>
+          <!-- Antennae -->
+          <path d="M40,34 Q28,18 16,14" fill="none" stroke="#cc4422" stroke-width="0.8" opacity="0.6"/>
+          <path d="M46,32 Q36,16 26,10" fill="none" stroke="#cc4422" stroke-width="0.8" opacity="0.6"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u3s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#cc4422"/><stop offset="50%" stop-color="#aa3318"/><stop offset="100%" stop-color="#882210"/></linearGradient></defs>
+          <ellipse cx="120" cy="50" rx="10" ry="14" fill="#aa3318" opacity="0.8"/>
+          <rect x="88" y="40" width="14" height="20" rx="3" fill="#aa3318"/>
+          <rect x="74" y="38" width="16" height="24" rx="4" fill="#bb3818"/>
+          <ellipse cx="56" cy="50" rx="26" ry="18" fill="url(#u3s_body)"/>
+          <line x1="36" y1="42" x2="18" y2="30" stroke="#bb3818" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M18,30 Q14,24 10,28 Q8,32 14,34 Z" fill="#cc4422"/>
+          <path d="M18,30 Q20,24 16,22 Q12,24 14,28 Z" fill="#dd5533"/>
+          <line x1="36" y1="58" x2="20" y2="68" stroke="#bb3818" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M20,68 Q16,74 12,70 Q10,66 16,64 Z" fill="#cc4422"/>
+          <path d="M20,68 Q22,74 18,76 Q14,74 16,70 Z" fill="#dd5533"/>
+          <circle cx="36" cy="27" r="3.5" fill="#1a1a1a"/><circle cx="35" cy="26" r="1.5" fill="white"/>
+          <circle cx="44" cy="25" r="3.5" fill="#1a1a1a"/><circle cx="43" cy="24" r="1.5" fill="white"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U5: Clownfish -->
+  <div class="fish-card">
+    <div class="fish-name">Clownfish <span class="fix-badge green">dorsal lowered</span></div>
+    <div class="fish-detail">Rounder/chubbier egg-shape, 3 white stripes clipped to body, black edges</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u4_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff7722"/><stop offset="50%" stop-color="#ee5500"/><stop offset="100%" stop-color="#cc4400"/>
+            </linearGradient>
+            <clipPath id="u4_clip"><ellipse cx="72" cy="50" rx="32" ry="28"/></clipPath>
+          </defs>
+          <!-- Dorsal — lowered -->
+          <path d="M52,26 Q60,14 70,20 Q78,14 86,24" fill="#cc4400" opacity="0.85"/>
+          <path d="M58,74 Q68,86 78,76" fill="#cc4400" opacity="0.75"/>
+          <path d="M102,50 Q118,32 124,26 Q120,44 121,50 Q120,56 124,74 Q118,68 102,50Z" fill="#cc4400" opacity="0.85"/>
+          <path d="M54,72 Q48,80 44,76 Q48,74 54,72Z" fill="#cc440066"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="32" ry="28" fill="url(#u4_body)"/>
+          <g clip-path="url(#u4_clip)">
+            <rect x="48" y="22" width="3" height="56" fill="#1a1a1a"/><rect x="50" y="22" width="5" height="56" fill="white"/><rect x="54" y="22" width="3" height="56" fill="#1a1a1a"/>
+            <rect x="68" y="22" width="3" height="56" fill="#1a1a1a"/><rect x="70" y="22" width="5" height="56" fill="white"/><rect x="74" y="22" width="3" height="56" fill="#1a1a1a"/>
+            <rect x="88" y="22" width="2.5" height="56" fill="#1a1a1a"/><rect x="90" y="22" width="4" height="56" fill="white"/><rect x="93" y="22" width="2.5" height="56" fill="#1a1a1a"/>
+          </g>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#1a1a1a"/><circle cx="46" cy="42" r="1.2" fill="white"/>
+          <path d="M41,54 Q39,56 41,57" fill="none" stroke="#aa330044" stroke-width="1"/>
+          <path d="M56,58 Q48,66 44,62 Q50,60 56,58Z" fill="#ee550066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u4s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff7722"/><stop offset="50%" stop-color="#ee5500"/><stop offset="100%" stop-color="#cc4400"/></linearGradient><clipPath id="u4s_clip"><ellipse cx="72" cy="50" rx="32" ry="28"/></clipPath></defs>
+          <path d="M52,26 Q60,14 70,20 Q78,14 86,24" fill="#cc4400" opacity="0.85"/>
+          <path d="M102,50 Q118,32 124,26 Q120,44 121,50 Q120,56 124,74 Q118,68 102,50Z" fill="#cc4400" opacity="0.85"/>
+          <ellipse cx="72" cy="50" rx="32" ry="28" fill="url(#u4s_body)"/>
+          <g clip-path="url(#u4s_clip)"><rect x="48" y="22" width="3" height="56" fill="#1a1a1a"/><rect x="50" y="22" width="5" height="56" fill="white"/><rect x="54" y="22" width="3" height="56" fill="#1a1a1a"/><rect x="68" y="22" width="3" height="56" fill="#1a1a1a"/><rect x="70" y="22" width="5" height="56" fill="white"/><rect x="74" y="22" width="3" height="56" fill="#1a1a1a"/><rect x="88" y="22" width="2.5" height="56" fill="#1a1a1a"/><rect x="90" y="22" width="4" height="56" fill="white"/><rect x="93" y="22" width="2.5" height="56" fill="#1a1a1a"/></g>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#1a1a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U6: Pufferfish (unchanged from v5) -->
+  <div class="fish-card">
+    <div class="fish-name">Pufferfish</div>
+    <div class="fish-detail">Inflated round, thick spines (2.5px), enormous green eyes, tiny beak</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <radialGradient id="u5_body" cx="0.45" cy="0.45" r="0.55">
+              <stop offset="0%" stop-color="#d4c898"/><stop offset="50%" stop-color="#bba870"/><stop offset="100%" stop-color="#998850"/>
+            </radialGradient>
+            <clipPath id="u5_clip"><circle cx="72" cy="50" r="32"/></clipPath>
+          </defs>
+          <path d="M78,20 Q82,12 86,18" fill="#998850" opacity="0.7"/>
+          <path d="M78,80 Q82,88 86,82" fill="#998850" opacity="0.7"/>
+          <path d="M102,50 Q114,40 118,36 Q114,48 115,50 Q114,52 118,64 Q114,60 102,50Z" fill="#998850" opacity="0.8"/>
+          <g stroke="#887744" stroke-width="2.5" stroke-linecap="round" opacity="0.6">
+            <line x1="72" y1="18" x2="72" y2="10"/><line x1="56" y1="22" x2="52" y2="14"/><line x1="88" y1="22" x2="92" y2="14"/>
+            <line x1="44" y1="34" x2="36" y2="30"/><line x1="100" y1="34" x2="108" y2="30"/>
+            <line x1="40" y1="50" x2="32" y2="50"/><line x1="44" y1="66" x2="36" y2="70"/><line x1="100" y1="66" x2="108" y2="70"/>
+            <line x1="56" y1="78" x2="52" y2="86"/><line x1="88" y1="78" x2="92" y2="86"/><line x1="72" y1="82" x2="72" y2="90"/>
+          </g>
+          <circle cx="72" cy="50" r="32" fill="url(#u5_body)"/>
+          <g clip-path="url(#u5_clip)">
+            <ellipse cx="72" cy="62" rx="24" ry="14" fill="#e8d8b0" opacity="0.3"/>
+            <circle cx="58" cy="38" r="3" fill="#887744" opacity="0.2"/><circle cx="72" cy="34" r="3.5" fill="#887744" opacity="0.2"/>
+            <circle cx="86" cy="38" r="3" fill="#887744" opacity="0.2"/><circle cx="64" cy="46" r="2.5" fill="#887744" opacity="0.2"/>
+            <circle cx="80" cy="44" r="2.5" fill="#887744" opacity="0.2"/>
+          </g>
+          <circle cx="58" cy="42" r="8" fill="white"/><circle cx="57" cy="41" r="5.5" fill="#22aa44"/><circle cx="56" cy="40" r="3" fill="#1a1a1a"/><circle cx="54.5" cy="39" r="1.5" fill="white"/>
+          <path d="M42,50 L38,48 L38,52 Z" fill="#887744"/>
+          <ellipse cx="54" cy="58" rx="6" ry="4" fill="#bba87066" transform="rotate(-20,54,58)"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><radialGradient id="u5s_body" cx="0.45" cy="0.45" r="0.55"><stop offset="0%" stop-color="#d4c898"/><stop offset="50%" stop-color="#bba870"/><stop offset="100%" stop-color="#998850"/></radialGradient></defs>
+          <g stroke="#887744" stroke-width="2.5" stroke-linecap="round" opacity="0.6"><line x1="72" y1="18" x2="72" y2="10"/><line x1="56" y1="22" x2="52" y2="14"/><line x1="88" y1="22" x2="92" y2="14"/><line x1="40" y1="50" x2="32" y2="50"/><line x1="56" y1="78" x2="52" y2="86"/><line x1="88" y1="78" x2="92" y2="86"/><line x1="72" y1="82" x2="72" y2="90"/></g>
+          <circle cx="72" cy="50" r="32" fill="url(#u5s_body)"/>
+          <circle cx="58" cy="42" r="8" fill="white"/><circle cx="57" cy="41" r="5.5" fill="#22aa44"/><circle cx="56" cy="40" r="3" fill="#1a1a1a"/>
+          <path d="M42,50 L38,48 L38,52 Z" fill="#887744"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U7: Hermit Crab — REDRAWN from reference -->
+  <div class="fish-card">
+    <div class="fish-name">Hermit Crab <span class="fix-badge">REDRAWN from reference</span></div>
+    <div class="fish-detail">Dome snail shell on top, red-orange crab peeking out underneath, stalked eyes, walking legs</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <radialGradient id="u6_shell" cx="0.5" cy="0.4" r="0.55">
+              <stop offset="0%" stop-color="#e8dcc8"/>
+              <stop offset="40%" stop-color="#d4c8a8"/>
+              <stop offset="100%" stop-color="#a89870"/>
+            </radialGradient>
+            <radialGradient id="u6_shellhi" cx="0.35" cy="0.3" r="0.4">
+              <stop offset="0%" stop-color="#f0e8d822"/>
+              <stop offset="100%" stop-color="#f0e8d800"/>
+            </radialGradient>
+            <clipPath id="u6_shellclip">
+              <ellipse cx="88" cy="40" rx="38" ry="30"/>
+            </clipPath>
+          </defs>
+          <!-- Walking legs (behind shell) — orange, jointed, extending forward -->
+          <line x1="52" y1="64" x2="30" y2="78" stroke="#e06030" stroke-width="2" stroke-linecap="round"/>
+          <line x1="30" y1="78" x2="22" y2="74" stroke="#e06030" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="48" y1="66" x2="24" y2="76" stroke="#e06030" stroke-width="2" stroke-linecap="round"/>
+          <line x1="24" y1="76" x2="16" y2="72" stroke="#e06030" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="56" y1="66" x2="38" y2="82" stroke="#e06030" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="38" y1="82" x2="32" y2="80" stroke="#e06030" stroke-width="1.3" stroke-linecap="round"/>
+          <!-- Crab body peeking out from under shell -->
+          <ellipse cx="52" cy="60" rx="20" ry="12" fill="#cc4422"/>
+          <!-- Bumpy texture on crab body -->
+          <circle cx="46" cy="58" r="2" fill="#bb3318" opacity="0.3"/>
+          <circle cx="54" cy="56" r="2.5" fill="#bb3318" opacity="0.3"/>
+          <circle cx="50" cy="62" r="2" fill="#bb3318" opacity="0.3"/>
+          <!-- Big claw — chunky, forward-facing -->
+          <path d="M36,56 L20,50" stroke="#e06030" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <ellipse cx="16" cy="48" rx="8" ry="6" fill="#dd5533" transform="rotate(-10,16,48)"/>
+          <!-- Claw split line -->
+          <path d="M10,46 Q16,42 22,46" fill="none" stroke="#aa3318" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Smaller claw -->
+          <path d="M38,62 L26,66" stroke="#e06030" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <ellipse cx="23" cy="67" rx="5" ry="4" fill="#dd5533" opacity="0.9"/>
+          <!-- Dome snail shell — large, sitting on top of crab -->
+          <ellipse cx="88" cy="40" rx="38" ry="30" fill="url(#u6_shell)"/>
+          <ellipse cx="88" cy="40" rx="38" ry="30" fill="url(#u6_shellhi)"/>
+          <!-- Growth ridges on shell (concentric arcs) -->
+          <g clip-path="url(#u6_shellclip)" opacity="0.2">
+            <ellipse cx="88" cy="40" rx="34" ry="26" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+            <ellipse cx="88" cy="40" rx="28" ry="21" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+            <ellipse cx="88" cy="40" rx="22" ry="16" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+            <ellipse cx="88" cy="40" rx="16" ry="11" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+            <ellipse cx="88" cy="40" rx="10" ry="7" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+          </g>
+          <!-- Greenish patina on shell -->
+          <g clip-path="url(#u6_shellclip)" opacity="0.1">
+            <circle cx="100" cy="48" r="12" fill="#667744"/>
+            <circle cx="78" cy="50" r="8" fill="#667744"/>
+            <circle cx="108" cy="36" r="6" fill="#667744"/>
+          </g>
+          <!-- Shell opening edge (dark arc where crab exits) -->
+          <path d="M54,54 Q60,68 74,70" fill="none" stroke="#887050" stroke-width="2" opacity="0.5"/>
+          <!-- Stalked eyes — orange stalks, dark eye caps, pointing up -->
+          <line x1="42" y1="52" x2="34" y2="36" stroke="#e06030" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="34" cy="34" rx="3.5" ry="4" fill="#442200"/>
+          <circle cx="33" cy="33" r="1.5" fill="#884400"/>
+          <circle cx="32.5" cy="32.5" r="0.8" fill="white" opacity="0.6"/>
+          <line x1="48" y1="50" x2="42" y2="34" stroke="#e06030" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="42" cy="32" rx="3.5" ry="4" fill="#442200"/>
+          <circle cx="41" cy="31" r="1.5" fill="#884400"/>
+          <circle cx="40.5" cy="30.5" r="0.8" fill="white" opacity="0.6"/>
+          <!-- Antennae — thin, curving forward -->
+          <path d="M38,40 Q26,28 14,24" fill="none" stroke="#e06030" stroke-width="0.8" opacity="0.5"/>
+          <path d="M44,38 Q34,26 24,20" fill="none" stroke="#e06030" stroke-width="0.8" opacity="0.5"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs>
+            <radialGradient id="u6s_shell" cx="0.5" cy="0.4" r="0.55">
+              <stop offset="0%" stop-color="#e8dcc8"/><stop offset="40%" stop-color="#d4c8a8"/><stop offset="100%" stop-color="#a89870"/>
+            </radialGradient>
+            <clipPath id="u6s_shellclip"><ellipse cx="88" cy="40" rx="38" ry="30"/></clipPath>
+          </defs>
+          <!-- Legs -->
+          <line x1="52" y1="64" x2="30" y2="78" stroke="#e06030" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="66" x2="24" y2="76" stroke="#e06030" stroke-width="2" stroke-linecap="round"/>
+          <!-- Crab body -->
+          <ellipse cx="52" cy="60" rx="20" ry="12" fill="#cc4422"/>
+          <!-- Big claw -->
+          <path d="M36,56 L20,50" stroke="#e06030" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <ellipse cx="16" cy="48" rx="8" ry="6" fill="#dd5533" transform="rotate(-10,16,48)"/>
+          <!-- Shell -->
+          <ellipse cx="88" cy="40" rx="38" ry="30" fill="url(#u6s_shell)"/>
+          <g clip-path="url(#u6s_shellclip)" opacity="0.2">
+            <ellipse cx="88" cy="40" rx="28" ry="21" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+            <ellipse cx="88" cy="40" rx="16" ry="11" fill="none" stroke="#8a7a58" stroke-width="0.8"/>
+          </g>
+          <!-- Eyes -->
+          <line x1="42" y1="52" x2="34" y2="36" stroke="#e06030" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="34" cy="34" rx="3.5" ry="4" fill="#442200"/>
+          <line x1="48" y1="50" x2="42" y2="34" stroke="#e06030" stroke-width="2.5" stroke-linecap="round"/>
+          <ellipse cx="42" cy="32" rx="3.5" ry="4" fill="#442200"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U8: Zebrafish -->
+  <div class="fish-card">
+    <div class="fish-name">Zebrafish <span class="fix-badge green">anal raised</span></div>
+    <div class="fish-detail">Silver-blue, 4 horizontal navy stripes clipped to body</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u7_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#a0b8d0"/><stop offset="50%" stop-color="#88a0c0"/><stop offset="100%" stop-color="#6888a8"/>
+            </linearGradient>
+            <clipPath id="u7_clip"><path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,42 126,50 Q126,58 108,64 Q80,72 55,68 Q28,64 28,50Z"/></clipPath>
+          </defs>
+          <path d="M68,34 Q74,22 82,32" fill="#5878a0" opacity="0.8"/>
+          <!-- Anal — raised -->
+          <path d="M82,66 Q88,74 96,68" fill="#5878a0" opacity="0.7"/>
+          <path d="M122,50 Q136,34 140,28 Q136,44 137,50 Q136,56 140,72 Q136,66 122,50Z" fill="#5878a0" opacity="0.85"/>
+          <path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,42 126,50 Q126,58 108,64 Q80,72 55,68 Q28,64 28,50Z" fill="url(#u7_body)"/>
+          <g clip-path="url(#u7_clip)" opacity="0.45">
+            <rect x="28" y="34" width="100" height="4" fill="#1a2a50" rx="1"/><rect x="28" y="43" width="100" height="4" fill="#1a2a50" rx="1"/>
+            <rect x="28" y="52" width="100" height="4" fill="#1a2a50" rx="1"/><rect x="28" y="61" width="100" height="4" fill="#1a2a50" rx="1"/>
+          </g>
+          <circle cx="38" cy="46" r="5" fill="white"/><circle cx="37" cy="45" r="3" fill="#1a1a2a"/><circle cx="36" cy="44" r="1.2" fill="white"/>
+          <path d="M28,51 Q26,53 28,54" fill="none" stroke="#50688044" stroke-width="1"/>
+          <path d="M44,56 Q36,64 32,60 Q38,58 44,56Z" fill="#88a0c066"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u7s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a0b8d0"/><stop offset="50%" stop-color="#88a0c0"/><stop offset="100%" stop-color="#6888a8"/></linearGradient><clipPath id="u7s_clip"><path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,42 126,50 Q126,58 108,64 Q80,72 55,68 Q28,64 28,50Z"/></clipPath></defs>
+          <path d="M68,34 Q74,22 82,32" fill="#5878a0" opacity="0.8"/>
+          <path d="M122,50 Q136,34 140,28 Q136,44 137,50 Q136,56 140,72 Q136,66 122,50Z" fill="#5878a0" opacity="0.85"/>
+          <path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,42 126,50 Q126,58 108,64 Q80,72 55,68 Q28,64 28,50Z" fill="url(#u7s_body)"/>
+          <g clip-path="url(#u7s_clip)" opacity="0.45"><rect x="28" y="34" width="100" height="4" fill="#1a2a50" rx="1"/><rect x="28" y="43" width="100" height="4" fill="#1a2a50" rx="1"/><rect x="28" y="52" width="100" height="4" fill="#1a2a50" rx="1"/><rect x="28" y="61" width="100" height="4" fill="#1a2a50" rx="1"/></g>
+          <circle cx="38" cy="46" r="5" fill="white"/><circle cx="37" cy="45" r="3" fill="#1a1a2a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U9: Pilotfish -->
+  <div class="fish-card">
+    <div class="fish-name">Pilotfish <span class="fix-badge green">anal raised</span></div>
+    <div class="fish-detail">Sleek silver, 5 vertical dark bands clipped to body</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u8_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c0d0e0"/><stop offset="50%" stop-color="#a0b4c8"/><stop offset="100%" stop-color="#7898b0"/>
+            </linearGradient>
+            <clipPath id="u8_clip"><path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,44 126,50 Q126,56 108,64 Q80,72 55,68 Q28,64 28,50Z"/></clipPath>
+          </defs>
+          <path d="M60,34 Q66,20 74,30 Q78,24 84,32" fill="#6888a0" opacity="0.8"/>
+          <!-- Anal — raised -->
+          <path d="M82,66 Q88,74 96,68" fill="#6888a0" opacity="0.7"/>
+          <path d="M122,50 Q138,32 142,26 Q138,44 139,50 Q138,56 142,74 Q138,68 122,50Z" fill="#6888a0" opacity="0.85"/>
+          <path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,44 126,50 Q126,56 108,64 Q80,72 55,68 Q28,64 28,50Z" fill="url(#u8_body)"/>
+          <g clip-path="url(#u8_clip)" opacity="0.4">
+            <rect x="42" y="28" width="6" height="44" fill="#1a2a40" rx="2"/><rect x="58" y="26" width="6" height="48" fill="#1a2a40" rx="2"/>
+            <rect x="74" y="26" width="6" height="48" fill="#1a2a40" rx="2"/><rect x="90" y="28" width="6" height="44" fill="#1a2a40" rx="2"/>
+            <rect x="106" y="32" width="6" height="36" fill="#1a2a40" rx="2"/>
+          </g>
+          <circle cx="38" cy="46" r="5" fill="white"/><circle cx="37" cy="45" r="3" fill="#1a1a2a"/><circle cx="36" cy="44" r="1.2" fill="white"/>
+          <path d="M28,51 Q26,53 28,54" fill="none" stroke="#60809044" stroke-width="1"/>
+          <path d="M46,56 Q38,64 34,60 Q40,58 46,56Z" fill="#a0b4c866"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u8s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c0d0e0"/><stop offset="50%" stop-color="#a0b4c8"/><stop offset="100%" stop-color="#7898b0"/></linearGradient><clipPath id="u8s_clip"><path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,44 126,50 Q126,56 108,64 Q80,72 55,68 Q28,64 28,50Z"/></clipPath></defs>
+          <path d="M60,34 Q66,20 74,30 Q78,24 84,32" fill="#6888a0" opacity="0.8"/>
+          <path d="M122,50 Q138,32 142,26 Q138,44 139,50 Q138,56 142,74 Q138,68 122,50Z" fill="#6888a0" opacity="0.85"/>
+          <path d="M28,50 Q28,36 55,32 Q80,28 108,36 Q126,44 126,50 Q126,56 108,64 Q80,72 55,68 Q28,64 28,50Z" fill="url(#u8s_body)"/>
+          <g clip-path="url(#u8s_clip)" opacity="0.4"><rect x="42" y="28" width="6" height="44" fill="#1a2a40" rx="2"/><rect x="58" y="26" width="6" height="48" fill="#1a2a40" rx="2"/><rect x="74" y="26" width="6" height="48" fill="#1a2a40" rx="2"/><rect x="90" y="28" width="6" height="44" fill="#1a2a40" rx="2"/><rect x="106" y="32" width="6" height="36" fill="#1a2a40" rx="2"/></g>
+          <circle cx="38" cy="46" r="5" fill="white"/><circle cx="37" cy="45" r="3" fill="#1a1a2a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U10: Cardinalfish — FULL REWORK to Banggai style -->
+  <div class="fish-card">
+    <div class="fish-name">Cardinalfish <span class="fix-badge">REWORKED → Banggai style</span></div>
+    <div class="fish-detail">Tall dramatic dorsal, flowing pelvic fins, black/silver stripes, white spots, huge dark eye</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u9_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c0c8d0"/><stop offset="50%" stop-color="#909aa8"/><stop offset="100%" stop-color="#606870"/>
+            </linearGradient>
+            <clipPath id="u9_clip"><ellipse cx="72" cy="50" rx="30" ry="22"/></clipPath>
+          </defs>
+          <!-- Tall dramatic dorsal — two lobes (front spiny short, rear tall sail) -->
+          <path d="M54,30 L56,22 L58,28 L60,20 L62,28" fill="#2a2a2a" opacity="0.85"/>
+          <path d="M62,28 Q70,4 82,26" fill="#3a3a3a" opacity="0.85"/>
+          <!-- White spots on rear dorsal -->
+          <circle cx="70" cy="16" r="1.2" fill="#ccddee" opacity="0.6"/>
+          <circle cx="74" cy="12" r="1" fill="#ccddee" opacity="0.5"/>
+          <circle cx="68" cy="22" r="1" fill="#ccddee" opacity="0.5"/>
+          <!-- Long flowing anal fin -->
+          <path d="M58,72 Q68,94 82,74" fill="#3a3a3a" opacity="0.8"/>
+          <circle cx="68" cy="84" r="1" fill="#ccddee" opacity="0.5"/>
+          <circle cx="72" cy="80" r="1.2" fill="#ccddee" opacity="0.5"/>
+          <!-- Tail — forked with extended lobes -->
+          <path d="M100,50 Q114,28 122,18 Q116,40 118,48" fill="#2a2a2a" opacity="0.85"/>
+          <path d="M100,50 Q114,72 122,82 Q116,60 118,52" fill="#2a2a2a" opacity="0.85"/>
+          <!-- White spots on tail lobes -->
+          <circle cx="112" cy="32" r="1" fill="#ccddee" opacity="0.5"/>
+          <circle cx="116" cy="26" r="1.2" fill="#ccddee" opacity="0.5"/>
+          <circle cx="112" cy="68" r="1" fill="#ccddee" opacity="0.5"/>
+          <circle cx="116" cy="74" r="1.2" fill="#ccddee" opacity="0.5"/>
+          <!-- Long flowing pelvic fins -->
+          <path d="M54,66 Q48,86 42,82 Q50,76 54,66Z" fill="#2a2a2a" opacity="0.8"/>
+          <path d="M60,68 Q56,88 50,84 Q56,78 60,68Z" fill="#2a2a2a" opacity="0.8"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="30" ry="22" fill="url(#u9_body)"/>
+          <!-- 3 bold black vertical bars, clipped -->
+          <g clip-path="url(#u9_clip)">
+            <rect x="48" y="28" width="8" height="44" fill="#1a1a1a" opacity="0.8"/>
+            <rect x="66" y="28" width="8" height="44" fill="#1a1a1a" opacity="0.8"/>
+            <rect x="84" y="28" width="8" height="44" fill="#1a1a1a" opacity="0.8"/>
+          </g>
+          <!-- White spots on dark bars -->
+          <g clip-path="url(#u9_clip)">
+            <circle cx="52" cy="42" r="1.2" fill="#ccddee" opacity="0.5"/>
+            <circle cx="50" cy="54" r="1" fill="#ccddee" opacity="0.5"/>
+            <circle cx="70" cy="40" r="1.2" fill="#ccddee" opacity="0.5"/>
+            <circle cx="68" cy="56" r="1" fill="#ccddee" opacity="0.5"/>
+            <circle cx="88" cy="44" r="1" fill="#ccddee" opacity="0.5"/>
+            <circle cx="86" cy="52" r="1.2" fill="#ccddee" opacity="0.5"/>
+          </g>
+          <!-- HUGE dark eye -->
+          <circle cx="50" cy="46" r="7" fill="#0a0a0a"/>
+          <circle cx="48" cy="44" r="3" fill="#2a2a3a"/>
+          <circle cx="47" cy="43" r="1.8" fill="white" opacity="0.6"/>
+          <!-- Mouth -->
+          <path d="M43,52 Q41,54 43,55" fill="none" stroke="#50505066" stroke-width="1"/>
+          <!-- Pectoral -->
+          <path d="M56,56 Q50,62 46,58 Q52,56 56,56Z" fill="#909aa866"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u9s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c0c8d0"/><stop offset="50%" stop-color="#909aa8"/><stop offset="100%" stop-color="#606870"/></linearGradient><clipPath id="u9s_clip"><ellipse cx="72" cy="50" rx="30" ry="22"/></clipPath></defs>
+          <path d="M54,30 L56,22 L58,28 L60,20 L62,28" fill="#2a2a2a" opacity="0.85"/>
+          <path d="M62,28 Q70,4 82,26" fill="#3a3a3a" opacity="0.85"/>
+          <path d="M58,72 Q68,94 82,74" fill="#3a3a3a" opacity="0.8"/>
+          <path d="M100,50 Q114,28 122,18 Q116,40 118,48" fill="#2a2a2a" opacity="0.85"/>
+          <path d="M100,50 Q114,72 122,82 Q116,60 118,52" fill="#2a2a2a" opacity="0.85"/>
+          <path d="M54,66 Q48,86 42,82 Q50,76 54,66Z" fill="#2a2a2a" opacity="0.8"/>
+          <ellipse cx="72" cy="50" rx="30" ry="22" fill="url(#u9s_body)"/>
+          <g clip-path="url(#u9s_clip)"><rect x="48" y="28" width="8" height="44" fill="#1a1a1a" opacity="0.8"/><rect x="66" y="28" width="8" height="44" fill="#1a1a1a" opacity="0.8"/><rect x="84" y="28" width="8" height="44" fill="#1a1a1a" opacity="0.8"/></g>
+          <circle cx="50" cy="46" r="7" fill="#0a0a0a"/><circle cx="48" cy="44" r="3" fill="#2a2a3a"/><circle cx="47" cy="43" r="1.8" fill="white" opacity="0.6"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- U11: Anemonefish -->
+  <div class="fish-card">
+    <div class="fish-name">Anemonefish <span class="fix-badge green">dorsal centered</span></div>
+    <div class="fish-detail">Darker red than Clownfish, fewer stripes, heavy black edges, centered dorsal</div>
+    <div class="fish-sizes">
+      <div class="fish-svg-container">
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="u10_body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#cc3311"/><stop offset="50%" stop-color="#aa2208"/><stop offset="100%" stop-color="#881808"/>
+            </linearGradient>
+            <clipPath id="u10_clip"><ellipse cx="72" cy="50" rx="32" ry="26"/></clipPath>
+          </defs>
+          <!-- Dorsal — CENTERED over body, visible -->
+          <path d="M54,28 Q60,16 68,22 Q74,14 82,22 Q88,18 92,28" fill="#881808" opacity="0.85"/>
+          <!-- Anal -->
+          <path d="M60,74 Q68,86 78,76" fill="#881808" opacity="0.75"/>
+          <!-- Tail -->
+          <path d="M102,50 Q118,34 124,28 Q120,44 121,50 Q120,56 124,72 Q118,66 102,50Z" fill="#881808" opacity="0.85"/>
+          <path d="M54,70 Q48,78 44,74 Q48,72 54,70Z" fill="#88180866"/>
+          <!-- Body -->
+          <ellipse cx="72" cy="50" rx="32" ry="26" fill="url(#u10_body)"/>
+          <!-- 2 white stripes with heavy black edges -->
+          <g clip-path="url(#u10_clip)">
+            <rect x="50" y="24" width="4" height="52" fill="#0a0a0a"/><rect x="53" y="24" width="5" height="52" fill="white"/><rect x="57" y="24" width="4" height="52" fill="#0a0a0a"/>
+            <rect x="76" y="24" width="4" height="52" fill="#0a0a0a"/><rect x="79" y="24" width="5" height="52" fill="white"/><rect x="83" y="24" width="4" height="52" fill="#0a0a0a"/>
+          </g>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#1a1a1a"/><circle cx="46" cy="42" r="1.2" fill="white"/>
+          <path d="M41,54 Q39,56 41,57" fill="none" stroke="#661008" stroke-width="1"/>
+          <path d="M56,58 Q48,66 44,62 Q50,60 56,58Z" fill="#aa220866"/>
+        </svg>
+        <div class="size-label">160×100</div>
+      </div>
+      <div class="fish-svg-container">
+        <svg width="80" height="50" viewBox="0 0 160 100">
+          <defs><linearGradient id="u10s_body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#cc3311"/><stop offset="50%" stop-color="#aa2208"/><stop offset="100%" stop-color="#881808"/></linearGradient><clipPath id="u10s_clip"><ellipse cx="72" cy="50" rx="32" ry="26"/></clipPath></defs>
+          <path d="M54,28 Q60,16 68,22 Q74,14 82,22 Q88,18 92,28" fill="#881808" opacity="0.85"/>
+          <path d="M102,50 Q118,34 124,28 Q120,44 121,50 Q120,56 124,72 Q118,66 102,50Z" fill="#881808" opacity="0.85"/>
+          <ellipse cx="72" cy="50" rx="32" ry="26" fill="url(#u10s_body)"/>
+          <g clip-path="url(#u10s_clip)"><rect x="50" y="24" width="4" height="52" fill="#0a0a0a"/><rect x="53" y="24" width="5" height="52" fill="white"/><rect x="57" y="24" width="4" height="52" fill="#0a0a0a"/><rect x="76" y="24" width="4" height="52" fill="#0a0a0a"/><rect x="79" y="24" width="5" height="52" fill="white"/><rect x="83" y="24" width="4" height="52" fill="#0a0a0a"/></g>
+          <circle cx="48" cy="44" r="5" fill="white"/><circle cx="47" cy="43" r="3" fill="#1a1a1a"/>
+        </svg>
+        <div class="size-label">80×50</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="notes" style="margin-top:32px;">
+  <strong>v6 Review Checklist:</strong><br>
+  ✅ All dorsal fins lowered to hug body contour lines<br>
+  ✅ All anal fins raised to hug body contour lines<br>
+  ✅ Sunfish → Mola mola shape (single triangle fins, clavus pseudo-tail, gill slit)<br>
+  ✅ Cardinalfish → Banggai style (tall dramatic dorsal, flowing pelvics, black/silver bars, white spots)<br>
+  ✅ Crawfish tail closed up, claws redesigned as proper pincers<br>
+  ✅ Hermit Crab claws adjusted (ellipse pincer + arm)<br>
+  ✅ Cichlid egg spots removed from anal fin<br>
+  ✅ Anemonefish dorsal centered over body (no longer front-only)<br>
+  ✅ Goby twin dorsals evened to same height<br>
+  ✅ All 21 fish at catch (160×100) and trophy (80×50) sizes
+</div>
+
+</body>
+</html>

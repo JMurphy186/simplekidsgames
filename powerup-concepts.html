@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monster Rally — Power-Up Icon Concepts</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0B0E18;
+    color: #fff;
+    font-family: 'Arial Black', 'Impact', sans-serif;
+    padding: 30px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #FF6B35, #FF2D95);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 40px;
+    font-family: Arial, sans-serif;
+  }
+  .powerup-section {
+    margin-bottom: 50px;
+  }
+  .powerup-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+  .powerup-desc {
+    color: #888;
+    font-size: 13px;
+    font-family: Arial, sans-serif;
+    margin-bottom: 20px;
+  }
+  .concepts-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  .concept {
+    text-align: center;
+  }
+  .concept-label {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+    font-family: Arial, sans-serif;
+  }
+  canvas {
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+  }
+  .size-ref {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    margin-top: 10px;
+  }
+  .size-label {
+    font-size: 10px;
+    color: #555;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>Power-Up Icon Concepts</h1>
+<p class="subtitle">Each power-up shown at 3 sizes: Large (preview), Medium (in-game), Small (mini HUD). Dark bg = game context.</p>
+
+<!-- TURBO BOOST -->
+<div class="powerup-section">
+  <div class="powerup-title" style="color:#ff6600;">⚡ TURBO BOOST</div>
+  <div class="powerup-desc">Speed increase — should feel fast, hot, dangerous</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="turbo-a" width="240" height="100"></canvas>
+      <div class="concept-label">A: Flame Ring</div>
+    </div>
+    <div class="concept">
+      <canvas id="turbo-b" width="240" height="100"></canvas>
+      <div class="concept-label">B: Speed Bolt</div>
+    </div>
+    <div class="concept">
+      <canvas id="turbo-c" width="240" height="100"></canvas>
+      <div class="concept-label">C: Rocket</div>
+    </div>
+  </div>
+</div>
+
+<!-- MEGA TRUCK -->
+<div class="powerup-section">
+  <div class="powerup-title" style="color:#ff4444;">💪 MEGA TRUCK</div>
+  <div class="powerup-desc">Grow huge — should feel powerful, unstoppable, heavy</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="mega-a" width="240" height="100"></canvas>
+      <div class="concept-label">A: Growth Arrows</div>
+    </div>
+    <div class="concept">
+      <canvas id="mega-b" width="240" height="100"></canvas>
+      <div class="concept-label">B: Fist Smash</div>
+    </div>
+    <div class="concept">
+      <canvas id="mega-c" width="240" height="100"></canvas>
+      <div class="concept-label">C: Shield Star</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAGNET -->
+<div class="powerup-section">
+  <div class="powerup-title" style="color:#4488ff;">🧲 MAGNET</div>
+  <div class="powerup-desc">Pull stars in — should feel magnetic, electric, attractive</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="mag-a" width="240" height="100"></canvas>
+      <div class="concept-label">A: Horseshoe Magnet</div>
+    </div>
+    <div class="concept">
+      <canvas id="mag-b" width="240" height="100"></canvas>
+      <div class="concept-label">B: Vortex Pull</div>
+    </div>
+    <div class="concept">
+      <canvas id="mag-c" width="240" height="100"></canvas>
+      <div class="concept-label">C: Magnetic Ring</div>
+    </div>
+  </div>
+</div>
+
+<!-- SUPER JUMP -->
+<div class="powerup-section">
+  <div class="powerup-title" style="color:#8855ff;">🚀 SUPER JUMP</div>
+  <div class="powerup-desc">Jump way higher — should feel springy, bouncy, airborne</div>
+  <div class="concepts-row">
+    <div class="concept">
+      <canvas id="jump-a" width="240" height="100"></canvas>
+      <div class="concept-label">A: Spring Coil</div>
+    </div>
+    <div class="concept">
+      <canvas id="jump-b" width="240" height="100"></canvas>
+      <div class="concept-label">B: Up Arrow Burst</div>
+    </div>
+    <div class="concept">
+      <canvas id="jump-c" width="240" height="100"></canvas>
+      <div class="concept-label">C: Wing Badge</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Helper: draw a power-up icon at a given size
+function drawAt(ctx, x, y, r, drawFn) {
+  ctx.save();
+  ctx.translate(x, y);
+  drawFn(ctx, r);
+  ctx.restore();
+}
+
+// Glow effect helper
+function drawGlow(ctx, r, color, intensity) {
+  const grad = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.5);
+  grad.addColorStop(0, color + (intensity || '44'));
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// =============================================
+// TURBO BOOST CONCEPTS
+// =============================================
+
+// A: Flame Ring — fire circle with bolt inside
+function turboA(ctx, r) {
+  drawGlow(ctx, r, '#ff6600');
+  // Outer flame ring
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const flameR = r * (0.85 + Math.sin(i * 2.5) * 0.15);
+    ctx.fillStyle = i % 2 === 0 ? '#ff4400' : '#ff8800';
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5);
+    ctx.lineTo(Math.cos(a - 0.2) * flameR, Math.sin(a - 0.2) * flameR);
+    ctx.lineTo(Math.cos(a + 0.2) * flameR, Math.sin(a + 0.2) * flameR);
+    ctx.fill();
+  }
+  // Inner circle
+  ctx.fillStyle = '#ff6600';
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.55, 0, Math.PI * 2);
+  ctx.fill();
+  // Gradient overlay
+  const g = ctx.createRadialGradient(0, -r*0.15, 0, 0, 0, r*0.55);
+  g.addColorStop(0, '#ffcc00');
+  g.addColorStop(1, '#ff4400');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Lightning bolt
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(-r*0.12, -r*0.35);
+  ctx.lineTo(r*0.08, -r*0.05);
+  ctx.lineTo(-r*0.02, -r*0.05);
+  ctx.lineTo(r*0.12, r*0.35);
+  ctx.lineTo(-r*0.08, r*0.05);
+  ctx.lineTo(r*0.02, r*0.05);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// B: Speed Bolt — pointed shape streaking forward
+function turboB(ctx, r) {
+  drawGlow(ctx, r, '#ff4400');
+  // Outer circle
+  const g = ctx.createRadialGradient(-r*0.1, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#ffaa00');
+  g.addColorStop(0.6, '#ff4400');
+  g.addColorStop(1, '#cc2200');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Speed lines on left side
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = r * 0.06;
+  for (let i = 0; i < 3; i++) {
+    const ly = -r*0.3 + i * r * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.85, ly);
+    ctx.lineTo(-r * 0.45, ly);
+    ctx.stroke();
+  }
+  // Big bold lightning bolt
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = '#ffcc00';
+  ctx.shadowBlur = r * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(-r*0.25, -r*0.6);
+  ctx.lineTo(r*0.15, -r*0.08);
+  ctx.lineTo(-r*0.05, -r*0.08);
+  ctx.lineTo(r*0.25, r*0.6);
+  ctx.lineTo(-r*0.15, r*0.08);
+  ctx.lineTo(r*0.05, r*0.08);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+// C: Rocket — little rocket ship icon
+function turboC(ctx, r) {
+  drawGlow(ctx, r, '#ff6600');
+  // Circle bg
+  const g = ctx.createRadialGradient(0, -r*0.2, 0, 0, 0, r);
+  g.addColorStop(0, '#ff8833');
+  g.addColorStop(1, '#cc3300');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Rocket body
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.65);
+  ctx.quadraticCurveTo(r*0.25, -r*0.3, r*0.2, r*0.2);
+  ctx.lineTo(-r*0.2, r*0.2);
+  ctx.quadraticCurveTo(-r*0.25, -r*0.3, 0, -r*0.65);
+  ctx.fill();
+  // Nose cone
+  ctx.fillStyle = '#ff4444';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.65);
+  ctx.lineTo(r*0.1, -r*0.35);
+  ctx.lineTo(-r*0.1, -r*0.35);
+  ctx.fill();
+  // Window
+  ctx.fillStyle = '#4488ff';
+  ctx.beginPath();
+  ctx.arc(0, -r*0.15, r*0.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Fins
+  ctx.fillStyle = '#ff6600';
+  ctx.beginPath();
+  ctx.moveTo(-r*0.2, r*0.1);
+  ctx.lineTo(-r*0.4, r*0.35);
+  ctx.lineTo(-r*0.15, r*0.2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(r*0.2, r*0.1);
+  ctx.lineTo(r*0.4, r*0.35);
+  ctx.lineTo(r*0.15, r*0.2);
+  ctx.fill();
+  // Exhaust flame
+  ctx.fillStyle = '#ffcc00';
+  ctx.beginPath();
+  ctx.moveTo(-r*0.12, r*0.2);
+  ctx.lineTo(0, r*0.55);
+  ctx.lineTo(r*0.12, r*0.2);
+  ctx.fill();
+  ctx.fillStyle = '#ff4400';
+  ctx.beginPath();
+  ctx.moveTo(-r*0.07, r*0.2);
+  ctx.lineTo(0, r*0.4);
+  ctx.lineTo(r*0.07, r*0.2);
+  ctx.fill();
+}
+
+// =============================================
+// MEGA TRUCK CONCEPTS
+// =============================================
+
+// A: Growth Arrows — expanding arrows
+function megaA(ctx, r) {
+  drawGlow(ctx, r, '#ff4444');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#ff6666');
+  g.addColorStop(1, '#cc0000');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Four outward arrows
+  ctx.fillStyle = '#fff';
+  const dirs = [0, Math.PI/2, Math.PI, Math.PI*1.5];
+  for (const a of dirs) {
+    ctx.save();
+    ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.25);
+    ctx.lineTo(r*0.2, -r*0.45);
+    ctx.lineTo(0, -r*0.7);
+    ctx.lineTo(-r*0.2, -r*0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(-r*0.06, -r*0.1, r*0.12, -r*0.35);
+    ctx.restore();
+  }
+}
+
+// B: Fist Smash — clenched fist
+function megaB(ctx, r) {
+  drawGlow(ctx, r, '#ff2222');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#ff5555');
+  g.addColorStop(1, '#aa0000');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Impact lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = r * 0.04;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.65, Math.sin(a) * r * 0.65);
+    ctx.lineTo(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85);
+    ctx.stroke();
+  }
+  // Fist (simplified)
+  ctx.fillStyle = '#ffcc88';
+  // Palm
+  ctx.beginPath();
+  ctx.arc(0, r*0.05, r*0.35, 0, Math.PI * 2);
+  ctx.fill();
+  // Fingers (4 bumps on top)
+  for (let i = 0; i < 4; i++) {
+    const fx = -r*0.22 + i * r*0.15;
+    ctx.beginPath();
+    ctx.arc(fx, -r*0.22, r*0.11, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Knuckle lines
+  ctx.strokeStyle = '#cc9966';
+  ctx.lineWidth = r * 0.03;
+  for (let i = 0; i < 4; i++) {
+    const fx = -r*0.22 + i * r*0.15;
+    ctx.beginPath();
+    ctx.arc(fx, -r*0.15, r*0.08, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+  }
+}
+
+// C: Shield Star — star inside a hexagonal shield
+function megaC(ctx, r) {
+  drawGlow(ctx, r, '#ff3333');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#ff6644');
+  g.addColorStop(1, '#bb1100');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Shield shape
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.7);
+  ctx.lineTo(r*0.55, -r*0.35);
+  ctx.lineTo(r*0.55, r*0.2);
+  ctx.lineTo(0, r*0.65);
+  ctx.lineTo(-r*0.55, r*0.2);
+  ctx.lineTo(-r*0.55, -r*0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = r * 0.05;
+  ctx.stroke();
+  // Up arrow in center
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.4);
+  ctx.lineTo(r*0.25, -r*0.05);
+  ctx.lineTo(r*0.1, -r*0.05);
+  ctx.lineTo(r*0.1, r*0.3);
+  ctx.lineTo(-r*0.1, r*0.3);
+  ctx.lineTo(-r*0.1, -r*0.05);
+  ctx.lineTo(-r*0.25, -r*0.05);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// =============================================
+// MAGNET CONCEPTS
+// =============================================
+
+// A: Horseshoe Magnet — classic U shape
+function magA(ctx, r) {
+  drawGlow(ctx, r, '#4488ff');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#6699ff');
+  g.addColorStop(1, '#2244aa');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Magnet U-shape
+  ctx.strokeStyle = '#ff3333';
+  ctx.lineWidth = r * 0.2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(0, -r*0.05, r*0.4, 0, Math.PI);
+  ctx.stroke();
+  // Tips (silver/blue)
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = r * 0.2;
+  ctx.beginPath();
+  ctx.moveTo(-r*0.4, -r*0.05);
+  ctx.lineTo(-r*0.4, -r*0.35);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(r*0.4, -r*0.05);
+  ctx.lineTo(r*0.4, -r*0.35);
+  ctx.stroke();
+  // Magnetic field lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = r * 0.03;
+  ctx.setLineDash([r*0.05, r*0.05]);
+  for (let i = 0; i < 3; i++) {
+    const mr = r * (0.55 + i * 0.12);
+    ctx.beginPath();
+    ctx.arc(0, -r*0.05, mr, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+}
+
+// B: Vortex Pull — spiral/swirl
+function magB(ctx, r) {
+  drawGlow(ctx, r, '#4488ff');
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+  g.addColorStop(0, '#88bbff');
+  g.addColorStop(0.5, '#4466dd');
+  g.addColorStop(1, '#1133aa');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Spiral arms
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = r * 0.06;
+  ctx.lineCap = 'round';
+  for (let arm = 0; arm < 3; arm++) {
+    ctx.beginPath();
+    const offset = (arm / 3) * Math.PI * 2;
+    for (let t = 0; t < 60; t++) {
+      const angle = offset + t * 0.12;
+      const dist = r * 0.1 + t * r * 0.012;
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+      if (t === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  // Center dot
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// C: Magnetic Ring — concentric rings with pull indicators
+function magC(ctx, r) {
+  drawGlow(ctx, r, '#4488ff');
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+  g.addColorStop(0, '#66aaff');
+  g.addColorStop(1, '#2244bb');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Concentric rings
+  for (let i = 0; i < 3; i++) {
+    ctx.strokeStyle = `rgba(255,255,255,${0.15 + i * 0.1})`;
+    ctx.lineWidth = r * 0.04;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * (0.75 - i * 0.2), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  // Inward arrows
+  ctx.fillStyle = '#fff';
+  const arrowDirs = [0, Math.PI/2, Math.PI, Math.PI*1.5];
+  for (const a of arrowDirs) {
+    ctx.save();
+    ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(0, -r*0.25);
+    ctx.lineTo(r*0.12, -r*0.5);
+    ctx.lineTo(-r*0.12, -r*0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  // Star in center
+  ctx.fillStyle = '#ffdd44';
+  const sr = r * 0.18;
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = (i * 4 * Math.PI / 5) - Math.PI / 2;
+    ctx.lineTo(Math.cos(a) * sr, Math.sin(a) * sr);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// =============================================
+// SUPER JUMP CONCEPTS
+// =============================================
+
+// A: Spring Coil — bouncy spring
+function jumpA(ctx, r) {
+  drawGlow(ctx, r, '#8855ff');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#aa77ff');
+  g.addColorStop(1, '#5522aa');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Spring coils
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = r * 0.08;
+  ctx.lineCap = 'round';
+  const coils = 4;
+  const springW = r * 0.4;
+  const springH = r * 1.2;
+  const startY = r * 0.5;
+  ctx.beginPath();
+  for (let i = 0; i <= coils * 20; i++) {
+    const t = i / (coils * 20);
+    const x = Math.sin(t * coils * Math.PI * 2) * springW;
+    const y = startY - t * springH;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Up arrow at top
+  ctx.fillStyle = '#ffcc00';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.75);
+  ctx.lineTo(r*0.2, -r*0.45);
+  ctx.lineTo(-r*0.2, -r*0.45);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// B: Up Arrow Burst — bold arrow with energy burst
+function jumpB(ctx, r) {
+  drawGlow(ctx, r, '#8855ff');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#bb88ff');
+  g.addColorStop(1, '#6633bb');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Energy burst rays
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = r * 0.04;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5);
+    ctx.lineTo(Math.cos(a) * r * 0.85, Math.sin(a) * r * 0.85);
+    ctx.stroke();
+  }
+  // Bold up arrow
+  ctx.fillStyle = '#fff';
+  ctx.shadowColor = '#aa66ff';
+  ctx.shadowBlur = r * 0.3;
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.65);
+  ctx.lineTo(r*0.4, -r*0.1);
+  ctx.lineTo(r*0.15, -r*0.1);
+  ctx.lineTo(r*0.15, r*0.55);
+  ctx.lineTo(-r*0.15, r*0.55);
+  ctx.lineTo(-r*0.15, -r*0.1);
+  ctx.lineTo(-r*0.4, -r*0.1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+// C: Wing Badge — wings spreading from center
+function jumpC(ctx, r) {
+  drawGlow(ctx, r, '#8855ff');
+  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
+  g.addColorStop(0, '#aa77ff');
+  g.addColorStop(1, '#5522cc');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  // Wings
+  ctx.fillStyle = '#fff';
+  // Left wing
+  ctx.beginPath();
+  ctx.moveTo(-r*0.1, -r*0.1);
+  ctx.quadraticCurveTo(-r*0.7, -r*0.6, -r*0.75, -r*0.15);
+  ctx.quadraticCurveTo(-r*0.5, r*0.1, -r*0.1, r*0.15);
+  ctx.closePath();
+  ctx.fill();
+  // Right wing
+  ctx.beginPath();
+  ctx.moveTo(r*0.1, -r*0.1);
+  ctx.quadraticCurveTo(r*0.7, -r*0.6, r*0.75, -r*0.15);
+  ctx.quadraticCurveTo(r*0.5, r*0.1, r*0.1, r*0.15);
+  ctx.closePath();
+  ctx.fill();
+  // Center chevron
+  ctx.fillStyle = '#ffcc00';
+  ctx.beginPath();
+  ctx.moveTo(0, -r*0.35);
+  ctx.lineTo(r*0.15, r*0.05);
+  ctx.lineTo(0, r*0.35);
+  ctx.lineTo(-r*0.15, r*0.05);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// =============================================
+// RENDER ALL CONCEPTS
+// =============================================
+
+function renderSet(canvasId, drawFn) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  // Large
+  drawAt(ctx, 45, 50, 38, drawFn);
+  // Medium (game size)
+  drawAt(ctx, 120, 55, 22, drawFn);
+  // Small (HUD)
+  drawAt(ctx, 175, 60, 14, drawFn);
+  // Labels
+  ctx.fillStyle = '#444';
+  ctx.font = '9px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Large', 45, 95);
+  ctx.fillText('Game', 120, 95);
+  ctx.fillText('HUD', 175, 95);
+}
+
+// Turbo Boost
+renderSet('turbo-a', turboA);
+renderSet('turbo-b', turboB);
+renderSet('turbo-c', turboC);
+
+// Mega Truck
+renderSet('mega-a', megaA);
+renderSet('mega-b', megaB);
+renderSet('mega-c', megaC);
+
+// Magnet
+renderSet('mag-a', magA);
+renderSet('mag-b', magB);
+renderSet('mag-c', magC);
+
+// Super Jump
+renderSet('jump-a', jumpA);
+renderSet('jump-b', jumpB);
+renderSet('jump-c', jumpC);
+
+</script>
+</body>
+</html>
