@@ -1,0 +1,3 @@
+# Working files — don't track
+patch-*.js
+.claude/
