@@ -818,23 +818,7 @@ a { text-decoration: none; color: inherit; }
   // Camera flashes
   const flashes = [];
 
-  // Moths (8-9 total, split between two spotlights at 25% and 75%)
-  const moths = [];
   const spotXs = [W * 0.25, W * 0.75];
-  for (let s = 0; s < 2; s++) {
-    for (let i = 0; i < 2 + (s === 0 ? 1 : 0); i++) {
-      moths.push({
-        spotIdx: s,
-        angle: Math.random() * 6.28,
-        radius: 8 + Math.random() * 25,
-        speed: 0.02 + Math.random() * 0.03,
-        orbitY: 20 + Math.random() * 25,
-        size: 1 + Math.random() * 1.5,
-        dartX: 0, dartY: 0,
-        dartTimer: Math.floor(80 + Math.random() * 160)
-      });
-    }
-  }
 
   // Dust particles
   const dust = [];
@@ -919,7 +903,7 @@ a { text-decoration: none; color: inherit; }
     }
 
     // Camera flashes
-    if (frame % (30 + Math.floor(Math.random() * 90)) === 0) {
+    if (frame % (8 + Math.floor(Math.random() * 20)) === 0) {
       flashes.push({ x: Math.random() * W, y: 4 + Math.random() * 8, life: 1, r: 3 + Math.random() * 4 });
     }
     for (let i = flashes.length - 1; i >= 0; i--) {
@@ -960,14 +944,16 @@ a { text-decoration: none; color: inherit; }
     ctx.scale(sc, sc);
     ctx.rotate(tilt);
 
-    // Truck body
+    // Truck body — positioned so bottom sits just above wheel tops
     const bW = 36, bH = 14;
-    const bx = -bW / 2, by = -bH;
+    const wY = 8; // wheel center Y
+    const by = wY - bH - 1; // body bottom 1px above wheel top (wheel radius 7)
+    const bx = -bW / 2;
 
-    // Suspension arms (shorter — wheels close to body)
+    // Suspension arms
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(bx + 8, bH * 0.5); ctx.lineTo(bx + 8, bH + 1); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(bx + bW - 8, bH * 0.5); ctx.lineTo(bx + bW - 8, bH + 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx + 8, by + bH); ctx.lineTo(bx + 8, wY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx + bW - 8, by + bH); ctx.lineTo(bx + bW - 8, wY); ctx.stroke();
 
     // Lower body
     ctx.fillStyle = '#cc4400';
@@ -1002,9 +988,9 @@ a { text-decoration: none; color: inherit; }
       ctx.beginPath(); ctx.moveTo(f[0], fby + 2); ctx.lineTo(f[0] + 1.5, fby - f[1]); ctx.lineTo(f[0] + 3, fby + 2); ctx.fill();
     });
 
-    // Wheels (tight to body)
-    drawWheel(bx + 8, bH + 1, 7, wheelRot);
-    drawWheel(bx + bW - 8, bH + 1, 7, wheelRot);
+    // Wheels
+    drawWheel(bx + 8, wY, 7, wheelRot);
+    drawWheel(bx + bW - 8, wY, 7, wheelRot);
 
     // Exhaust flame
     const fa = 0.4 + Math.random() * 0.5, fw = 3 + Math.random() * 6;
@@ -1050,30 +1036,6 @@ a { text-decoration: none; color: inherit; }
     if (Math.abs(bounceRaw) < 0.08) {
       ctx.fillStyle = 'rgba(255,150,0,0.05)';
       ctx.fillRect(0, 0, W, H);
-    }
-
-    // ── Moths ──
-    for (const m of moths) {
-      m.angle += m.speed;
-      m.dartTimer--;
-      if (m.dartTimer <= 0) {
-        m.dartX = (Math.random() - 0.5) * 12;
-        m.dartY = (Math.random() - 0.5) * 8;
-        m.dartTimer = 80 + Math.floor(Math.random() * 160);
-      }
-      m.dartX *= 0.97; m.dartY *= 0.97;
-      const sx = spotXs[m.spotIdx];
-      const mx = sx + Math.cos(m.angle) * m.radius + m.dartX;
-      const my = m.orbitY + Math.sin(m.angle * 1.3) * m.radius * 0.6 + m.dartY;
-      const distFromCenter = Math.abs(mx - sx) / (W * 0.15);
-      const brightness = Math.max(0.15, 1 - distFromCenter);
-      ctx.globalAlpha = brightness * 0.15;
-      ctx.fillStyle = '#fffbe0';
-      ctx.beginPath(); ctx.arc(mx, my, m.size * 3, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = brightness;
-      ctx.fillStyle = '#fffbe0';
-      ctx.beginPath(); ctx.arc(mx, my, m.size, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 1;
     }
 
     // ── Dust particles ──
