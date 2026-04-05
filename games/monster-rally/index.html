@@ -135,11 +135,14 @@ checkOrientation();
 // ============================================================
 function resize() {
   // Fill the entire screen — canvas CSS is 100vw x 100dvh
-  // Set canvas resolution to match actual pixel dimensions
+  // DPR-aware sizing for crisp rendering on Retina
   const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
   const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  canvas.width = vw;
-  canvas.height = vh;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = vw * dpr;
+  canvas.height = vh * dpr;
+  canvas.style.width = vw + 'px';
+  canvas.style.height = vh + 'px';
 }
 resize();
 window.addEventListener('resize', resize);
@@ -1376,21 +1379,29 @@ function drawPauseOverlay() {
 }
 
 function drawGamesButton(x, y) {
-  // Prominent orange rounded button — 130x50, easy to tap
+  // Top-left MENU button — glass style matching Space Dodge
   ctx.save();
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.beginPath(); ctx.roundRect(x + 2, y + 2, 130, 44, 12); ctx.fill();
-  // Background
-  ctx.fillStyle = 'rgba(255,107,53,0.85)';
-  ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.fill();
-  // Border
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.roundRect(x, y, 130, 44, 12); ctx.stroke();
-  // Text
-  ctx.fillStyle = '#fff'; ctx.font = "bold 18px 'Luckiest Guy', cursive";
-  ctx.textAlign = 'center';
-  ctx.fillText('\uD83C\uDFE0 MENU', x + 65, y + 30);
+  const mbW = 110, mbH = Math.max(44, 36);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x, y, mbW, mbH, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = "700 13px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
+  ctx.fillText('\uD83C\uDFE0 MENU', x + mbW / 2, y + mbH / 2 + 5);
+  ctx.restore();
+}
+
+function drawTrophyButton() {
+  // Top-right TROPHIES button — glass style matching Space Dodge
+  ctx.save();
+  const tbW = 130, tbH = Math.max(44, 36);
+  const tbX = W - tbW - 10, tbY = 10;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.strokeStyle = 'rgba(255,202,40,0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(tbX, tbY, tbW, tbH, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#FFCA28'; ctx.font = "700 13px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
+  ctx.fillText('\uD83C\uDFC6 TROPHIES', tbX + tbW / 2, tbY + tbH / 2 + 5);
   ctx.restore();
 }
 
@@ -1409,14 +1420,18 @@ function drawChangeTruckButton(x, y) {
 }
 
 function drawPauseButton() {
-  // Pause icon — bigger for mobile (28px icon, 50px hit area), left of mute button
+  // Glass rounded square with gear icon — 44x44, top-right
   const px = W - 70, py = 18;
+  const bSz = 44, bx = px - bSz / 2, by = py - bSz / 2;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath(); ctx.roundRect(px - 18, py - 18, 36, 36, 10); ctx.fill();
-  // Two vertical bars (bigger)
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(bx, by, bSz, bSz, 12); ctx.fill(); ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillRect(px - 7, py - 8, 5, 16);
-  ctx.fillRect(px + 3, py - 8, 5, 16);
+  ctx.font = "22px 'Baloo 2', sans-serif";
+  ctx.textAlign = 'center';
+  ctx.fillText('⚙', px, py + 8);
+  ctx.textAlign = 'left';
 }
 
 function drawPickerScreen() {
@@ -1491,27 +1506,52 @@ function drawPickerScreen() {
     }
   }
 
-  // Page arrows
+  // Page arrows — glass pills with chevrons
   if (PICKER_PAGES > 1) {
-    ctx.font = "700 36px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
-    if (pickerPage > 0) {
-      ctx.fillStyle = '#fff';
-      ctx.fillText('◀', 40, 240);
-    } else {
-      ctx.fillStyle = '#333';
-      ctx.fillText('◀', 40, 240);
-    }
-    if (pickerPage < PICKER_PAGES - 1) {
-      ctx.fillStyle = '#fff';
-      ctx.fillText('▶', W - 40, 240);
-    } else {
-      ctx.fillStyle = '#333';
-      ctx.fillText('▶', W - 40, 240);
-    }
+    const pillW = 40, pillH = 64, pillR = 20, pillY = 240 - pillH / 2;
+
+    // Left pill
+    const leftEnabled = pickerPage > 0;
+    const lpX = 20;
+    const lpG = ctx.createLinearGradient(0, pillY, 0, pillY + pillH);
+    lpG.addColorStop(0, 'rgba(255,255,255,0.08)');
+    lpG.addColorStop(1, 'rgba(255,255,255,0.02)');
+    ctx.fillStyle = lpG;
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(lpX, pillY, pillW, pillH, pillR); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = leftEnabled ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(lpX + pillW * 0.58, 240 - pillH * 0.15);
+    ctx.lineTo(lpX + pillW * 0.35, 240);
+    ctx.lineTo(lpX + pillW * 0.58, 240 + pillH * 0.15);
+    ctx.stroke();
+
+    // Right pill
+    const rightEnabled = pickerPage < PICKER_PAGES - 1;
+    const rpX = W - 20 - pillW;
+    const rpG = ctx.createLinearGradient(0, pillY, 0, pillY + pillH);
+    rpG.addColorStop(0, 'rgba(255,255,255,0.08)');
+    rpG.addColorStop(1, 'rgba(255,255,255,0.02)');
+    ctx.fillStyle = rpG;
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(rpX, pillY, pillW, pillH, pillR); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = rightEnabled ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(rpX + pillW * 0.42, 240 - pillH * 0.15);
+    ctx.lineTo(rpX + pillW * 0.65, 240);
+    ctx.lineTo(rpX + pillW * 0.42, 240 + pillH * 0.15);
+    ctx.stroke();
+
     // Page dots
     for (let p = 0; p < PICKER_PAGES; p++) {
-      ctx.fillStyle = p === pickerPage ? '#ffcc00' : '#555';
+      ctx.fillStyle = p === pickerPage ? '#FF6D00' : 'rgba(255,255,255,0.2)';
+      if (p === pickerPage) { ctx.shadowColor = '#FF6D00'; ctx.shadowBlur = 6; }
       ctx.beginPath(); ctx.arc(W / 2 - (PICKER_PAGES - 1) * 8 + p * 16, 310, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
     }
   }
 
@@ -1554,15 +1594,18 @@ function drawModeSelectScreen() {
   ctx.fillStyle = lightGrad;
   ctx.beginPath(); ctx.arc(showcaseX, showcaseY, 50, 0, Math.PI * 2); ctx.fill();
 
-  // Glowing platform arc
-  ctx.strokeStyle = truckInfo.accent || '#ffcc00';
-  ctx.lineWidth = 1.5;
-  ctx.globalAlpha = 0.35;
-  ctx.beginPath(); ctx.ellipse(showcaseX, showcaseY + 16, 40, 6, 0, 0, Math.PI * 2); ctx.stroke();
-  ctx.globalAlpha = 0.12;
-  ctx.fillStyle = truckInfo.accent || '#ffcc00';
-  ctx.beginPath(); ctx.ellipse(showcaseX, showcaseY + 16, 40, 6, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.globalAlpha = 1;
+  // Dirt platform under truck
+  ctx.save();
+  const dirtG = ctx.createLinearGradient(showcaseX - 100, 0, showcaseX + 100, 0);
+  dirtG.addColorStop(0, 'transparent');
+  dirtG.addColorStop(0.3, 'rgba(139,90,43,0.5)');
+  dirtG.addColorStop(0.7, 'rgba(139,90,43,0.5)');
+  dirtG.addColorStop(1, 'transparent');
+  ctx.shadowColor = 'rgba(139,90,43,0.3)';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = dirtG;
+  ctx.fillRect(showcaseX - 100, showcaseY + 12, 200, 8);
+  ctx.restore();
 
   // Truck preview (smaller)
   ctx.save();
@@ -1577,8 +1620,26 @@ function drawModeSelectScreen() {
   ctx.font = "bold 11px 'Luckiest Guy', cursive";
   ctx.fillText(truckInfo.name, showcaseX, showcaseY + 36);
 
+  // Speed bar
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = "700 10px 'Baloo 2', sans-serif";
+  ctx.fillText('SPEED', showcaseX, showcaseY + 52);
+  const speedBarW = W * 0.35, speedBarH = 6;
+  const speedBarX = showcaseX - speedBarW / 2, speedBarY = showcaseY + 57;
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath(); ctx.roundRect(speedBarX, speedBarY, speedBarW, speedBarH, 3); ctx.fill();
+  const speedPct = truckInfo.type === 'monster' ? 0.65 : truckInfo.type === 'car' ? 0.9 : 0.5;
+  const speedFillW = speedBarW * speedPct;
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,109,0,0.4)'; ctx.shadowBlur = 8;
+  const speedG = ctx.createLinearGradient(speedBarX, 0, speedBarX + speedFillW, 0);
+  speedG.addColorStop(0, '#FF6D00'); speedG.addColorStop(1, '#FFD700');
+  ctx.fillStyle = speedG;
+  ctx.beginPath(); ctx.roundRect(speedBarX, speedBarY, speedFillW, speedBarH, 3); ctx.fill();
+  ctx.restore();
+
   const btnW = 220, btnH = 52, gap = 10;
-  const by = 195;
+  const by = 205;
   const endlessUnlocked = localStorage.getItem('mr_endless_unlocked') === 'true';
   const modes = [
     { label: 'RALLY', desc: '8-level campaign!', color: 'rgba(34,204,68,', key: '1' },
@@ -1594,21 +1655,30 @@ function drawModeSelectScreen() {
     ctx.fillText('x ' + coins, W / 2 + 92, 94);
   }
 
+  // Mode buttons — styled with gradients and drop shadows
+  const modeColors = [
+    { g1: '#22cc44', g2: '#1a9934', shadow: '#0d6622' }, // Rally
+    { g1: '#FF6D00', g2: '#E65100', shadow: '#BF360C' }, // Crush Frenzy
+    { g1: '#00cccc', g2: '#009999', shadow: '#006666' }, // Endless
+  ];
   for (let i = 0; i < modes.length; i++) {
-    const m = modes[i];
+    const m = modes[i], mc = modeColors[i];
     const btnY = by + i * (btnH + gap);
     const bx = W / 2 - btnW / 2;
-    const pulse = 0.7 + Math.sin(Date.now() * 0.004 + i * 1.2) * 0.25;
 
-    ctx.fillStyle = m.color + pulse + ')';
-    ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 15); ctx.fill();
+    // Drop shadow
+    ctx.fillStyle = mc.shadow;
+    ctx.beginPath(); ctx.roundRect(bx, btnY + 3, btnW, btnH, 12); ctx.fill();
 
-    // Border
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 15); ctx.stroke();
+    // Button gradient
+    const bGrad = ctx.createLinearGradient(0, btnY, 0, btnY + btnH);
+    bGrad.addColorStop(0, mc.g1);
+    bGrad.addColorStop(1, mc.g2);
+    ctx.fillStyle = m.color.includes('80,80,80') ? 'rgba(80,80,80,0.7)' : bGrad;
+    ctx.beginPath(); ctx.roundRect(bx, btnY, btnW, btnH, 12); ctx.fill();
 
     // Label
-    ctx.fillStyle = '#fff'; ctx.font = "bold 20px 'Luckiest Guy', cursive";
+    ctx.fillStyle = '#fff'; ctx.font = "bold 18px 'Luckiest Guy', cursive";
     ctx.fillText(m.label, W / 2, btnY + 24);
 
     // Description
@@ -1616,7 +1686,7 @@ function drawModeSelectScreen() {
     ctx.fillText(m.desc, W / 2, btnY + 42);
 
     // Key hint
-    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = "11px 'Baloo 2', sans-serif";
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = "11px 'Baloo 2', sans-serif";
     ctx.fillText('[' + m.key + ']', bx + btnW - 20, btnY + 18);
   }
 
@@ -1665,8 +1735,10 @@ function drawLevelCompleteScreen() {
   ctx.textAlign = 'center';
   ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
 
-  // "LEVEL COMPLETE!"
+  // "LEVEL COMPLETE!" — crisp with dark outline
   const bounce = Math.sin(Date.now() * 0.005) * 5;
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
   ctx.fillStyle = '#ffd700';
   ctx.font = "bold 40px 'Luckiest Guy', cursive";
   ctx.strokeText('LEVEL COMPLETE!', W / 2, 100 + bounce);
@@ -1688,8 +1760,8 @@ function drawLevelCompleteScreen() {
   }
   // Glow shadow in matching color
   ctx.shadowColor = lvl.nameColor === 'rainbow' ? '#ff44ff' : (lvl.nameColor || '#aaa');
-  ctx.shadowBlur = 12;
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+  ctx.shadowBlur = 3;
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
   ctx.strokeText(lvl.name, W / 2, 138);
   ctx.fillText(lvl.name, W / 2, 138);
   ctx.shadowBlur = 0;
@@ -1707,7 +1779,7 @@ function drawLevelCompleteScreen() {
   // Tap to continue
   const blink = Math.sin(Date.now() * 0.004) > 0;
   if (blink) {
-    ctx.fillStyle = '#fff'; ctx.font = "700 18px 'Baloo 2', sans-serif";
+    ctx.fillStyle = '#FF6D00'; ctx.font = "700 13px 'Baloo 2', sans-serif";
     if (campaignLevel < campaignSequence.length - 1) {
       ctx.fillText('TAP FOR NEXT LEVEL!', W / 2, H - 45);
     } else {
@@ -1828,6 +1900,8 @@ function drawGameOverScreen() {
 
   {
     // Frenzy: show TIME'S UP
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
     ctx.fillStyle = '#ff4400';
     ctx.font = "bold 44px 'Luckiest Guy', cursive";
     ctx.strokeText("TIME'S UP!", W / 2, 110 + bounce);
@@ -3653,6 +3727,17 @@ function drawStar(s, starIndex) {
 
   ctx.save();
   ctx.translate(sx, sy);
+  // Progressive glow based on player score (using star collection as proxy)
+  const p1score = player1 ? player1.score : 0;
+  const glowLevel = Math.min(1, p1score / 200);
+  if (glowLevel > 0.25) {
+    ctx.shadowColor = 'rgba(255,215,0,' + (0.3 + glowLevel * 0.4) + ')';
+    ctx.shadowBlur = 4 + glowLevel * 8;
+  }
+  if (glowLevel > 0.75) {
+    const pulse = 1 + Math.sin(Date.now() * 0.008) * 0.08;
+    ctx.scale(pulse, pulse);
+  }
   drawStarCoin(12);
   ctx.restore();
 }
@@ -4326,34 +4411,48 @@ function drawTitleScreen() {
 
   titleBounce += 0.05;
 
-  // Individual bouncing letters for "MONSTER"
+  // ── TITLE — "MONSTER" gold + "RALLY" orange-red ──────────
   ctx.textAlign = 'center';
-  const word1 = 'MONSTER';
-  ctx.font = "bold 48px 'Luckiest Guy', cursive";
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
-  const w1Width = ctx.measureText(word1).width;
-  let cx1 = W / 2 - w1Width / 2;
-  for (let i = 0; i < word1.length; i++) {
-    const charBounce = Math.sin(titleBounce + i * 0.3) * 6;
-    const charW = ctx.measureText(word1[i]).width;
-    ctx.fillStyle = i % 2 === 0 ? '#ff4400' : '#ff6622';
-    ctx.strokeText(word1[i], cx1 + charW / 2, 150 + charBounce);
-    ctx.fillText(word1[i], cx1 + charW / 2, 150 + charBounce);
-    cx1 += charW;
-  }
 
-  const word2 = 'RALLY!';
-  ctx.font = "bold 52px 'Luckiest Guy', cursive";
-  const w2Width = ctx.measureText(word2).width;
-  let cx2 = W / 2 - w2Width / 2;
-  for (let i = 0; i < word2.length; i++) {
-    const charBounce = Math.sin(titleBounce + i * 0.3 + 1) * 6;
-    const charW = ctx.measureText(word2[i]).width;
-    ctx.fillStyle = i % 2 === 0 ? '#ffcc00' : '#ffdd44';
-    ctx.strokeText(word2[i], cx2 + charW / 2, 205 + charBounce);
-    ctx.fillText(word2[i], cx2 + charW / 2, 205 + charBounce);
-    cx2 += charW;
-  }
+  // "MONSTER" — gold with orange drop shadow
+  ctx.save();
+  ctx.font = "bold 48px 'Luckiest Guy', cursive";
+  ctx.shadowColor = 'rgba(255,215,0,0.3)';
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
+  ctx.fillStyle = '#E65100';
+  ctx.fillText('MONSTER', W / 2 + 3, 153); // drop shadow
+  ctx.fillStyle = '#FFD700';
+  ctx.strokeText('MONSTER', W / 2, 150);
+  ctx.fillText('MONSTER', W / 2, 150);
+  ctx.restore();
+
+  // "RALLY" — red with dark red drop shadow
+  ctx.save();
+  ctx.font = "bold 48px 'Luckiest Guy', cursive";
+  ctx.shadowColor = 'rgba(255,61,0,0.3)';
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2;
+  ctx.fillStyle = '#8E0000';
+  ctx.fillText('RALLY', W / 2 + 3, 203); // drop shadow
+  ctx.fillStyle = '#FF3D00';
+  ctx.strokeText('RALLY', W / 2, 200);
+  ctx.fillText('RALLY', W / 2, 200);
+  ctx.restore();
+
+  // Gradient stripe between title and subtitle
+  const stripeG = ctx.createLinearGradient(W / 2 - 100, 0, W / 2 + 100, 0);
+  stripeG.addColorStop(0, 'transparent');
+  stripeG.addColorStop(0.3, '#FFD700');
+  stripeG.addColorStop(0.7, '#FF3D00');
+  stripeG.addColorStop(1, 'transparent');
+  ctx.fillStyle = stripeG;
+  ctx.fillRect(W / 2 - 100, 212, 200, 2);
+
+  // Subtitle
+  ctx.fillStyle = 'rgba(255,215,0,0.7)';
+  ctx.font = "bold 12px 'Baloo 2', sans-serif";
+  ctx.fillText('CRUSH EVERYTHING IN YOUR PATH', W / 2, 230);
 
   // Monster truck flanking the title (left side)
   ctx.save();
@@ -4385,8 +4484,9 @@ function drawTitleScreen() {
   ctx.fillStyle = '#444'; ctx.font = "10px 'Baloo 2', sans-serif"; ctx.textAlign = 'right';
   ctx.fillText('v1.0', W - 10, H - 8);
 
-  // Back to games button (prominent orange button, 130x50)
+  // Corner buttons
   drawGamesButton(15, 10);
+  drawTrophyButton();
 
   ctx.textAlign = 'left';
 }
