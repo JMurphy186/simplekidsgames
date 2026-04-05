@@ -822,7 +822,7 @@ a { text-decoration: none; color: inherit; }
   const moths = [];
   const spotXs = [W * 0.25, W * 0.75];
   for (let s = 0; s < 2; s++) {
-    for (let i = 0; i < 4 + (s === 0 ? 1 : 0); i++) {
+    for (let i = 0; i < 2 + (s === 0 ? 1 : 0); i++) {
       moths.push({
         spotIdx: s,
         angle: Math.random() * 6.28,
@@ -964,10 +964,10 @@ a { text-decoration: none; color: inherit; }
     const bW = 36, bH = 14;
     const bx = -bW / 2, by = -bH;
 
-    // Suspension arms
+    // Suspension arms (shorter — wheels close to body)
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(bx + 8, bH * 0.3); ctx.lineTo(bx + 8, bH + 4); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(bx + bW - 8, bH * 0.3); ctx.lineTo(bx + bW - 8, bH + 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx + 8, bH * 0.5); ctx.lineTo(bx + 8, bH + 1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx + bW - 8, bH * 0.5); ctx.lineTo(bx + bW - 8, bH + 1); ctx.stroke();
 
     // Lower body
     ctx.fillStyle = '#cc4400';
@@ -1002,9 +1002,9 @@ a { text-decoration: none; color: inherit; }
       ctx.beginPath(); ctx.moveTo(f[0], fby + 2); ctx.lineTo(f[0] + 1.5, fby - f[1]); ctx.lineTo(f[0] + 3, fby + 2); ctx.fill();
     });
 
-    // Wheels
-    drawWheel(bx + 8, bH + 5, 7, wheelRot);
-    drawWheel(bx + bW - 8, bH + 5, 7, wheelRot);
+    // Wheels (tight to body)
+    drawWheel(bx + 8, bH + 1, 7, wheelRot);
+    drawWheel(bx + bW - 8, bH + 1, 7, wheelRot);
 
     // Exhaust flame
     const fa = 0.4 + Math.random() * 0.5, fw = 3 + Math.random() * 6;
