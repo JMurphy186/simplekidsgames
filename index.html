@@ -916,17 +916,53 @@ a { text-decoration: none; color: inherit; }
       if (f.life <= 0) flashes.splice(i, 1);
     }
 
-    // ── Crushed cars ──
+    // ── Crushed cars — slightly squished but recognizable ──
     for (const car of cars) {
       ctx.save();
-      ctx.translate(car.x, H * 0.73);
-      ctx.scale(1, 0.4);
+      ctx.translate(car.x, H * 0.74);
+      ctx.scale(1, 0.65); // partially crushed, not flat
+
+      // Body (sedan shape)
       ctx.fillStyle = car.color;
       ctx.beginPath();
-      ctx.roundRect(-12, -6, 24, 12, 2);
+      ctx.moveTo(-14, 2); // bottom left
+      ctx.lineTo(-14, -2); // left side
+      ctx.lineTo(-12, -4); // hood rise
+      ctx.lineTo(-4, -4); // hood top
+      ctx.lineTo(-3, -8); // windshield bottom
+      ctx.lineTo(3, -8);  // roof front
+      ctx.lineTo(7, -8);  // roof back
+      ctx.lineTo(9, -4);  // rear window
+      ctx.lineTo(14, -4); // trunk
+      ctx.lineTo(14, 2);  // bottom right
+      ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(-10, -3, 8, 6);
+
+      // Darker lower panel
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.fillRect(-14, -1, 28, 3);
+
+      // Windows
+      ctx.fillStyle = 'rgba(120,200,240,0.6)';
+      ctx.beginPath();
+      ctx.moveTo(-2, -7); ctx.lineTo(2, -7); ctx.lineTo(3, -5); ctx.lineTo(-3, -5);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(4, -7); ctx.lineTo(7, -7); ctx.lineTo(8, -5); ctx.lineTo(4, -5);
+      ctx.closePath(); ctx.fill();
+
+      // Wheels (small, partially visible beneath body)
+      ctx.fillStyle = '#1a1a1a';
+      ctx.beginPath(); ctx.arc(-9, 3, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(10, 3, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#555';
+      ctx.beginPath(); ctx.arc(-9, 3, 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(10, 3, 1.5, 0, Math.PI * 2); ctx.fill();
+
+      // Crush damage — dented roof line
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(-2, -7); ctx.lineTo(0, -6); ctx.lineTo(5, -7); ctx.stroke();
+
       ctx.restore();
     }
 
