@@ -1340,9 +1340,17 @@ a { text-decoration: none; color: inherit; }
     ctx.ellipse(sx, sy + shipH * 0.3, shipW * 1.2, shipH * 0.5, 0, 0, 6.28);
     ctx.fill();
 
-    // Draw Nova Wing sprite
+    // Draw Nova Wing sprite (with triangle fallback)
     if (novaWingImg.complete && novaWingImg.naturalWidth > 0) {
       ctx.drawImage(novaWingImg, sx - shipW / 2, sy - shipH / 2, shipW, shipH);
+    } else {
+      // Fallback triangle while image loads
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - shipH * 0.4);
+      ctx.lineTo(sx - shipW * 0.35, sy + shipH * 0.3);
+      ctx.lineTo(sx + shipW * 0.35, sy + shipH * 0.3);
+      ctx.closePath();
+      ctx.fillStyle = '#1a58cc'; ctx.fill();
     }
 
     // Exhaust flame (pulsing blue, below ship)
