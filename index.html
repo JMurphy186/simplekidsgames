@@ -686,16 +686,9 @@ a { text-decoration: none; color: inherit; }
     <div class="game-grid">
       <!-- 1. Monster Rally — LIVE -->
       <a href="games/monster-rally/" class="game-card live">
-        <div class="card-thumb rally-bg">
+        <div class="card-thumb" style="position:relative;overflow:hidden;height:90px;padding:0;">
+          <canvas id="truckCanvas" width="200" height="90" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
           <div class="play-badge">PLAY!</div>
-          <div class="rally-canvas-wrap">
-            <div class="rally-stars-bg">
-              <span class="rally-s" style="left:15%;top:12%;--d:0s;">⭐</span>
-              <span class="rally-s" style="left:68%;top:8%;--d:0.4s;">⭐</span>
-              <span class="rally-s" style="left:45%;top:22%;--d:0.8s;">⭐</span>
-            </div>
-            <canvas id="truckCanvas" width="160" height="90"></canvas>
-          </div>
         </div>
         <div class="card-bottom">
           <div class="card-name">Monster Rally</div>
@@ -809,8 +802,11 @@ a { text-decoration: none; color: inherit; }
 (function() {
   const c = document.getElementById('truckCanvas');
   if (!c) return;
+  // Match canvas pixel width to actual display width — same pattern as sdCanvas/crCanvas
+  const displayW = Math.round(c.getBoundingClientRect().width);
+  if (displayW > 0) c.width = displayW;
   const ctx = c.getContext('2d');
-  const W = 160, H = 90;
+  const W = c.width, H = c.height;
   let frame = 0;
 
   // Crowd heads
