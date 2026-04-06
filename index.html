@@ -1102,7 +1102,6 @@ a { text-decoration: none; color: inherit; }
   let frame = 0;
   const Rnd = () => Math.random();
 
-  const novaWingImg = window._sdNovaWing;
   const stars = Array.from({length:55}, () => ({x:Rnd()*W,y:Rnd()*H*0.55,r:Rnd()*1.2+0.3,tw:Rnd()*6.28,sp:0.015+Rnd()*0.025,hue:190+Rnd()*40}));
   const fireflies = Array.from({length:4}, () => ({x:W*0.05+Rnd()*W*0.3,y:H*0.28+Rnd()*H*0.18,vx:(Rnd()-0.5)*0.3,vy:(Rnd()-0.5)*0.2,tw:Rnd()*6.28}));
   const shoot = {x:-20,y:Rnd()*H*0.2+5,vx:2,vy:0.6,life:0,ml:40,del:80+Rnd()*150};
@@ -1262,6 +1261,7 @@ a { text-decoration: none; color: inherit; }
   const W = c.width, H = c.height;
   let frame = 0;
   const Rnd = () => Math.random();
+  const novaWingImg = window._sdNovaWing;
 
   // 60 stars with varying speed/size for parallax depth
   const stars = Array.from({length:60}, () => ({
