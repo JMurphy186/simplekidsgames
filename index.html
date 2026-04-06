@@ -723,9 +723,22 @@ a { text-decoration: none; color: inherit; }
         </div>
       </a>
 
+
+      <!-- Fruit Slicer (PREVIEW) -->
+      <a href="games/fruit-slicer/" class="game-card live">
+        <div class="card-thumb" style="position:relative;overflow:hidden;height:90px;padding:0;">
+          <canvas id="fsCanvas" width="200" height="90" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
+          <div class="play-badge">PLAY!</div>
+          <div style="position:absolute;top:8px;right:8px;background:#FFD700;color:#000;font-weight:700;font-size:11px;padding:2px 10px;border-radius:10px;z-index:2;">PREVIEW</div>
+        </div>
+        <div class="card-bottom">
+          <div class="card-name">Fruit Slicer</div>
+          <div class="card-sub live-sub">🍉 Swipe • Arcade</div>
+        </div>
+      </a>
       <!-- Coming Soon (2 tiles) — parked: Color Splash, Frog Jump, Cake Catch, Lightning Run, Wave Rider -->
-      <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>🦕</div><div class="card-bottom"><div class="card-name">Dino Dash</div><div class="card-sub">Coming Soon</div></div></div>
-      <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>🏴‍☠️</div><div class="card-bottom"><div class="card-name">Pirate Quest</div><div class="card-sub">Coming Soon</div></div></div>
+      <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>❓</div><div class="card-bottom"><div class="card-name">Coming Soon</div><div class="card-sub">Stay Tuned!</div></div></div>
+      <div class="game-card dimmed"><div class="card-thumb"><span class="lock">🔒</span>❓</div><div class="card-bottom"><div class="card-name">Coming Soon</div><div class="card-sub">Stay Tuned!</div></div></div>
     </div>
   </div>
 
@@ -1398,6 +1411,149 @@ a { text-decoration: none; color: inherit; }
   draw();
 })();
 
+
+// Animated Fruit Slicer card — fruit launch + slice
+(function() {
+  const c = document.getElementById('fsCanvas');
+  if (!c) return;
+  const rect = c.getBoundingClientRect();
+  const displayW = Math.round(rect.width);
+  const displayH = Math.round(rect.height);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = displayW * dpr;
+  c.height = displayH * dpr;
+  c.style.width = displayW + 'px';
+  c.style.height = displayH + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
+  let frame = 0;
+
+  const fruitColors = [
+    { color: '#2d8a4e', inner: '#ff4757' },
+    { color: '#ff9f43', inner: '#ffa502' },
+    { color: '#ff4757', inner: '#ffffcc' },
+    { color: '#f9ca24', inner: '#fffde7' },
+    { color: '#6c5ce7', inner: '#a29bfe' },
+  ];
+
+  // Fruit state
+  let fruits = [];
+  let halves = [];
+  let particles = [];
+  let sparkles = [];
+  let slashTrails = [];
+  let spawnTimer = 0;
+
+  function spawnFruit() {
+    const type = fruitColors[Math.floor(Math.random() * fruitColors.length)];
+    const x = W * 0.15 + Math.random() * W * 0.7;
+    fruits.push({
+      x, y: H + 15,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: -(H * 0.035) - Math.random() * 2,
+      r: 8 + Math.random() * 5,
+      color: type.color, inner: type.inner,
+      rot: 0, rotSpeed: (Math.random() - 0.5) * 0.08,
+      alive: true,
+    });
+  }
+
+  function sliceFruit(f) {
+    f.alive = false;
+    const speed = 2 + Math.random() * 1.5;
+    halves.push({ x: f.x - 3, y: f.y, vx: -speed, vy: -1, r: f.r, color: f.color, inner: f.inner, rot: f.rot, rs: -0.06, half: 'left', life: 1.2 });
+    halves.push({ x: f.x + 3, y: f.y, vx: speed, vy: -1, r: f.r, color: f.color, inner: f.inner, rot: f.rot, rs: 0.06, half: 'right', life: 1.2 });
+    for (let i = 0; i < 8; i++) {
+      const a = Math.random() * Math.PI * 2, s = 1.5 + Math.random() * 3;
+      particles.push({ x: f.x, y: f.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 1, r: 1.5 + Math.random() * 2, color: f.inner, life: 0.5 + Math.random() * 0.3 });
+    }
+    const sLen = 30 + Math.random() * 20, sAngle = -0.5 + Math.random();
+    slashTrails.push({ x1: f.x - Math.cos(sAngle) * sLen, y1: f.y - Math.sin(sAngle) * sLen, x2: f.x + Math.cos(sAngle) * sLen, y2: f.y + Math.sin(sAngle) * sLen, life: 0.35, maxLife: 0.35 });
+  }
+
+  function draw() {
+    frame++;
+    const dt = 0.016;
+
+    // Spawn
+    spawnTimer += dt;
+    if (spawnTimer > 1.2 + Math.random() * 0.8) { spawnFruit(); spawnTimer = 0; }
+
+    // Update
+    for (const f of fruits) {
+      if (!f.alive) continue;
+      f.vy += 0.18; f.x += f.vx; f.y += f.vy; f.rot += f.rotSpeed;
+      if (f.vy > 0 && f.y < H * 0.55) sliceFruit(f);
+      if (f.y > H + 20) f.alive = false;
+    }
+    fruits = fruits.filter(f => f.alive);
+    for (const h of halves) { h.vy += 0.2; h.x += h.vx; h.y += h.vy; h.rot += h.rs; h.life -= dt; }
+    halves = halves.filter(h => h.life > 0 && h.y < H + 20);
+    for (const p of particles) { p.vy += 0.1; p.x += p.vx; p.y += p.vy; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
+    for (const s of slashTrails) s.life -= dt;
+    slashTrails = slashTrails.filter(s => s.life > 0);
+    if (Math.random() < 0.1) sparkles.push({ x: Math.random() * W, y: Math.random() * H * 0.7, r: 0.5 + Math.random(), life: 0.5 + Math.random() * 0.5 });
+    for (const s of sparkles) s.life -= dt;
+    sparkles = sparkles.filter(s => s.life > 0);
+
+    // Draw background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#1a0a2e'); bg.addColorStop(0.5, '#2d1b4e'); bg.addColorStop(1, '#0a0515');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    // Sparkles
+    for (const s of sparkles) {
+      ctx.fillStyle = '#FFD700'; ctx.globalAlpha = s.life * 0.5;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Halves
+    for (const h of halves) {
+      ctx.save(); ctx.globalAlpha = h.life; ctx.translate(h.x, h.y); ctx.rotate(h.rot);
+      ctx.fillStyle = h.color; ctx.beginPath();
+      if (h.half === 'left') ctx.arc(0, 0, h.r, Math.PI * 0.5, Math.PI * 1.5);
+      else ctx.arc(0, 0, h.r, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = h.inner; ctx.beginPath();
+      if (h.half === 'left') ctx.arc(0, 0, h.r * 0.75, Math.PI * 0.5, Math.PI * 1.5);
+      else ctx.arc(0, 0, h.r * 0.75, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    // Fruits
+    for (const f of fruits) {
+      if (!f.alive) continue;
+      ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(f.rot);
+      ctx.fillStyle = f.color; ctx.beginPath(); ctx.arc(0, 0, f.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.beginPath(); ctx.ellipse(-f.r * 0.2, -f.r * 0.3, f.r * 0.35, f.r * 0.18, -0.4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Juice particles
+    for (const p of particles) {
+      ctx.globalAlpha = p.life * 0.8; ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Slash trails
+    for (const s of slashTrails) {
+      const a = s.life / s.maxLife;
+      ctx.strokeStyle = 'rgba(255,255,255,' + (a * 0.6) + ')'; ctx.lineWidth = 8 * a; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2 * a;
+      ctx.beginPath(); ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); ctx.stroke();
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
 // ============================================================
 // INSERT COIN interaction
 // ============================================================
@@ -1413,7 +1569,8 @@ a { text-decoration: none; color: inherit; }
   const games = [
     { name: 'Monster Rally', url: 'games/monster-rally/' },
     { name: 'Space Dodge', url: 'games/space-dodge/' },
-    { name: 'Catch & Reel', url: 'games/catch-and-reel/' }
+    { name: 'Catch & Reel', url: 'games/catch-and-reel/' },
+    { name: 'Fruit Slicer', url: 'games/fruit-slicer/' }
   ];
 
   function insertCoin() {
