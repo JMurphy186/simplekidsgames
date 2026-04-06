@@ -57,7 +57,7 @@
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-family: 'Arial Black', 'Luckiest Guy', cursive;
+    font-family: 'Luckiest Guy', 'Arial Black', cursive;
     text-align: center;
     gap: 20px;
   }
@@ -95,6 +95,7 @@
 </div>
 <canvas id="game"></canvas>
 <script>
+function safeSave(k, v) { try { safeSave(k, v); } catch(e) {} }
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
@@ -306,7 +307,7 @@ function generateCampaignSequence() {
 function saveCampaignSequence() {
   // Save envIndex array so resume uses same levels
   const indices = campaignSequence.map(l => l.envIndex);
-  localStorage.setItem('mr_campaign_sequence', JSON.stringify(indices));
+  safeSave('mr_campaign_sequence', JSON.stringify(indices));
 }
 
 function loadCampaignSequence() {
@@ -481,7 +482,7 @@ let lavaBubbles = [];
 let neonSpotlights = [{ x: 200, angle: 0, speed: 0.02, color: '#ff00ff' }, { x: 500, angle: Math.PI, speed: -0.015, color: '#00ffff' }, { x: 650, angle: 1, speed: 0.025, color: '#ffff00' }];
 
 // Truck picker state
-let selectedTruck = parseInt(localStorage.getItem('monsterRallyTruck') || '4'); // Default to first Pro Stadium truck
+let selectedTruck = parseInt(localStorage.getItem('monsterRallyTruck', 10) || '4'); // Default to first Pro Stadium truck
 if (selectedTruck < 0 || selectedTruck >= ROSTER_COUNT) selectedTruck = 4;
 let selectedTruck2 = 1;
 let pickerPlayer = 1; // which player is picking
@@ -490,10 +491,10 @@ let pickerPulse = 0;
 
 // Per-truck best scores
 function getBestScore(truckIdx) {
-  return parseInt(localStorage.getItem('monsterRallyBest_' + truckIdx) || localStorage.getItem('monsterRallyBest') || '0');
+  return parseInt(localStorage.getItem('monsterRallyBest_' + truckIdx, 10) || localStorage.getItem('monsterRallyBest') || '0');
 }
 function setBestScore(truckIdx, val) {
-  localStorage.setItem('monsterRallyBest_' + truckIdx, val);
+  safeSave('monsterRallyBest_' + truckIdx, val);
 }
 
 // Player state factory
@@ -538,7 +539,7 @@ let bigAirPlaying = false;
 let score = 0;
 let combo = 0;
 let comboTimer = 0;
-let bestScore = parseInt(localStorage.getItem('monsterRallyBest') || '0');
+let bestScore = parseInt(localStorage.getItem('monsterRallyBest', 10) || '0');
 
 // Power-ups array
 let powerUps = [];
@@ -873,7 +874,7 @@ function stopBigAir() {
 
 function toggleMute() {
   audioMuted = !audioMuted;
-  localStorage.setItem('monsterRallyMuted', audioMuted);
+  safeSave('monsterRallyMuted', audioMuted);
   if (audioMuted) {
     stopEngine();
     stopBigAir();
@@ -934,9 +935,9 @@ function handleDown(e) {
       // Campaign complete! Show win screen
       campaignWinTimer = 0;
       // Award coin + unlock endless
-      localStorage.setItem('mr_coins', String(parseInt(localStorage.getItem('mr_coins') || '0') + 1));
-      localStorage.setItem('mr_endless_unlocked', 'true');
-      localStorage.setItem('mr_campaign_beaten', 'true');
+      safeSave('mr_coins', String(parseInt(localStorage.getItem('mr_coins', 10) || '0') + 1));
+      safeSave('mr_endless_unlocked', 'true');
+      safeSave('mr_campaign_beaten', 'true');
       localStorage.removeItem('mr_campaign_level');
       localStorage.removeItem('mr_campaign_sequence');
       gameState = 'campaignwin';
@@ -986,9 +987,9 @@ document.addEventListener('keydown', (e) => {
       if (campaignLevel < campaignSequence.length - 1) { campaignLevel++; startLevelTransition(); }
       else {
         campaignWinTimer = 0;
-        localStorage.setItem('mr_coins', String(parseInt(localStorage.getItem('mr_coins') || '0') + 1));
-        localStorage.setItem('mr_endless_unlocked', 'true');
-        localStorage.setItem('mr_campaign_beaten', 'true');
+        safeSave('mr_coins', String(parseInt(localStorage.getItem('mr_coins', 10) || '0') + 1));
+        safeSave('mr_endless_unlocked', 'true');
+        safeSave('mr_campaign_beaten', 'true');
         localStorage.removeItem('mr_campaign_level');
         gameState = 'campaignwin';
       }
@@ -1119,7 +1120,7 @@ function handlePickerClick(vx, vy) {
 }
 
 function confirmPicker() {
-  localStorage.setItem('monsterRallyTruck', selectedTruck);
+  safeSave('monsterRallyTruck', selectedTruck);
   if (pickerPlayer === 1) {
     // Go to mode select
     gameState = 'modeselect';
@@ -1648,7 +1649,7 @@ function drawModeSelectScreen() {
   ];
 
   // Coin count display
-  const coins = parseInt(localStorage.getItem('mr_coins') || '0');
+  const coins = parseInt(localStorage.getItem('mr_coins', 10) || '0');
   if (coins > 0) {
     ctx.save(); ctx.translate(W / 2 + 80, 90); drawStarCoin(8); ctx.restore();
     ctx.fillStyle = '#ffd700'; ctx.font = "700 14px 'Baloo 2', sans-serif";
@@ -4026,7 +4027,7 @@ function update() {
         campaignTotals.flips += levelStats.flips;
         campaignTotals.score += levelStats.score;
         // Save progress (level + sequence so resume uses same levels)
-        localStorage.setItem('mr_campaign_level', String(campaignLevel + 1));
+        safeSave('mr_campaign_level', String(campaignLevel + 1));
         saveCampaignSequence();
         gameState = 'levelcomplete';
         stopEngine();
@@ -4186,7 +4187,7 @@ function update() {
     const best = getBestScore(p.truckIdx);
     if (p.score > best) setBestScore(p.truckIdx, p.score);
   }
-  if (maxScore > bestScore) { bestScore = maxScore; localStorage.setItem('monsterRallyBest', bestScore); }
+  if (maxScore > bestScore) { bestScore = maxScore; safeSave('monsterRallyBest', bestScore); }
 }
 
 // ============================================================
