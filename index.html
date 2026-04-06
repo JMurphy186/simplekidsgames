@@ -803,10 +803,17 @@ a { text-decoration: none; color: inherit; }
   const c = document.getElementById('truckCanvas');
   if (!c) return;
   // Match canvas pixel width to actual display width — same pattern as sdCanvas/crCanvas
-  const displayW = Math.round(c.getBoundingClientRect().width);
-  if (displayW > 0) c.width = displayW;
+  const rect = c.getBoundingClientRect();
+  const displayW = Math.round(rect.width);
+  const displayH = Math.round(rect.height);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = displayW * dpr;
+  c.height = displayH * dpr;
+  c.style.width = displayW + 'px';
+  c.style.height = displayH + 'px';
   const ctx = c.getContext('2d');
-  const W = c.width, H = c.height;
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
   let frame = 0;
 
   // Crowd heads
@@ -1095,10 +1102,17 @@ a { text-decoration: none; color: inherit; }
   const c = document.getElementById('crCanvas');
   if (!c) return;
   // Match canvas pixel width to actual display width — prevents horizontal stretch squish
-  const displayW = Math.round(c.getBoundingClientRect().width);
-  if (displayW > 0) c.width = displayW;
+  const rect = c.getBoundingClientRect();
+  const displayW = Math.round(rect.width);
+  const displayH = Math.round(rect.height);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = displayW * dpr;
+  c.height = displayH * dpr;
+  c.style.width = displayW + 'px';
+  c.style.height = displayH + 'px';
   const ctx = c.getContext('2d');
-  const W = c.width, H = c.height;
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
   let frame = 0;
   const Rnd = () => Math.random();
 
@@ -1255,10 +1269,17 @@ a { text-decoration: none; color: inherit; }
 (function() {
   const c = document.getElementById('sdCanvas');
   if (!c) return;
-  const displayW = Math.round(c.getBoundingClientRect().width);
-  if (displayW > 0) c.width = displayW;
+  const rect = c.getBoundingClientRect();
+  const displayW = Math.round(rect.width);
+  const displayH = Math.round(rect.height);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = displayW * dpr;
+  c.height = displayH * dpr;
+  c.style.width = displayW + 'px';
+  c.style.height = displayH + 'px';
   const ctx = c.getContext('2d');
-  const W = c.width, H = c.height;
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
   let frame = 0;
   const Rnd = () => Math.random();
   const novaWingImg = window._sdNovaWing;
