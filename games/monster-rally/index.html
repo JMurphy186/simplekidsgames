@@ -113,6 +113,31 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
 // ============================================================
+// VIRTUAL RESOLUTION (declared early so recalculateW() is callable
+// from refreshViewport() on first paint without TDZ issues).
+// ============================================================
+// H is FIXED — vertical gameplay axis (ground Y, jump arcs, truck size all
+//   tuned around H=450 and must not change).
+// W is DYNAMIC — widens on landscape phones/tablets/desktop so players see
+//   more of the horizontal world instead of a stretched 800-wide canvas.
+//   Clamped [800, 1200]: portrait letterbox keeps minimum 800, ultrawide
+//   monitors can't create absurdly sparse levels.
+const H = 450;
+let W = 800;
+const W_MIN = 800;
+const W_MAX = 1200;
+
+function recalculateW() {
+  // canvas.width/height are the DPR-scaled backing store; their ratio equals
+  // the CSS viewport ratio, which is what we care about for game geometry.
+  if (!canvas || !canvas.width || !canvas.height) return W;
+  const canvasAspect = canvas.width / canvas.height;
+  const target = Math.round(H * canvasAspect);
+  W = Math.max(W_MIN, Math.min(W_MAX, target));
+  return W;
+}
+
+// ============================================================
 // ORIENTATION + RESPONSIVE SIZING
 // (rotate overlay + canvas backing-store resize, unified so
 //  orientationchange always refreshes BOTH)
@@ -178,10 +203,14 @@ function checkOrientation() {
   }
 }
 
-// Unified refresh: canvas + orientation + force redraw. Used on resize AND
-// orientationchange so the canvas backing store always matches the viewport.
+// Unified refresh: canvas + orientation + dynamic W + force redraw. Used on
+// resize AND orientationchange so the canvas backing store always matches the
+// viewport and the world width adapts to the new aspect ratio.
 function refreshViewport() {
   resize();
+  // recalculateW() must run AFTER resize() so canvas.width is current. On
+  // portrait (after letterbox) this lands at W_MIN; on landscape it expands.
+  if (typeof recalculateW === 'function') recalculateW();
   checkOrientation();
   // Force a redraw so the user sees the new state immediately — critical for
   // rotation on iOS where the frame loop may be gated behind pause.
@@ -200,6 +229,7 @@ function handleOrientationChange() {
 
 // Initial paint
 resize();
+recalculateW();
 checkOrientation();
 
 window.addEventListener('resize', refreshViewport);
@@ -275,7 +305,8 @@ function tryFullscreen() {
 // ============================================================
 // CONSTANTS
 // ============================================================
-const W = 800, H = 450;
+// W/H are declared earlier (above the orientation block) so recalculateW()
+// is callable from refreshViewport() without hitting TDZ on initial paint.
 const GROUND_Y = 340;
 const GRAVITY = 0.48; // floatier jumps, more hang time for crushes & flips
 const JUMP_FORCE = -12;
@@ -717,6 +748,28 @@ console.log('[MR] BASE_TRUCK_SPEED =', BASE_TRUCK_SPEED, ' maxSpeed =', maxSpeed
 let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition' | 'campaignwin'
 let gameMode = 'rally'; // 'rally' | 'frenzy' | 'endless'
 let roundTimer = 0; // countdown timer for frenzy (frames)
+
+// ============================================================
+// MODE FLAGS
+// Feature flags for the available game modes. Single-mode shipping
+// build — rally (campaign) only. Other modes are PARKED (code kept,
+// entry points gated) so they can be revived by flipping a flag without
+// touching game logic.
+//   campaign:    rally campaign mode — the only shipped mode
+//   crushFrenzy: 60-second timed arena — code preserved
+//   endless:     post-campaign unlock — code preserved
+//   coop:        local multiplayer — NOT IMPLEMENTED in current build
+// Gating strategy: flags guard the entry points (mode select UI + state
+// transitions), not every gameMode check inside the game loop. Since we
+// always stay in gameMode='rally', those checks become dead branches but
+// remain executable if the flag is flipped.
+// ============================================================
+const MODE_FLAGS = {
+  campaign: true,
+  crushFrenzy: false,
+  endless: false,
+  coop: false
+};
 
 // Campaign state
 let campaignLevel = 0; // index into campaignSequence (0-based, 0-4 for 5 levels)
@@ -1223,9 +1276,11 @@ function handleDown(e) {
     gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return;
   }
   if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
-  if (gameState === 'modeselect') { handleModeSelectClick(vc.x, vc.y); return; }
+  // Mode select is gated off — handler kept for revival via MODE_FLAGS
+  if (gameState === 'modeselect' && (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless)) { handleModeSelectClick(vc.x, vc.y); return; }
   if (gameState === 'paused') { handlePauseClick(vc.x, vc.y); return; }
-  if (gameState === 'gameover') { gameState = 'modeselect'; return; }
+  // Game over → back to picker (was 'modeselect' but mode select is gone)
+  if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
   if (gameState === 'levelcomplete') {
     if (campaignLevel < campaignSequence.length - 1) {
       campaignLevel++;
@@ -1243,7 +1298,8 @@ function handleDown(e) {
     }
     return;
   }
-  if (gameState === 'campaignwin') { gameState = 'modeselect'; return; }
+  // Campaign complete → back to picker (was 'modeselect')
+  if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
   if (gameState === 'leveltransition') return;
   if (gameState === 'countdown') return;
 
@@ -1281,7 +1337,7 @@ document.addEventListener('keydown', (e) => {
     if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
     if (gameState === 'picker') { confirmPicker(); return; }
     if (gameState === 'modeselect') return;
-    if (gameState === 'gameover') { gameState = 'modeselect'; return; }
+    if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
     if (gameState === 'levelcomplete') {
       if (campaignLevel < campaignSequence.length - 1) { campaignLevel++; startLevelTransition(); }
       else {
@@ -1294,14 +1350,14 @@ document.addEventListener('keydown', (e) => {
       }
       return;
     }
-    if (gameState === 'campaignwin') { gameState = 'modeselect'; return; }
+    if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
   }
 
-  // Mode select keyboard shortcuts
-  if (gameState === 'modeselect') {
+  // Mode select keyboard shortcuts — dead code unless crushFrenzy/endless revived
+  if (gameState === 'modeselect' && (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless)) {
     if (e.code === 'Digit1') selectMode('rally');
-    if (e.code === 'Digit2') selectMode('frenzy');
-    if (e.code === 'Digit3' && localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
+    if (e.code === 'Digit2' && MODE_FLAGS.crushFrenzy) selectMode('frenzy');
+    if (e.code === 'Digit3' && MODE_FLAGS.endless && localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
     return;
   }
 
@@ -1534,8 +1590,14 @@ function handlePickerClick(vx, vy) {
 function confirmPicker() {
   safeSave('monsterRallyTruck', selectedTruck);
   if (pickerPlayer === 1) {
-    // Go to mode select
-    gameState = 'modeselect';
+    // Single-mode shipping build: skip mode select, drop straight into the
+    // campaign. If crushFrenzy/endless get revived later, restore the
+    // `gameState = 'modeselect'` branch here (gated by MODE_FLAGS).
+    if (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless) {
+      gameState = 'modeselect';
+    } else {
+      selectMode('rally');
+    }
   } else {
     // P2 picked, start countdown
     startCountdown();
@@ -1555,8 +1617,8 @@ function handleModeSelectClick(vx, vy) {
     const btnY = by + i * (btnH + gap);
     if (vx >= bx && vx <= bx + btnW && vy >= btnY && vy <= btnY + btnH) {
       if (i === 0) selectMode('rally');
-      else if (i === 1) selectMode('frenzy');
-      else if (i === 2) {
+      else if (i === 1 && MODE_FLAGS.crushFrenzy) selectMode('frenzy');
+      else if (i === 2 && MODE_FLAGS.endless) {
         if (localStorage.getItem('mr_endless_unlocked') === 'true') selectMode('endless');
       }
       return;
@@ -1709,7 +1771,10 @@ function restartGame() {
 function quitToMenu() {
   stopEngine();
   stopBigAir();
-  gameState = 'modeselect';
+  // Mode select is gone — quit goes back to the truck picker.
+  gameState = 'picker';
+  pickerPlayer = 1;
+  pickerPage = 0;
 }
 
 function handlePauseClick(vx, vy) {
@@ -2888,11 +2953,12 @@ function drawEnvironmentBg(env) {
     }
   }
 
-  // Stadium lights (desert only)
+  // Stadium lights (desert only) — right light pinned to the right edge so
+  // the cone follows W on wider landscape viewports.
   if (env.features === 'desert') {
     ctx.fillStyle = 'rgba(255,200,50,0.08)';
     ctx.beginPath(); ctx.moveTo(50, GROUND_Y - 120); ctx.lineTo(100, GROUND_Y); ctx.lineTo(0, GROUND_Y); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(750, GROUND_Y - 120); ctx.lineTo(800, GROUND_Y); ctx.lineTo(700, GROUND_Y); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(W - 50, GROUND_Y - 120); ctx.lineTo(W, GROUND_Y); ctx.lineTo(W - 100, GROUND_Y); ctx.fill();
   }
 }
 
@@ -4692,26 +4758,30 @@ function update() {
   if (screenShake > 0) screenShake *= 0.85;
   if (flashTimer > 0) flashTimer--;
 
-  // Spawn obstacles
+  // Spawn obstacles.
+  // Density scaling: wider W = proportionally shorter interval so on-screen
+  // obstacle count stays roughly constant regardless of viewport width.
+  // Factor = 800 / W (1.0 at min width, ~0.67 at max).
+  const _densityFactor = W_MIN / W;
   obstacleTimer--;
   if (obstacleTimer <= 0) {
     spawnObstacle();
     if (gameMode === 'frenzy') {
-      obstacleTimer = 20 + Math.random() * 20; // wall-to-wall cars!
+      obstacleTimer = (20 + Math.random() * 20) * _densityFactor; // wall-to-wall cars!
     } else {
       if (gameMode === 'rally') {
         const lvl = campaignSequence[campaignLevel] || campaignSequence[0];
-        obstacleTimer = lvl.obstGap * 0.5 + Math.random() * lvl.obstGap * 0.5 - Math.min(maxScore / 50, 30);
+        obstacleTimer = (lvl.obstGap * 0.5 + Math.random() * lvl.obstGap * 0.5 - Math.min(maxScore / 50, 30)) * _densityFactor;
       } else {
-        obstacleTimer = 80 + Math.random() * 70 - Math.min(maxScore / 50, 30);
+        obstacleTimer = (80 + Math.random() * 70 - Math.min(maxScore / 50, 30)) * _densityFactor;
       }
     }
   }
 
-  // Spawn stars (rally only)
+  // Spawn stars (rally only) — density also scales with W
   if (gameMode === 'rally') {
     starTimer--;
-    if (starTimer <= 0) { spawnStar(); starTimer = 50 + Math.random() * 40; }
+    if (starTimer <= 0) { spawnStar(); starTimer = (50 + Math.random() * 40) * _densityFactor; }
   }
 
   // Spawn power-ups (rally + frenzy)
@@ -5330,7 +5400,8 @@ function draw() {
 
   if (gameState === 'title') drawTitleScreen();
   if (gameState === 'picker') drawPickerScreen();
-  if (gameState === 'modeselect') drawModeSelectScreen();
+  // Mode select render — dead code in single-mode build (state unreachable)
+  if (gameState === 'modeselect' && (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless)) drawModeSelectScreen();
   if (gameState === 'gameover') drawGameOverScreen();
   if (gameState === 'levelcomplete') drawLevelCompleteScreen();
   if (gameState === 'campaignwin') drawCampaignWinScreen();
