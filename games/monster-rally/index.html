@@ -49,8 +49,9 @@
   }
   #rotate-msg {
     display: none;
+    pointer-events: none;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    inset: 0;
     background: #0B0E18;
     z-index: 9999;
     flex-direction: column;
@@ -99,10 +100,25 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d', { willReadFrequently: false });
 
 // ============================================================
-// ORIENTATION DETECTION (JS-based, replaces CSS media queries)
+// ORIENTATION + RESPONSIVE SIZING
+// (rotate overlay + canvas backing-store resize, unified so
+//  orientationchange always refreshes BOTH)
 // ============================================================
 const rotateOverlay = document.getElementById('rotate-msg');
 let rotatePausedGame = false; // track whether we auto-paused
+
+// Canvas backing-store resize (DPR-aware). MUST run on every orientationchange
+// otherwise the canvas will keep its old portrait dimensions after rotation
+// and the page looks blank until refresh.
+function resize() {
+  const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = vw * dpr;
+  canvas.height = vh * dpr;
+  canvas.style.width = vw + 'px';
+  canvas.style.height = vh + 'px';
+}
 
 function checkOrientation() {
   const isPortrait = window.innerHeight > window.innerWidth;
@@ -112,6 +128,7 @@ function checkOrientation() {
 
   if (isPortrait && isMobile) {
     rotateOverlay.style.display = 'flex';
+    rotateOverlay.style.pointerEvents = 'auto';
     canvas.style.display = 'none';
     // Auto-pause if game is currently playing
     if (typeof gameState !== 'undefined' && gameState === 'playing' && typeof pauseGame === 'function') {
@@ -120,6 +137,7 @@ function checkOrientation() {
     }
   } else {
     rotateOverlay.style.display = 'none';
+    rotateOverlay.style.pointerEvents = 'none';
     canvas.style.display = 'block';
     // Auto-resume only if we were the one that paused
     if (rotatePausedGame && typeof gameState !== 'undefined' && gameState === 'paused' && typeof resumeGame === 'function') {
@@ -129,31 +147,37 @@ function checkOrientation() {
   }
 }
 
-window.addEventListener('resize', checkOrientation);
-window.addEventListener('orientationchange', () => { setTimeout(checkOrientation, 200); });
-if (window.screen && window.screen.orientation) {
-  window.screen.orientation.addEventListener('change', () => { setTimeout(checkOrientation, 200); });
+// Unified refresh: canvas + orientation + force redraw. Used on resize AND
+// orientationchange so the canvas backing store always matches the viewport.
+function refreshViewport() {
+  resize();
+  checkOrientation();
+  // Force a redraw so the user sees the new state immediately — critical for
+  // rotation on iOS where the frame loop may be gated behind pause.
+  if (typeof draw === 'function') {
+    try { draw(); } catch (e) {}
+  }
 }
+
+// orientationchange fires BEFORE iOS updates innerWidth/innerHeight — wait
+// a tick before recomputing dimensions, otherwise we resize to stale values.
+function handleOrientationChange() {
+  setTimeout(refreshViewport, 100);
+  // Belt & suspenders: some devices finalize the viewport a bit later
+  setTimeout(refreshViewport, 350);
+}
+
+// Initial paint
+resize();
 checkOrientation();
 
-// ============================================================
-// RESPONSIVE SIZING
-// ============================================================
-function resize() {
-  // Fill the entire screen — canvas CSS is 100vw x 100dvh
-  // DPR-aware sizing for crisp rendering on Retina
-  const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
-  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = vw * dpr;
-  canvas.height = vh * dpr;
-  canvas.style.width = vw + 'px';
-  canvas.style.height = vh + 'px';
+window.addEventListener('resize', refreshViewport);
+window.addEventListener('load', refreshViewport); // Safari sometimes needs this
+window.addEventListener('orientationchange', handleOrientationChange);
+if (window.screen && window.screen.orientation) {
+  window.screen.orientation.addEventListener('change', handleOrientationChange);
 }
-resize();
-window.addEventListener('resize', resize);
-window.addEventListener('load', resize); // Safari sometimes needs this
-if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', refreshViewport);
 
 // Force Safari to repaint canvas on load
 window.addEventListener('load', function() {
@@ -451,31 +475,41 @@ for (const t of TRUCK_ROSTER) {
 
 const ROSTER_COUNT = TRUCK_ROSTER.length;
 
-// Preload all 26 truck sprites + universal tire
+// Preload all 26 truck sprites + universal tire.
+// Each sprite is tracked in truckDecodeStatus so drawTruckPNG can skip
+// rendering until its decode has finished. This prevents the main thread
+// from decoding a sprite on the first frame it's drawn, which was causing
+// visible jank at the start of a level.
 const truckImages = {};
+const truckDecodeStatus = {}; // id -> 'loading' | 'ready' | 'failed'
 for (const t of TRUCK_ROSTER) {
   const img = new Image();
   img.decoding = 'async';
-  img.src = t.sprite;
   truckImages[t.id] = img;
+  truckDecodeStatus[t.id] = 'loading';
+  const id = t.id;
+  img.onload = () => {
+    if (typeof img.decode === 'function') {
+      img.decode()
+        .then(() => { truckDecodeStatus[id] = 'ready'; })
+        .catch(() => { truckDecodeStatus[id] = 'ready'; }); // image loaded, decode hint failed — still drawable
+    } else {
+      truckDecodeStatus[id] = 'ready';
+    }
+  };
+  img.onerror = () => { truckDecodeStatus[id] = 'failed'; };
+  img.src = t.sprite;
 }
 const tireImage = new Image();
 tireImage.decoding = 'async';
 tireImage.src = 'assets/trucks/tire-universal.png';
 
-// Force all truck images to decode before first level (prevents jank on sprite swap)
+// Legacy: preloadTruckDecodes() kept as a no-op for any callers that still
+// await it. All decoding happens via the per-image handlers above.
 let truckImagesDecoded = false;
 function preloadTruckDecodes() {
-  if (truckImagesDecoded) return Promise.resolve();
-  const decodes = Object.values(truckImages).map(img => {
-    if (typeof img.decode === 'function') return img.decode().catch(() => {});
-    return Promise.resolve();
-  });
-  if (typeof tireImage.decode === 'function') decodes.push(tireImage.decode().catch(() => {}));
-  return Promise.all(decodes).then(() => { truckImagesDecoded = true; });
+  return Promise.resolve();
 }
-// Kick off decode asap (background)
-preloadTruckDecodes();
 
 // ─── TruckUnlocks helper — localStorage persistence with try/catch ──────────
 const TruckUnlocks = {
@@ -552,7 +586,11 @@ function setSelectedTruckIndex(idx) {
 // ─── drawTruckPNG — unified PNG truck renderer with tire overlay ────────────
 function drawTruckPNG(tx, ty, tw, th, truck, showExhaust, squishY, tireAngle) {
   const img = truckImages[truck.id];
-  if (!img || !img.complete || img.naturalWidth === 0) {
+  const status = truckDecodeStatus[truck.id];
+  // Hard gate: only draw the PNG once its async decode has resolved. Drawing
+  // an undecoded <img> forces a synchronous decode on the main thread and
+  // was the main source of start-of-level jank.
+  if (!img || status !== 'ready' || !img.complete || img.naturalWidth === 0) {
     // Fallback: colored rectangle while loading
     ctx.fillStyle = truck.body || '#888';
     ctx.fillRect(tx, ty + squishY, tw, th - squishY);
@@ -580,19 +618,10 @@ function drawTruckPNG(tx, ty, tw, th, truck, showExhaust, squishY, tireAngle) {
     }
   }
 
-  // Exhaust puff when airborne
-  if (showExhaust) {
-    const ex = tx - 2, ey = drawY + drawH * 0.55;
-    const fw = 6 + Math.random() * 8;
-    ctx.fillStyle = truck.flameOuter || '#ff4400';
-    ctx.beginPath();
-    ctx.moveTo(ex, ey - 4); ctx.lineTo(ex - fw, ey); ctx.lineTo(ex, ey + 4);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = truck.flameInner || '#ffcc00';
-    ctx.beginPath();
-    ctx.moveTo(ex, ey - 2); ctx.lineTo(ex - fw * 0.6, ey); ctx.lineTo(ex, ey + 2);
-    ctx.closePath(); ctx.fill();
-  }
+  // NOTE: Old triangular exhaust flame sprite removed — the exhaustParticles[]
+  // system added in a9eaf46 is now the sole exhaust visual for PNG trucks.
+  // `showExhaust` is kept as a function parameter for API compat with the
+  // picker/title previews that still pass it.
 }
 
 /* ── OLD ROSTER (commented for rollback) ──────────────────────────────────
@@ -667,13 +696,26 @@ function setBestScore(truckIdx, val) {
 }
 
 // Player state factory
+// Base truck render size. Pre-fix: 90x50. Post-fix: 180x100 — we baked the
+// old 2.0x mega scale directly into the base so the default truck feels like
+// a real monster truck. The new mega upgrade stacks on top (see MEGA_SCALE_MAX).
+// Hitbox is kept flush with the road: the bottom of the truck stays at
+// (GROUND_Y + tk.h - groundBottomOffset) so collision math is identical — the
+// truck just extends farther UPWARD from the same ground contact point.
+const TRUCK_BASE_W = 180;
+const TRUCK_BASE_H = 100;
+const TRUCK_GROUND_LIFT = TRUCK_BASE_H - 50; // how much higher the top sits vs the old 50-tall truck
+
 function createPlayer(truckIdx, groundOffset) {
-  const gndY = GROUND_Y + (groundOffset || 0);
+  // Shift groundY UP by TRUCK_GROUND_LIFT so the taller truck's bottom
+  // (groundY + h) matches the old truck's bottom (gndY + 50). This keeps
+  // obstacle crush windows identical to pre-fix behavior.
+  const gndY = GROUND_Y + (groundOffset || 0) - TRUCK_GROUND_LIFT;
   return {
     score: 0, combo: 0, comboTimer: 0, totalCrushes: 0,
     truckIdx: truckIdx,
     groundY: gndY,
-    truck: { x: 140, y: gndY, w: 90, h: 50, vy: 0, grounded: true, jumping: false, slamming: false, squish: 0, tilt: 0 },
+    truck: { x: 140, y: gndY, w: TRUCK_BASE_W, h: TRUCK_BASE_H, vy: 0, grounded: true, jumping: false, slamming: false, squish: 0, tilt: 0 },
     jumpPressed: false, jumpHeld: false,
     airborneFrames: 0, flipAngle: 0, flipInProgress: false, flipsCompleted: 0, flipStarted: false,
     // Power-up state (stackable — each has independent timer)
@@ -2023,23 +2065,8 @@ function drawModeSelectScreen() {
   ctx.font = "bold 11px 'Luckiest Guy', cursive";
   ctx.fillText(truckInfo.name, showcaseX, showcaseY + 36);
 
-  // Speed bar
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.font = "700 10px 'Baloo 2', sans-serif";
-  ctx.fillText('SPEED', showcaseX, showcaseY + 52);
-  const speedBarW = W * 0.35, speedBarH = 6;
-  const speedBarX = showcaseX - speedBarW / 2, speedBarY = showcaseY + 57;
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.beginPath(); ctx.roundRect(speedBarX, speedBarY, speedBarW, speedBarH, 3); ctx.fill();
-  const speedPct = truckInfo.type === 'monster' ? 0.65 : truckInfo.type === 'car' ? 0.9 : 0.5;
-  const speedFillW = speedBarW * speedPct;
-  ctx.save();
-  ctx.shadowColor = 'rgba(255,109,0,0.4)'; ctx.shadowBlur = 8;
-  const speedG = ctx.createLinearGradient(speedBarX, 0, speedBarX + speedFillW, 0);
-  speedG.addColorStop(0, '#FF6D00'); speedG.addColorStop(1, '#FFD700');
-  ctx.fillStyle = speedG;
-  ctx.beginPath(); ctx.roundRect(speedBarX, speedBarY, speedFillW, speedBarH, 3); ctx.fill();
-  ctx.restore();
+  // NOTE: Speed stat bar removed — all 26 trucks share identical speed, so the
+  // bar was cosmetic and misleading on the picker/mode-select showcase.
 
   const btnW = 220, btnH = 52, gap = 10;
   const by = 205;
@@ -3150,30 +3177,8 @@ function drawTruckHD(tx, ty, tw, th, showExhaust, squishY, assets, flameOuter, f
   const groundOffset = ty + th - 2; // visual ground contact point
   const drawY = groundOffset - wheelBottomInSvg * scale + squishY;
 
-  // Exhaust pipe position (from svgMeta, or estimated)
-  const exSvgX = m.exhaustX || (m.bodyMinX + 10);
-  const exSvgY = m.exhaustY || 125;
-
-  // Animated exhaust flames (Canvas-drawn, always visible, color-matched)
-  {
-    const exX = drawX + exSvgX * scale;
-    const exY = drawY + exSvgY * scale;
-    const exW = (8 + Math.random() * 12) * 1.5;
-    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
-    ctx.fillStyle = flameOuter || '#ff4400';
-    ctx.beginPath();
-    ctx.moveTo(exX, exY - 6 * scale);
-    ctx.lineTo(exX - exW * scale, exY);
-    ctx.lineTo(exX, exY + 6 * scale);
-    ctx.closePath(); ctx.fill();
-    ctx.fillStyle = flameInner || '#ffcc00';
-    ctx.beginPath();
-    ctx.moveTo(exX, exY - 3.75 * scale);
-    ctx.lineTo(exX - (exW - 3) * scale, exY);
-    ctx.lineTo(exX, exY + 3.75 * scale);
-    ctx.closePath(); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
+  // NOTE: Old always-on triangular exhaust flame sprite removed — the
+  // exhaustParticles[] system is now the sole exhaust visual for SVG trucks too.
 
   // Draw body SVG
   ctx.drawImage(assets.body, drawX, drawY, fullW, fullH);
@@ -4269,11 +4274,12 @@ function updatePlayer(p) {
     tk.slamming = false;
   }
 
-  // Mega truck scale
+  // Mega truck scale — base truck is already 2x old size, so mega just stacks
+  // an additional +40% on top (effective ~2.8x the pre-fix base).
   if (p.megaActive) {
-    p.megaScale = Math.min(2.0, p.megaScale + 0.05);
+    p.megaScale = Math.min(1.4, p.megaScale + 0.04);
   } else {
-    p.megaScale = Math.max(1.0, p.megaScale - 0.05);
+    p.megaScale = Math.max(1.0, p.megaScale - 0.04);
   }
 
   if (!tk.grounded) {
