@@ -121,27 +121,39 @@ function resize() {
 }
 
 function checkOrientation() {
-  const isPortrait = window.innerHeight > window.innerWidth;
-  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  const isSmall = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
-  const isMobile = isTouch && isSmall;
+  if (!rotateOverlay) return;
+
+  // matchMedia is the authoritative source of orientation on mobile.
+  // innerHeight > innerWidth misfires when dynamic toolbars (Safari/Brave
+  // address bar, iOS status bar) change the reported viewport height.
+  const portraitMQ = window.matchMedia('(orientation: portrait)');
+  const isPortrait = portraitMQ.matches;
+  const isMobile = window.matchMedia('(max-width: 900px)').matches || 'ontouchstart' in window;
 
   if (isPortrait && isMobile) {
     rotateOverlay.style.display = 'flex';
     rotateOverlay.style.pointerEvents = 'auto';
     canvas.style.display = 'none';
-    // Auto-pause if game is currently playing
-    if (typeof gameState !== 'undefined' && gameState === 'playing' && typeof pauseGame === 'function') {
-      pauseGame();
-      rotatePausedGame = true;
-    }
+    // Auto-pause if game is currently playing.
+    // try/catch because gameState/pauseGame are declared later in the script,
+    // and `typeof` on a TDZ let-binding throws ReferenceError.
+    try {
+      if (gameState === 'playing' && typeof pauseGame === 'function') {
+        pauseGame();
+        rotatePausedGame = true;
+      }
+    } catch (e) { /* gameState not yet initialized */ }
   } else {
     rotateOverlay.style.display = 'none';
     rotateOverlay.style.pointerEvents = 'none';
     canvas.style.display = 'block';
     // Auto-resume only if we were the one that paused
-    if (rotatePausedGame && typeof gameState !== 'undefined' && gameState === 'paused' && typeof resumeGame === 'function') {
-      resumeGame();
+    if (rotatePausedGame) {
+      try {
+        if (gameState === 'paused' && typeof resumeGame === 'function') {
+          resumeGame();
+        }
+      } catch (e) { /* gameState not yet initialized */ }
     }
     rotatePausedGame = false;
   }
@@ -178,6 +190,23 @@ if (window.screen && window.screen.orientation) {
   window.screen.orientation.addEventListener('change', handleOrientationChange);
 }
 if (window.visualViewport) window.visualViewport.addEventListener('resize', refreshViewport);
+
+// matchMedia listener — the most reliable rotation trigger on mobile.
+// orientationchange is deprecated and innerHeight/innerWidth lags; matchMedia
+// fires immediately when the device transitions between portrait/landscape.
+const _portraitMQ = window.matchMedia('(orientation: portrait)');
+function _onPortraitChange() {
+  setTimeout(function() {
+    refreshViewport();
+    checkOrientation();
+    if (typeof draw === 'function') { try { draw(); } catch (e) {} }
+  }, 100);
+}
+if (_portraitMQ.addEventListener) {
+  _portraitMQ.addEventListener('change', _onPortraitChange);
+} else if (_portraitMQ.addListener) {
+  _portraitMQ.addListener(_onPortraitChange);
+}
 
 // Force Safari to repaint canvas on load
 window.addEventListener('load', function() {
