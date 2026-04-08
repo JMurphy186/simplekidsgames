@@ -75,9 +75,21 @@
     color: #888;
   }
   #rotate-msg .dismiss {
-    font-size: 14px;
-    opacity: 0.5;
-    margin-top: 10px;
+    font-family: 'Baloo 2', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7a90;
+    text-decoration: none;
+    margin-top: 18px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: color 0.15s ease;
+  }
+  #rotate-msg .dismiss:hover,
+  #rotate-msg .dismiss:active {
+    color: #a9b6cc;
   }
   @keyframes rotatePhone {
     0%, 100% { transform: rotate(0deg); }
@@ -92,6 +104,7 @@
   <span class="rotate-icon">📱</span>
   <span class="rotate-text">ROTATE YOUR PHONE</span>
   <span class="rotate-sub">Monster Rally plays best in landscape</span>
+  <a id="rotate-dismiss" class="dismiss" href="#">Play in portrait anyway →</a>
 </div>
 <canvas id="game"></canvas>
 <script>
@@ -130,7 +143,13 @@ function checkOrientation() {
   const isPortrait = portraitMQ.matches;
   const isMobile = window.matchMedia('(max-width: 900px)').matches || 'ontouchstart' in window;
 
-  if (isPortrait && isMobile) {
+  // Session-scoped dismissal: if the user chose "play in portrait anyway",
+  // skip the overlay until the tab closes. Re-warns on next visit by design.
+  // Wrapped in try/catch for Safari Private Browsing which throws on storage.
+  let portraitDismissed = false;
+  try { portraitDismissed = sessionStorage.getItem('mr_portrait_dismissed') === '1'; } catch (e) {}
+
+  if (isPortrait && isMobile && !portraitDismissed) {
     rotateOverlay.style.display = 'flex';
     rotateOverlay.style.pointerEvents = 'auto';
     canvas.style.display = 'none';
@@ -206,6 +225,32 @@ if (_portraitMQ.addEventListener) {
   _portraitMQ.addEventListener('change', _onPortraitChange);
 } else if (_portraitMQ.addListener) {
   _portraitMQ.addListener(_onPortraitChange);
+}
+
+// Dismiss link — lets the user bypass the rotate nudge and play in portrait
+// (letterboxed). sessionStorage keeps the choice for this tab only so next
+// visit the rotate nudge returns by default.
+const _rotateDismissEl = document.getElementById('rotate-dismiss');
+if (_rotateDismissEl) {
+  const _dismissRotate = function(ev) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    try { sessionStorage.setItem('mr_portrait_dismissed', '1'); } catch (e) {}
+    rotateOverlay.style.display = 'none';
+    rotateOverlay.style.pointerEvents = 'none';
+    canvas.style.display = 'block';
+    // Auto-resume if we were the one that paused
+    if (rotatePausedGame) {
+      try {
+        if (gameState === 'paused' && typeof resumeGame === 'function') resumeGame();
+      } catch (e) { /* gameState not yet initialized */ }
+    }
+    rotatePausedGame = false;
+    // Force a redraw so the letterboxed playfield appears immediately
+    resize();
+    if (typeof draw === 'function') { try { draw(); } catch (e) {} }
+  };
+  _rotateDismissEl.addEventListener('click', _dismissRotate);
+  _rotateDismissEl.addEventListener('touchend', _dismissRotate);
 }
 
 // Force Safari to repaint canvas on load
@@ -1129,17 +1174,25 @@ function toggleMute() {
 
 function getVirtualCoords(e) {
   const rect = canvas.getBoundingClientRect();
-  // Map from CSS display size to virtual 800x450 coords
-  const scaleX = W / rect.width;
-  const scaleY = H / rect.height;
-  let cx, cy;
+  // Letterbox-aware mapping. draw() uses uniform scale s = min(scaleX,scaleY)
+  // plus a centering offset; we MUST mirror that exactly here or touch hit
+  // zones will drift from rendered positions (and portrait mode breaks).
+  const sx = rect.width / W;
+  const sy = rect.height / H;
+  const s = Math.min(sx, sy);
+  const offsetX = (rect.width - W * s) / 2;
+  const offsetY = (rect.height - H * s) / 2;
+  let rawX, rawY;
   if (e.touches) {
-    cx = (e.touches[0].clientX - rect.left) * scaleX;
-    cy = (e.touches[0].clientY - rect.top) * scaleY;
+    rawX = e.touches[0].clientX - rect.left;
+    rawY = e.touches[0].clientY - rect.top;
   } else {
-    cx = (e.clientX - rect.left) * scaleX;
-    cy = (e.clientY - rect.top) * scaleY;
+    rawX = e.clientX - rect.left;
+    rawY = e.clientY - rect.top;
   }
+  // Subtract the letterbox offset BEFORE dividing by the uniform scale.
+  const cx = (rawX - offsetX) / s;
+  const cy = (rawY - offsetY) / s;
   return { x: cx, y: cy };
 }
 
@@ -5106,10 +5159,32 @@ function drawPlayerTruck(p) {
 // MAIN DRAW
 // ============================================================
 function draw() {
+  // Letterbox scaling — preserve 800×450 aspect ratio regardless of viewport
+  // shape. In landscape the bars are zero width; in portrait the playfield
+  // sits in a centered horizontal strip with dark navy bars above/below.
+  // Uniform scale (min of X/Y) prevents vertical stretching in portrait.
   const scaleX = canvas.width / W;
   const scaleY = canvas.height / H;
+  const s = Math.min(scaleX, scaleY);
+  const offsetX = (canvas.width - W * s) / 2;
+  const offsetY = (canvas.height - H * s) / 2;
+
+  // Fill letterbox area with dark navy (matches rotate-msg bg / game chrome,
+  // NOT pure black — pure black in the middle of a navy-toned game looks
+  // like a rendering bug).
+  ctx.fillStyle = '#0B0E18';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
   ctx.save();
-  ctx.scale(scaleX, scaleY);
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(s, s);
+
+  // Clip everything to the 800×450 virtual playfield so stray geometry
+  // (HUD overflow, environment features, etc.) can never bleed into the
+  // letterbox bars.
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.clip();
 
   if (screenShake > 0.5) {
     ctx.translate((Math.random() - 0.5) * screenShake * 2, (Math.random() - 0.5) * screenShake * 2);
