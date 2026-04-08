@@ -89,9 +89,8 @@
 <body>
 <div id="rotate-msg">
   <span class="rotate-icon">📱</span>
-  <span class="rotate-text">Rotate your device!</span>
-  <span class="rotate-sub">This game plays best in landscape mode</span>
-  <div class="dismiss">Tap to continue anyway</div>
+  <span class="rotate-text">ROTATE YOUR PHONE</span>
+  <span class="rotate-sub">Monster Rally plays best in landscape</span>
 </div>
 <canvas id="game"></canvas>
 <script>
@@ -103,26 +102,32 @@ const ctx = canvas.getContext('2d', { willReadFrequently: false });
 // ORIENTATION DETECTION (JS-based, replaces CSS media queries)
 // ============================================================
 const rotateOverlay = document.getElementById('rotate-msg');
-let rotateOverlayDismissed = false;
+let rotatePausedGame = false; // track whether we auto-paused
 
 function checkOrientation() {
-  if (rotateOverlayDismissed) return;
   const isPortrait = window.innerHeight > window.innerWidth;
-  const isMobile = window.innerWidth < 900 || window.innerHeight < 900;
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isSmall = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+  const isMobile = isTouch && isSmall;
+
   if (isPortrait && isMobile) {
     rotateOverlay.style.display = 'flex';
     canvas.style.display = 'none';
+    // Auto-pause if game is currently playing
+    if (typeof gameState !== 'undefined' && gameState === 'playing' && typeof pauseGame === 'function') {
+      pauseGame();
+      rotatePausedGame = true;
+    }
   } else {
     rotateOverlay.style.display = 'none';
     canvas.style.display = 'block';
+    // Auto-resume only if we were the one that paused
+    if (rotatePausedGame && typeof gameState !== 'undefined' && gameState === 'paused' && typeof resumeGame === 'function') {
+      resumeGame();
+    }
+    rotatePausedGame = false;
   }
 }
-
-rotateOverlay.addEventListener('click', () => {
-  rotateOverlayDismissed = true;
-  rotateOverlay.style.display = 'none';
-  canvas.style.display = 'block';
-});
 
 window.addEventListener('resize', checkOrientation);
 window.addEventListener('orientationchange', () => { setTimeout(checkOrientation, 200); });
@@ -234,15 +239,15 @@ const ENVIRONMENTS = [
 // Campaign level configs (8 levels)
 // All available campaign levels (pool of 7 randomizable + Rainbow Road finale)
 const CAMPAIGN_LEVEL_POOL = [
-  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 2.1, maxSpeed: 5.3, speedRamp: 1140, obstGap: 170, starFreq: 40, countdownSecs: 30, nameColor: '#cc9966' },
-  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 2.2, maxSpeed: 5.8, speedRamp: 1045, obstGap: 160, starFreq: 40, countdownSecs: 30, nameColor: '#ff8844' },
-  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 2.3, maxSpeed: 6.3, speedRamp: 950,  obstGap: 150, starFreq: 45, countdownSecs: 30, nameColor: '#cc44ff' },
-  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 2.4, maxSpeed: 6.8, speedRamp: 855,  obstGap: 140, starFreq: 45, countdownSecs: 30, nameColor: '#6688aa' },
-  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 2.3, maxSpeed: 6.3, speedRamp: 950,  obstGap: 150, starFreq: 45, countdownSecs: 30, nameColor: '#aabbcc' },
-  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 2.5, maxSpeed: 6.8, speedRamp: 808,  obstGap: 130, starFreq: 45, countdownSecs: 30, nameColor: '#44cc44' },
-  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 2.6, maxSpeed: 7.3, speedRamp: 760,  obstGap: 120, starFreq: 50, countdownSecs: 30, nameColor: '#ff5500' }
+  { envIndex: 0, name: 'DESERT NIGHT',   baseSpeed: 2.415, maxSpeed: 6.095, speedRamp: 1140, obstGap: 170, starFreq: 40, countdownSecs: 30, nameColor: '#cc9966' },
+  { envIndex: 1, name: 'SUNSET CITY',    baseSpeed: 2.53, maxSpeed: 6.67, speedRamp: 1045, obstGap: 160, starFreq: 40, countdownSecs: 30, nameColor: '#ff8844' },
+  { envIndex: 2, name: 'NEON ARENA',     baseSpeed: 2.645, maxSpeed: 7.245, speedRamp: 950,  obstGap: 150, starFreq: 45, countdownSecs: 30, nameColor: '#cc44ff' },
+  { envIndex: 3, name: 'STORMY HIGHWAY', baseSpeed: 2.76, maxSpeed: 7.82, speedRamp: 855,  obstGap: 140, starFreq: 45, countdownSecs: 30, nameColor: '#6688aa' },
+  { envIndex: 4, name: 'MOON SURFACE',   baseSpeed: 2.645, maxSpeed: 7.245, speedRamp: 950,  obstGap: 150, starFreq: 45, countdownSecs: 30, nameColor: '#aabbcc' },
+  { envIndex: 5, name: 'JUNGLE RUINS',   baseSpeed: 2.875, maxSpeed: 7.82, speedRamp: 808,  obstGap: 130, starFreq: 45, countdownSecs: 30, nameColor: '#44cc44' },
+  { envIndex: 6, name: 'LAVA WORLD',     baseSpeed: 2.99, maxSpeed: 8.395, speedRamp: 760,  obstGap: 120, starFreq: 50, countdownSecs: 30, nameColor: '#ff5500' }
 ];
-const RAINBOW_ROAD = { envIndex: 7, name: 'RAINBOW ROAD', baseSpeed: 2.3, maxSpeed: 6.8, speedRamp: 855, obstGap: 140, starFreq: 25, countdownSecs: 30, nameColor: 'rainbow' };
+const RAINBOW_ROAD = { envIndex: 7, name: 'RAINBOW ROAD', baseSpeed: 2.645, maxSpeed: 7.82, speedRamp: 855, obstGap: 140, starFreq: 25, countdownSecs: 30, nameColor: 'rainbow' };
 
 // Active campaign sequence (generated per playthrough, 5 levels)
 let campaignSequence = [];
@@ -450,11 +455,27 @@ const ROSTER_COUNT = TRUCK_ROSTER.length;
 const truckImages = {};
 for (const t of TRUCK_ROSTER) {
   const img = new Image();
+  img.decoding = 'async';
   img.src = t.sprite;
   truckImages[t.id] = img;
 }
 const tireImage = new Image();
+tireImage.decoding = 'async';
 tireImage.src = 'assets/trucks/tire-universal.png';
+
+// Force all truck images to decode before first level (prevents jank on sprite swap)
+let truckImagesDecoded = false;
+function preloadTruckDecodes() {
+  if (truckImagesDecoded) return Promise.resolve();
+  const decodes = Object.values(truckImages).map(img => {
+    if (typeof img.decode === 'function') return img.decode().catch(() => {});
+    return Promise.resolve();
+  });
+  if (typeof tireImage.decode === 'function') decodes.push(tireImage.decode().catch(() => {}));
+  return Promise.all(decodes).then(() => { truckImagesDecoded = true; });
+}
+// Kick off decode asap (background)
+preloadTruckDecodes();
 
 // ─── TruckUnlocks helper — localStorage persistence with try/catch ──────────
 const TruckUnlocks = {
@@ -585,8 +606,11 @@ const hdAssetsList_OLD = [fchdAssets, btAssets, gmAssets, pnAssets, gsAssets, rr
 // ============================================================
 // GAME STATE
 // ============================================================
-let gameSpeed = 1.9;
-let maxSpeed = 6.5;
+// Unified base truck speed (all 26 trucks identical) — bumped +15% from 1.9
+const BASE_TRUCK_SPEED = 2.185; // was 1.9, +15%
+let gameSpeed = BASE_TRUCK_SPEED;
+let maxSpeed = 7.475; // was 6.5, +15%
+console.log('[MR] BASE_TRUCK_SPEED =', BASE_TRUCK_SPEED, ' maxSpeed =', maxSpeed);
 let gameState = 'title'; // 'title' | 'picker' | 'modeselect' | 'countdown' | 'playing' | 'paused' | 'gameover' | 'levelcomplete' | 'leveltransition' | 'campaignwin'
 let gameMode = 'rally'; // 'rally' | 'frenzy' | 'endless'
 let roundTimer = 0; // countdown timer for frenzy (frames)
@@ -2427,6 +2451,89 @@ function spawnLandParticles(x, y) {
   }
 }
 
+// Exhaust particle system — continuous trail while airborne + jump burst
+let exhaustParticles = [];
+function exhaustSpawnBudget() {
+  const dpr = window.devicePixelRatio || 1;
+  if (dpr > 1 && exhaustParticles.length > 60) return 0.5;
+  return 1;
+}
+function spawnExhaustTrail(p) {
+  const tk = p.truck;
+  if (!tk || tk.grounded) return;
+  const budget = exhaustSpawnBudget();
+  if (budget <= 0 || Math.random() > budget) return;
+  const rearX = tk.x + 4;
+  const rearY = tk.y + tk.h * 0.55;
+  for (let i = 0; i < 2; i++) {
+    exhaustParticles.push({
+      x: rearX + (Math.random() - 0.5) * 6,
+      y: rearY + (Math.random() - 0.5) * 4,
+      vx: -2 - Math.random() * 2,
+      vy: (Math.random() - 0.5) * 1.5,
+      size: 4 + Math.random() * 5,
+      color1: '#FFB020',
+      color2: '#FF4500',
+      life: 1,
+      decay: 0.04,
+      burst: false
+    });
+  }
+}
+function spawnJumpBurst(p) {
+  const tk = p.truck;
+  if (!tk) return;
+  const rearX = tk.x + 6;
+  const rearY = tk.y + tk.h * 0.6;
+  for (let i = 0; i < 13; i++) {
+    const angle = Math.PI + (Math.random() - 0.5) * 0.8;
+    const speed = 4 + Math.random() * 4;
+    exhaustParticles.push({
+      x: rearX,
+      y: rearY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed + (Math.random() - 0.5) * 2,
+      size: 6 + Math.random() * 6,
+      color1: '#FFFFFF',
+      color2: '#FF6A00',
+      life: 1,
+      decay: 0.10,
+      burst: true
+    });
+  }
+}
+function updateExhaustParticles() {
+  if (exhaustParticles.length > 150) exhaustParticles.splice(0, exhaustParticles.length - 150);
+  for (let i = exhaustParticles.length - 1; i >= 0; i--) {
+    const p = exhaustParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.96;
+    p.vy *= 0.96;
+    p.life -= p.decay;
+    if (p.life <= 0) exhaustParticles.splice(i, 1);
+  }
+}
+function drawExhaustParticles() {
+  if (exhaustParticles.length === 0) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of exhaustParticles) {
+    const a = Math.max(0, Math.min(1, p.life));
+    const r = p.size * a;
+    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+    grad.addColorStop(0, p.color1);
+    grad.addColorStop(1, p.color2);
+    ctx.globalAlpha = a * 0.9;
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
 function spawnStarParticles(x, y) {
   for (let i = 0; i < 12; i++) {
     const angle = (i / 12) * Math.PI * 2;
@@ -4152,6 +4259,7 @@ function updatePlayer(p) {
     tk.grounded = false;
     tk.jumping = true;
     spawnLandParticles(tk.x + tk.w / 2, GROUND_Y + 8);
+    spawnJumpBurst(p); // Jump burst kick
   }
   p.jumpPressed = false;
 
@@ -4384,23 +4492,32 @@ function update() {
     const lvl = campaignSequence[campaignLevel] || campaignSequence[0];
     gameSpeed = Math.min(lvl.maxSpeed, lvl.baseSpeed + maxScore / lvl.speedRamp);
 
-    // Campaign max speed detection
+    // Campaign max speed detection — 10s end-of-level boost with Mega Truck combo
     if (!campaignMaxSpeedReached && gameSpeed >= lvl.maxSpeed) {
       campaignMaxSpeedReached = true;
-      campaignCountdown = (lvl.countdownSecs || 60) * 60; // per-level countdown
+      campaignCountdown = 10 * 60; // 10 seconds (was 30s+, now locked to 10)
       campaignMaxSpeedFlash = 1;
-      // Auto-turbo for all players during MAX SPEED countdown
+      // Auto-turbo + Mega Truck simultaneously for all players, same duration
       for (const p of players) {
         p.turboActive = true;
-        p.turboTimer = campaignCountdown; // full countdown duration
+        p.turboTimer = campaignCountdown;
+        p.megaActive = true;
+        p.megaTimer = campaignCountdown;
       }
     }
 
-    // Campaign 60s countdown at max speed
+    // Campaign 10s countdown at max speed (with mega+turbo combo)
     if (campaignMaxSpeedReached && campaignCountdown > 0) {
       campaignCountdown--;
       campaignMaxSpeedFlash += 0.05;
       if (campaignCountdown <= 0) {
+        // Clean up combo effects — both expire together
+        for (const p of players) {
+          p.turboActive = false;
+          p.turboTimer = 0;
+          p.megaActive = false;
+          p.megaTimer = 0;
+        }
         // LEVEL COMPLETE!
         levelStats.score = maxScore;
         campaignTotals.stars += levelStats.stars;
@@ -4547,6 +4664,11 @@ function update() {
     if (p.type === 'spark' || p.type === 'dust') p.vy += 0.2;
     p.life -= p.decay;
     if (p.life <= 0) particles.splice(i, 1);
+  }
+  // Exhaust particles (trail + burst)
+  updateExhaustParticles();
+  for (const p of players) {
+    if (p && p.truck) spawnExhaustTrail(p);
   }
 
   // Dust trail
@@ -4998,6 +5120,8 @@ function draw() {
     for (const obs of obstacles) drawObstacle(obs);
     if (player1) drawPlayerTruck(player1);
 
+    // Exhaust trails (lighter composite, drawn with normal particles)
+    drawExhaustParticles();
     // Draw particles
     for (const p of particles) {
       ctx.globalAlpha = p.life;
