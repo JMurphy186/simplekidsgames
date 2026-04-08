@@ -397,45 +397,190 @@ const tcAssets = loadHdAssets(TC_BODY_SVG, TC_WHEEL_SVG);
 const hdAssetMap = {};
 
 // ============================================================
-// TRUCK ROSTER
+// TRUCK ROSTER — 26 painted PNG sprites + 4-tier unlock progression
 // ============================================================
+// NOTE: Old 15-entry SVG/car roster commented out below for rollback.
+// The Gemini-painted PNGs live in games/monster-rally/assets/trucks/
+const DEFAULT_AXLES = { front: { xPct: 0.22, yPct: 0.78 }, rear: { xPct: 0.78, yPct: 0.78 }, sizePct: 0.32 };
+
 const TRUCK_ROSTER = [
-  // Slots 1-4: Classic HD (SVG, 400x250 viewBox)
-  { name: 'Flame Crusher', body: '#FF8C00', accent: '#FFD600', highlight: '#E65100', decal: 'zigzag', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#ff4400', flameInner: '#ffcc00',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  { name: 'Blue Thunder', body: '#2962FF', accent: '#64B5F6', highlight: '#0000FF', decal: 'lightning', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#2962FF', flameInner: '#64B5F6',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  { name: 'Green Machine', body: '#64DD17', accent: '#B2FF59', highlight: '#33691E', decal: 'dashes', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#33691E', flameInner: '#B2FF59',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  { name: 'Purple Nightmare', body: '#9C27B0', accent: '#E040FB', highlight: '#4A148C', decal: 'stars', style: 'hd', type: 'monster', renderMode: 'svg', flameOuter: '#7B1FA2', flameInner: '#E040FB',
-    svgMeta: { viewBoxW: 400, viewBoxH: 250, bodyMinX: 65, bodyMaxX: 325, bodyMinY: 50, wheelCX: [140, 270], wheelCY: 165, wheelR: 42, exhaustX: 72, exhaustY: 125 } },
-  // Slots 5-8: Pro Stadium (SVG, 450x350 viewBox)
-  { name: 'Grave Stomper', body: '#111118', accent: '#76FF03', highlight: '#000', decal: 'skull', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#76FF03', flameInner: '#B2FF59',
-    svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 15, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
-  { name: 'Red Rampage', body: '#D32F2F', accent: '#FF8A80', highlight: '#B71C1C', decal: 'claws', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#D32F2F', flameInner: '#FF8A80',
-    svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 30, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
-  { name: 'Thunder Bull', body: '#4A148C', accent: '#FFD600', highlight: '#21006F', decal: 'horns', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#4A148C', flameInner: '#FFD600',
-    svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 15, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
-  { name: 'Toxic Crusher', body: '#33691E', accent: '#76FF03', highlight: '#1B5E20', decal: 'hazard', style: 'pro', type: 'monster', renderMode: 'svg', flameOuter: '#33691E', flameInner: '#76FF03',
-    svgMeta: { viewBoxW: 450, viewBoxH: 350, bodyMinX: 50, bodyMaxX: 400, bodyMinY: 0, wheelCX: [130, 320], wheelCY: 240, wheelR: 70, exhaustX: 55, exhaustY: 115 } },
-  // Slots 9+: Cars (playable crushable vehicles)
-  { name: 'Red Racer', body: '#e74c3c', accent: '#ff6b6b', highlight: '#c0392b', decal: 'stripes', style: 'car', type: 'car' },
-  { name: 'Cool Blue', body: '#3498db', accent: '#74b9ff', highlight: '#2980b9', decal: 'stripes', style: 'car', type: 'car' },
-  { name: 'Gold Rush', body: '#f39c12', accent: '#ffeaa7', highlight: '#e67e22', decal: 'flames', style: 'car', type: 'car' },
-  { name: 'Big SUV', body: '#34495e', accent: '#95a5a6', highlight: '#2c3e50', decal: 'bolts', style: 'suv', type: 'suv' },
-  { name: 'School Bus', body: '#f1c40f', accent: '#000', highlight: '#f39c12', decal: 'stripes', style: 'bus', type: 'bus' },
-  { name: 'Stretch Limo', body: '#e8e8e8', accent: '#222', highlight: '#ccc', decal: 'stars', style: 'limo', type: 'limo' }
+  // ===== STARTER (6) — unlocked from launch =====
+  { id: 'blaze-brigade',    name: 'Blaze Brigade',    sprite: 'assets/trucks/blaze-brigade.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#e74c3c', accent: '#FFD600', highlight: '#b71c1c', flameOuter: '#ff4400', flameInner: '#ffcc00' },
+  { id: 'hook-and-haul',    name: 'Hook & Haul',      sprite: 'assets/trucks/hook-and-haul.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#f39c12', accent: '#ffeaa7', highlight: '#e67e22', flameOuter: '#ff6600', flameInner: '#ffcc00' },
+  { id: 'trail-blazer',     name: 'Trail Blazer',     sprite: 'assets/trucks/trail-blazer.png',     tier: 'starter', renderMode: 'png', type: 'monster', body: '#795548', accent: '#bcaaa4', highlight: '#3e2723', flameOuter: '#ff6600', flameInner: '#ffcc00' },
+  { id: 'iron-dispatch',    name: 'Iron Dispatch',    sprite: 'assets/trucks/iron-dispatch.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#546e7a', accent: '#b0bec5', highlight: '#263238', flameOuter: '#4fc3f7', flameInner: '#e1f5fe' },
+  { id: 'bull-rush',        name: 'Bull Rush',        sprite: 'assets/trucks/bull-rush.png',        tier: 'starter', renderMode: 'png', type: 'monster', body: '#8d6e63', accent: '#d7ccc8', highlight: '#4e342e', flameOuter: '#ff4400', flameInner: '#ffcc00' },
+  { id: 'crimson-comet',    name: 'Crimson Comet',    sprite: 'assets/trucks/crimson-comet.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#c62828', accent: '#ef9a9a', highlight: '#8e0000', flameOuter: '#ff4400', flameInner: '#ffcc00' },
+
+  // ===== CAMPAIGN (10) — unlock by clearing levels =====
+  { id: 'voltrex',          name: 'Voltrex',          sprite: 'assets/trucks/voltrex.png',          tier: 'campaign', renderMode: 'png', type: 'monster', body: '#1e88e5', accent: '#64b5f6', highlight: '#0d47a1', flameOuter: '#2962ff', flameInner: '#64b5f6', unlockLevel: 1, unlockClearCount: 1 },
+  { id: 'graveyard-howler', name: 'Graveyard Howler', sprite: 'assets/trucks/graveyard-howler.png', tier: 'campaign', renderMode: 'png', type: 'monster', body: '#212121', accent: '#616161', highlight: '#000', flameOuter: '#9c27b0', flameInner: '#e1bee7', unlockLevel: 2, unlockClearCount: 1 },
+  { id: 'swamp-king',       name: 'Swamp King',       sprite: 'assets/trucks/swamp-king.png',       tier: 'campaign', renderMode: 'png', type: 'monster', body: '#33691e', accent: '#aed581', highlight: '#1b5e20', flameOuter: '#76ff03', flameInner: '#ccff90', unlockLevel: 3, unlockClearCount: 1 },
+  { id: 'frostbite',        name: 'Frostbite',        sprite: 'assets/trucks/frostbite.png',        tier: 'campaign', renderMode: 'png', type: 'monster', body: '#b3e5fc', accent: '#e1f5fe', highlight: '#01579b', flameOuter: '#4fc3f7', flameInner: '#e1f5fe', unlockLevel: 4, unlockClearCount: 1 },
+  { id: 'magma-maw',        name: 'Magma Maw',        sprite: 'assets/trucks/magma-maw.png',        tier: 'campaign', renderMode: 'png', type: 'monster', body: '#bf360c', accent: '#ff8a65', highlight: '#3e2723', flameOuter: '#ff4400', flameInner: '#ffcc00', unlockLevel: 5, unlockClearCount: 1 },
+  { id: 'toxic-crawler',    name: 'Toxic Crawler',    sprite: 'assets/trucks/toxic-crawler.png',    tier: 'campaign', renderMode: 'png', type: 'monster', body: '#558b2f', accent: '#c5e1a5', highlight: '#33691e', flameOuter: '#76ff03', flameInner: '#ccff90', unlockLevel: 6, unlockClearCount: 1 },
+  { id: 'emerald-wyrm',     name: 'Emerald Wyrm',     sprite: 'assets/trucks/emerald-wyrm.png',     tier: 'campaign', renderMode: 'png', type: 'monster', body: '#00695c', accent: '#80cbc4', highlight: '#004d40', flameOuter: '#00e676', flameInner: '#b9f6ca', unlockLevel: 7, unlockClearCount: 1 },
+  { id: 'iron-maw',         name: 'Iron Maw',         sprite: 'assets/trucks/iron-maw.png',         tier: 'campaign', renderMode: 'png', type: 'monster', body: '#37474f', accent: '#90a4ae', highlight: '#102027', flameOuter: '#ff4400', flameInner: '#ffcc00', unlockLevel: 8, unlockClearCount: 1 },
+  { id: 'steam-stomper',    name: 'Steam Stomper',    sprite: 'assets/trucks/steam-stomper.png',    tier: 'campaign', renderMode: 'png', type: 'monster', body: '#6d4c41', accent: '#bcaaa4', highlight: '#3e2723', flameOuter: '#ff6600', flameInner: '#ffcc00', unlockLevel: 1, unlockClearCount: 2 },
+  { id: 'road-hermit',      name: 'Road Hermit',      sprite: 'assets/trucks/road-hermit.png',      tier: 'campaign', renderMode: 'png', type: 'monster', body: '#8d6e63', accent: '#d7ccc8', highlight: '#3e2723', flameOuter: '#ff6600', flameInner: '#ffcc00', unlockLevel: 2, unlockClearCount: 2 },
+
+  // ===== COIN (5) — purchase with mr_coins =====
+  { id: 'bone-rattler',     name: 'Bone Rattler',     sprite: 'assets/trucks/bone-rattler.png',     tier: 'coin', renderMode: 'png', type: 'monster', body: '#424242', accent: '#eceff1', highlight: '#000', flameOuter: '#e040fb', flameInner: '#f3e5f5', cost: 500 },
+  { id: 'reef-reaper',      name: 'Reef Reaper',      sprite: 'assets/trucks/reef-reaper.png',      tier: 'coin', renderMode: 'png', type: 'monster', body: '#00838f', accent: '#80deea', highlight: '#006064', flameOuter: '#00e5ff', flameInner: '#84ffff', cost: 750 },
+  { id: 'black-tide',       name: 'Black Tide',       sprite: 'assets/trucks/black-tide.png',       tier: 'coin', renderMode: 'png', type: 'monster', body: '#1a237e', accent: '#7986cb', highlight: '#000051', flameOuter: '#304ffe', flameInner: '#8c9eff', cost: 1000 },
+  { id: 'hysteria',         name: 'Hysteria',         sprite: 'assets/trucks/hysteria.png',         tier: 'coin', renderMode: 'png', type: 'monster', body: '#7b1fa2', accent: '#ce93d8', highlight: '#4a148c', flameOuter: '#e040fb', flameInner: '#f3e5f5', cost: 1250 },
+  { id: 'red-planet',       name: 'Red Planet',       sprite: 'assets/trucks/red-planet.png',       tier: 'coin', renderMode: 'png', type: 'monster', body: '#bf360c', accent: '#ffab91', highlight: '#3e2723', flameOuter: '#ff4400', flameInner: '#ffcc00', cost: 1500 },
+
+  // ===== ACHIEVEMENT (5) — locked silhouettes, future system =====
+  { id: 'xeno-crawler',     name: '???',              sprite: 'assets/trucks/xeno-crawler.png',     tier: 'achievement', renderMode: 'png', type: 'monster', body: '#4527a0', accent: '#9575cd', highlight: '#311b92', flameOuter: '#7c4dff', flameInner: '#b388ff', realName: 'Xeno Crawler' },
+  { id: 'krakenfist',       name: '???',              sprite: 'assets/trucks/krakenfist.png',       tier: 'achievement', renderMode: 'png', type: 'monster', body: '#00695c', accent: '#4db6ac', highlight: '#004d40', flameOuter: '#00e676', flameInner: '#b9f6ca', realName: 'Krakenfist' },
+  { id: 'king-midas',       name: '???',              sprite: 'assets/trucks/king-midas.png',       tier: 'achievement', renderMode: 'png', type: 'monster', body: '#f9a825', accent: '#fff59d', highlight: '#f57f17', flameOuter: '#ffc107', flameInner: '#fff9c4', realName: 'King Midas' },
+  { id: 'soul-reaver',      name: '???',              sprite: 'assets/trucks/soul-reaver.png',      tier: 'achievement', renderMode: 'png', type: 'monster', body: '#212121', accent: '#616161', highlight: '#000', flameOuter: '#d500f9', flameInner: '#ea80fc', realName: 'Soul Reaver' },
+  { id: 'abyss-runner',     name: '???',              sprite: 'assets/trucks/abyss-runner.png',     tier: 'achievement', renderMode: 'png', type: 'monster', body: '#0d47a1', accent: '#64b5f6', highlight: '#000051', flameOuter: '#2962ff', flameInner: '#82b1ff', realName: 'Abyss Runner' },
 ];
+
+// Apply default axles to all entries (calibrate per-truck later if needed)
+for (const t of TRUCK_ROSTER) {
+  t.axles = DEFAULT_AXLES;
+}
+
 const ROSTER_COUNT = TRUCK_ROSTER.length;
 
-// Populate HD asset map by scanning roster for renderMode === 'svg'
-const hdAssetsList = [fchdAssets, btAssets, gmAssets, pnAssets, gsAssets, rrAssets, tbAssets, tcAssets];
-let hdIdx = 0;
-for (let i = 0; i < TRUCK_ROSTER.length; i++) {
-  if (TRUCK_ROSTER[i].renderMode === 'svg') {
-    hdAssetMap[i] = hdAssetsList[hdIdx++];
+// Preload all 26 truck sprites + universal tire
+const truckImages = {};
+for (const t of TRUCK_ROSTER) {
+  const img = new Image();
+  img.src = t.sprite;
+  truckImages[t.id] = img;
+}
+const tireImage = new Image();
+tireImage.src = 'assets/trucks/tire-universal.png';
+
+// ─── TruckUnlocks helper — localStorage persistence with try/catch ──────────
+const TruckUnlocks = {
+  getClears() {
+    try { return JSON.parse(localStorage.getItem('mr_level_clears') || '{}'); }
+    catch (e) { return {}; }
+  },
+  recordClear(levelId) {
+    const clears = this.getClears();
+    clears[levelId] = (clears[levelId] || 0) + 1;
+    try { localStorage.setItem('mr_level_clears', JSON.stringify(clears)); } catch (e) {}
+    return this.checkNewUnlocks(levelId, clears[levelId]);
+  },
+  getUnlockedIds() {
+    try { return new Set(JSON.parse(localStorage.getItem('mr_unlocked_trucks') || '[]')); }
+    catch (e) { return new Set(); }
+  },
+  addUnlock(id) {
+    const set = this.getUnlockedIds();
+    if (set.has(id)) return false;
+    set.add(id);
+    try { localStorage.setItem('mr_unlocked_trucks', JSON.stringify([...set])); } catch (e) {}
+    return true;
+  },
+  isUnlocked(truck) {
+    if (!truck) return false;
+    if (truck.tier === 'starter') return true;
+    if (truck.tier === 'campaign') {
+      const clears = this.getClears();
+      return (clears[truck.unlockLevel] || 0) >= truck.unlockClearCount;
+    }
+    return this.getUnlockedIds().has(truck.id);
+  },
+  checkNewUnlocks(levelId, clearCount) {
+    return TRUCK_ROSTER.filter(t =>
+      t.tier === 'campaign' &&
+      t.unlockLevel === levelId &&
+      t.unlockClearCount === clearCount
+    );
+  },
+  purchaseCoinTruck(truck) {
+    if (truck.tier !== 'coin') return { success: false, reason: 'not-coin-truck' };
+    if (this.isUnlocked(truck)) return { success: false, reason: 'already-owned' };
+    let coins = 0;
+    try { coins = parseInt(localStorage.getItem('mr_coins') || '0', 10); } catch (e) {}
+    if (coins < truck.cost) return { success: false, reason: 'insufficient-coins', coins, cost: truck.cost };
+    try {
+      localStorage.setItem('mr_coins', String(coins - truck.cost));
+      this.addUnlock(truck.id);
+      return { success: true, remainingCoins: coins - truck.cost };
+    } catch (e) {
+      return { success: false, reason: 'storage-error' };
+    }
+  }
+};
+
+// Helper: get currently-selected truck index (migrates legacy mr_selected_truck → index)
+function getSelectedTruckIndex() {
+  try {
+    const id = localStorage.getItem('mr_selected_truck');
+    if (id) {
+      const idx = TRUCK_ROSTER.findIndex(t => t.id === id);
+      if (idx >= 0 && TruckUnlocks.isUnlocked(TRUCK_ROSTER[idx])) return idx;
+    }
+  } catch (e) {}
+  return 0; // default to Blaze Brigade (first starter)
+}
+function setSelectedTruckIndex(idx) {
+  if (idx < 0 || idx >= TRUCK_ROSTER.length) return;
+  try { localStorage.setItem('mr_selected_truck', TRUCK_ROSTER[idx].id); } catch (e) {}
+  try { localStorage.setItem('monsterRallyTruck', String(idx)); } catch (e) {} // backward compat
+}
+
+// ─── drawTruckPNG — unified PNG truck renderer with tire overlay ────────────
+function drawTruckPNG(tx, ty, tw, th, truck, showExhaust, squishY, tireAngle) {
+  const img = truckImages[truck.id];
+  if (!img || !img.complete || img.naturalWidth === 0) {
+    // Fallback: colored rectangle while loading
+    ctx.fillStyle = truck.body || '#888';
+    ctx.fillRect(tx, ty + squishY, tw, th - squishY);
+    return;
+  }
+  // Draw truck body
+  const drawY = ty + squishY;
+  const drawH = th - squishY;
+  ctx.drawImage(img, tx, drawY, tw, drawH);
+
+  // Draw tire overlay at front + rear axles
+  if (tireImage && tireImage.complete && tireImage.naturalWidth > 0) {
+    const ax = truck.axles || DEFAULT_AXLES;
+    const tireSize = tw * ax.sizePct;
+    const tireHalf = tireSize / 2;
+    const axles = [ax.front, ax.rear];
+    for (const axle of axles) {
+      const cx = tx + tw * axle.xPct;
+      const cy = drawY + drawH * axle.yPct;
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (tireAngle) ctx.rotate(tireAngle);
+      ctx.drawImage(tireImage, -tireHalf, -tireHalf, tireSize, tireSize);
+      ctx.restore();
+    }
+  }
+
+  // Exhaust puff when airborne
+  if (showExhaust) {
+    const ex = tx - 2, ey = drawY + drawH * 0.55;
+    const fw = 6 + Math.random() * 8;
+    ctx.fillStyle = truck.flameOuter || '#ff4400';
+    ctx.beginPath();
+    ctx.moveTo(ex, ey - 4); ctx.lineTo(ex - fw, ey); ctx.lineTo(ex, ey + 4);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = truck.flameInner || '#ffcc00';
+    ctx.beginPath();
+    ctx.moveTo(ex, ey - 2); ctx.lineTo(ex - fw * 0.6, ey); ctx.lineTo(ex, ey + 2);
+    ctx.closePath(); ctx.fill();
   }
 }
+
+/* ── OLD ROSTER (commented for rollback) ──────────────────────────────────
+const TRUCK_ROSTER_OLD = [
+  // Slots 1-4: Classic HD, Slots 5-8: Pro Stadium, Slots 9+: Cars
+  // See git history for full definitions
+];
+const hdAssetsList_OLD = [fchdAssets, btAssets, gmAssets, pnAssets, gsAssets, rrAssets, tbAssets, tcAssets];
+─────────────────────────────────────────────────────────────────────────── */
 
 // ============================================================
 // GAME STATE
@@ -918,6 +1063,12 @@ function handleDown(e) {
   tryFullscreen();
   const vc = getVirtualCoords(e);
 
+  // Truck unlock notification — tap anywhere dismisses and advances queue
+  if (truckUnlockQueue.length > 0) {
+    truckUnlockQueue.shift();
+    return;
+  }
+
   if (gameState === 'title') {
     // Back to games button (top-left, 130x50 orange button)
     if (vc.x < 150 && vc.y < 60) { window.location.href = '/'; return; }
@@ -1068,54 +1219,167 @@ document.addEventListener('keyup', (e) => {
 // ============================================================
 // TRUCK PICKER + MODE SELECT + COUNTDOWN
 // ============================================================
-let pickerPage = 0;
-const PICKER_PER_PAGE = 4;
-// Display order: Pro Stadium (4-7) first, then Classic HD (0-3), then cars (8+)
-const PICKER_ORDER = [];
-for (let i = 4; i < 8 && i < ROSTER_COUNT; i++) PICKER_ORDER.push(i); // Pro Stadium
-for (let i = 0; i < 4 && i < ROSTER_COUNT; i++) PICKER_ORDER.push(i); // Classic HD
-for (let i = 8; i < ROSTER_COUNT; i++) PICKER_ORDER.push(i);          // Cars
-const PICKER_PAGES = Math.ceil(PICKER_ORDER.length / PICKER_PER_PAGE);
+// Truck unlock notification queue
+let truckUnlockQueue = [];
+let truckUnlockPulse = 0;
+
+function showTruckUnlockNotification(trucks) {
+  for (const t of trucks) truckUnlockQueue.push(t);
+}
+
+function drawTruckUnlockOverlay() {
+  if (truckUnlockQueue.length === 0) return;
+  const truck = truckUnlockQueue[0];
+  truckUnlockPulse += 0.08;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffd700';
+  ctx.font = "bold 32px 'Luckiest Guy', cursive";
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+  const hy = H * 0.22;
+  ctx.strokeText('NEW TRUCK UNLOCKED!', W / 2, hy);
+  ctx.fillText('NEW TRUCK UNLOCKED!', W / 2, hy);
+
+  // Truck sprite 160×80 centered
+  const img = truckImages[truck.id];
+  const sw = 220, sh = 110;
+  const sx = (W - sw) / 2, sy = H * 0.35;
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, sx, sy, sw, sh);
+  } else {
+    ctx.fillStyle = truck.body || '#888';
+    ctx.fillRect(sx, sy, sw, sh);
+  }
+
+  ctx.fillStyle = '#fff'; ctx.font = "bold 22px 'Luckiest Guy', cursive";
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  const ny = sy + sh + 36;
+  ctx.strokeText(truck.name, W / 2, ny);
+  ctx.fillText(truck.name, W / 2, ny);
+
+  const pulse = 0.5 + Math.sin(truckUnlockPulse) * 0.3;
+  ctx.fillStyle = 'rgba(255,255,255,' + pulse + ')';
+  ctx.font = "bold 16px 'Baloo 2', sans-serif";
+  ctx.fillText('TAP TO CONTINUE', W / 2, H - 50);
+}
+
+// Tier-grouped picker state
+let pickerTier = 'starter'; // 'starter' | 'campaign' | 'coin' | 'achievement'
+let pickerToast = null;     // { text, life }
+let pickerConfirm = null;   // { truck } — coin purchase confirmation
+
+const PICKER_TIERS = ['starter', 'campaign', 'coin', 'achievement'];
+const TIER_LABEL = { starter: 'STARTER', campaign: 'CAMPAIGN', coin: 'COIN', achievement: 'ACHIEVEMENT' };
+const TIER_COLOR = { starter: '#9e9e9e', campaign: '#4caf50', coin: '#ffd700', achievement: '#e040fb' };
+
+function getTruckIndicesInTier(tier) {
+  const out = [];
+  for (let i = 0; i < TRUCK_ROSTER.length; i++) {
+    if (TRUCK_ROSTER[i].tier === tier) out.push(i);
+  }
+  return out;
+}
 
 function getPickerTruckRects() {
+  // Grid of cards for current tier: 3 columns, variable rows
   const rects = [];
-  const startX = 80, gap = 170, y = 170;
-  const pageStart = pickerPage * PICKER_PER_PAGE;
-  const pageEnd = Math.min(pageStart + PICKER_PER_PAGE, PICKER_ORDER.length);
-  for (let i = pageStart; i < pageEnd; i++) {
-    const col = i - pageStart;
-    rects.push({ x: startX + col * gap, y, w: 140, h: 120, idx: PICKER_ORDER[i] });
+  const indices = getTruckIndicesInTier(pickerTier);
+  const cols = 3;
+  const cardW = 140, cardH = 118;
+  const gapX = 16, gapY = 14;
+  const gridW = cols * cardW + (cols - 1) * gapX;
+  const startX = (W - gridW) / 2;
+  const startY = 110;
+  for (let i = 0; i < indices.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    rects.push({
+      x: startX + col * (cardW + gapX),
+      y: startY + row * (cardH + gapY),
+      w: cardW, h: cardH,
+      idx: indices[i]
+    });
   }
   return rects;
 }
 
-// Helper: find which picker page a roster index appears on
-function pickerPageForTruck(truckIdx) {
-  const displayIdx = PICKER_ORDER.indexOf(truckIdx);
-  return displayIdx >= 0 ? Math.floor(displayIdx / PICKER_PER_PAGE) : 0;
-}
+// Legacy compat: some code still references PICKER_PAGES / pickerPage
+const PICKER_PER_PAGE = 12;
+const PICKER_PAGES = 1;
+let pickerPage = 0;
+function pickerPageForTruck() { return 0; }
 
 function handlePickerClick(vx, vy) {
-  // Check page arrows
-  if (vy >= 210 && vy <= 260) {
-    if (vx >= 20 && vx <= 60) { pickerPage = (pickerPage - 1 + PICKER_PAGES) % PICKER_PAGES; return; }
-    if (vx >= W - 60 && vx <= W - 20) { pickerPage = (pickerPage + 1) % PICKER_PAGES; return; }
+  // Purchase confirmation modal takes precedence
+  if (pickerConfirm) {
+    const mw = 320, mh = 160, mx = (W - mw) / 2, my = (H - mh) / 2;
+    const btnY = my + mh - 44, btnW = 120, btnH = 34;
+    const yesX = mx + 30, noX = mx + mw - 30 - btnW;
+    if (vy >= btnY && vy <= btnY + btnH) {
+      if (vx >= yesX && vx <= yesX + btnW) {
+        const result = TruckUnlocks.purchaseCoinTruck(pickerConfirm.truck);
+        if (result.success) {
+          pickerToast = { text: 'UNLOCKED: ' + pickerConfirm.truck.name, life: 2.0 };
+          const idx = TRUCK_ROSTER.findIndex(t => t.id === pickerConfirm.truck.id);
+          if (idx >= 0) { selectedTruck = idx; setSelectedTruckIndex(idx); }
+        } else {
+          pickerToast = { text: 'Need ' + (pickerConfirm.truck.cost - (result.coins || 0)) + ' more coins', life: 2.0 };
+        }
+        pickerConfirm = null;
+        return;
+      }
+      if (vx >= noX && vx <= noX + btnW) { pickerConfirm = null; return; }
+    }
+    // Tap outside modal cancels
+    if (vx < mx || vx > mx + mw || vy < my || vy > my + mh) { pickerConfirm = null; return; }
+    return;
   }
 
+  // Tier tab bar at top
+  const tabY = 70, tabH = 30, tabW = Math.min(120, (W - 40) / PICKER_TIERS.length);
+  const tabStartX = (W - tabW * PICKER_TIERS.length) / 2;
+  if (vy >= tabY && vy <= tabY + tabH) {
+    for (let i = 0; i < PICKER_TIERS.length; i++) {
+      const tx = tabStartX + i * tabW;
+      if (vx >= tx && vx <= tx + tabW) { pickerTier = PICKER_TIERS[i]; return; }
+    }
+  }
+
+  // Truck cards
   const rects = getPickerTruckRects();
-  for (let i = 0; i < rects.length; i++) {
-    const r = rects[i];
-    if (vx >= r.x && vx <= r.x + r.w && vy >= r.y && vy <= r.y + r.h) {
-      const truckIdx = r.idx;
-      if (pickerPlayer === 1) {
-        selectedTruck = truckIdx;
-      } else {
-        selectedTruck2 = truckIdx;
-      }
-      // Single tap: select AND immediately confirm
+  for (const r of rects) {
+    if (vx < r.x || vx > r.x + r.w || vy < r.y || vy > r.y + r.h) continue;
+    const truck = TRUCK_ROSTER[r.idx];
+    const unlocked = TruckUnlocks.isUnlocked(truck);
+
+    if (unlocked) {
+      // Select and confirm
+      if (pickerPlayer === 1) { selectedTruck = r.idx; setSelectedTruckIndex(r.idx); }
+      else selectedTruck2 = r.idx;
       confirmPicker();
       return;
     }
+
+    // Locked — handle per tier
+    if (truck.tier === 'campaign') {
+      const lvl = truck.unlockLevel, cnt = truck.unlockClearCount;
+      const suffix = cnt > 1 ? ' ×' + cnt : '';
+      pickerToast = { text: 'Beat Level ' + lvl + suffix, life: 1.8 };
+    } else if (truck.tier === 'coin') {
+      let coins = 0;
+      try { coins = parseInt(localStorage.getItem('mr_coins') || '0', 10); } catch (e) {}
+      if (coins >= truck.cost) {
+        pickerConfirm = { truck };
+      } else {
+        pickerToast = { text: 'Need ' + (truck.cost - coins) + ' more coins', life: 1.8 };
+      }
+    } else if (truck.tier === 'achievement') {
+      pickerToast = { text: 'Locked — keep playing to discover', life: 1.8 };
+    }
+    return;
   }
 }
 
@@ -1443,68 +1707,182 @@ function drawPickerScreen() {
     ctx.fillStyle = 'rgba(0,0,0,0.75)';
     ctx.fillRect(0, 0, W, H);
   }
-  // Dark overlay so picker UI stays readable
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
   ctx.fillRect(0, 0, W, H);
   pickerPulse += 0.06;
 
+  // Title
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffcc00';
-  ctx.font = "bold 30px 'Luckiest Guy', cursive";
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 5;
-  const title = pickerPlayer === 1 ? 'CHOOSE YOUR RIDE!' : 'PLAYER 2 — PICK YOUR RIDE!';
-  ctx.strokeText(title, W / 2, 55); ctx.fillText(title, W / 2, 55);
+  ctx.font = "bold 22px 'Luckiest Guy', cursive";
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  const title = pickerPlayer === 1 ? 'CHOOSE YOUR RIDE' : 'PLAYER 2 — PICK YOUR RIDE';
+  ctx.strokeText(title, W / 2, 40); ctx.fillText(title, W / 2, 40);
 
-  // Category label
-  const pageStart = pickerPage * PICKER_PER_PAGE;
-  ctx.fillStyle = '#aaa'; ctx.font = "14px 'Baloo 2', sans-serif";
+  // Coin balance (top-right)
+  let coins = 0;
+  try { coins = parseInt(localStorage.getItem('mr_coins') || '0', 10); } catch (e) {}
+  ctx.fillStyle = '#ffd700'; ctx.font = "bold 14px 'Baloo 2', sans-serif";
+  ctx.textAlign = 'right';
+  ctx.fillText('🪙 ' + coins, W - 15, 30);
+
+  // Tier tabs
+  const tabY = 70, tabH = 30;
+  const tabW = Math.min(120, (W - 40) / PICKER_TIERS.length);
+  const tabStartX = (W - tabW * PICKER_TIERS.length) / 2;
+  for (let i = 0; i < PICKER_TIERS.length; i++) {
+    const tx = tabStartX + i * tabW;
+    const tier = PICKER_TIERS[i];
+    const active = tier === pickerTier;
+    const indices = getTruckIndicesInTier(tier);
+    const unlockedCount = indices.filter(idx => TruckUnlocks.isUnlocked(TRUCK_ROSTER[idx])).length;
+
+    ctx.fillStyle = active ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.roundRect(tx, tabY, tabW - 2, tabH, 6); ctx.fill();
+    if (active) {
+      ctx.strokeStyle = TIER_COLOR[tier]; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(tx, tabY, tabW - 2, tabH, 6); ctx.stroke();
+    }
+    ctx.fillStyle = active ? TIER_COLOR[tier] : 'rgba(255,255,255,0.6)';
+    ctx.font = "bold 10px 'Luckiest Guy', cursive";
+    ctx.textAlign = 'center';
+    ctx.fillText(TIER_LABEL[tier], tx + tabW / 2, tabY + 13);
+    ctx.font = "9px 'Baloo 2', sans-serif";
+    ctx.fillText(unlockedCount + '/' + indices.length, tx + tabW / 2, tabY + 24);
+  }
 
   const rects = getPickerTruckRects();
   const activeTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
 
-  for (let ri = 0; ri < rects.length; ri++) {
-    const r = rects[ri], t = TRUCK_ROSTER[r.idx];
-    const isSelected = r.idx === activeTruck;
-    const isP1Pick = pickerPlayer === 2 && r.idx === selectedTruck;
+  for (const r of rects) {
+    const t = TRUCK_ROSTER[r.idx];
+    const unlocked = TruckUnlocks.isUnlocked(t);
+    const isSelected = r.idx === activeTruck && unlocked;
 
-    ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
-    if (isP1Pick) ctx.fillStyle = 'rgba(255,100,0,0.1)';
+    // Card background
+    ctx.fillStyle = isSelected ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.35)';
     ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 10); ctx.fill();
+    ctx.strokeStyle = unlocked ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1; ctx.stroke();
 
     if (isSelected) {
       const glow = 0.5 + Math.sin(pickerPulse) * 0.3;
-      ctx.strokeStyle = t.accent; ctx.lineWidth = 3; ctx.globalAlpha = glow;
+      ctx.strokeStyle = TIER_COLOR[t.tier]; ctx.lineWidth = 3; ctx.globalAlpha = glow;
       ctx.beginPath(); ctx.roundRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4, 12); ctx.stroke();
       ctx.globalAlpha = 1;
     }
-    if (isP1Pick) {
-      ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 10); ctx.stroke();
-      ctx.fillStyle = '#ff4400'; ctx.font = "11px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
-      ctx.fillText('P1', r.x + r.w / 2, r.y + r.h + 14);
-    }
 
-    // Draw vehicle preview using unified function
+    // Sprite: desaturate if locked, silhouette if achievement locked
     ctx.save();
-    const previewY = t.renderMode === 'svg' ? r.y + 65 : r.y + 50;
+    const previewY = r.y + 50;
     ctx.translate(r.x + r.w / 2, previewY);
-    ctx.scale(1.2, 1.2);
-    drawVehiclePreview(-45, -25, t, false, 0, r.idx);
+    ctx.scale(1.1, 1.1);
+    if (!unlocked && t.tier === 'achievement') {
+      // Silhouette — draw then overlay black
+      const img = truckImages[t.id];
+      if (img && img.complete && img.naturalWidth > 0) {
+        ctx.save();
+        ctx.filter = 'brightness(0)';
+        ctx.drawImage(img, -45, -25, 90, 50);
+        ctx.restore();
+      }
+    } else if (!unlocked) {
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.filter = 'grayscale(1) brightness(0.6)';
+      drawVehiclePreview(-45, -25, t, false, 0, r.idx);
+      ctx.restore();
+    } else {
+      drawVehiclePreview(-45, -25, t, false, 0, r.idx);
+    }
     ctx.restore();
 
-    // Name
-    ctx.fillStyle = '#fff'; ctx.font = "bold 12px 'Luckiest Guy', cursive";
-    ctx.textAlign = 'center';
-    ctx.fillText(t.name, r.x + r.w / 2, r.y + r.h - 18);
-
-    // (badges removed — trucks speak for themselves)
-
-    // Per-truck best score
-    const best = getBestScore(r.idx);
-    if (best > 0) {
-      ctx.fillStyle = '#ffd700'; ctx.font = "11px 'Baloo 2', sans-serif";
-      ctx.fillText('Best: ⭐ ' + best, r.x + r.w / 2, r.y + r.h - 5);
+    // Lock icon overlay for locked cards
+    if (!unlocked) {
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath(); ctx.arc(r.x + r.w / 2, previewY, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = "14px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
+      ctx.fillText('🔒', r.x + r.w / 2, previewY + 5);
     }
+
+    // Name
+    ctx.fillStyle = unlocked ? '#fff' : 'rgba(255,255,255,0.5)';
+    ctx.font = "bold 11px 'Luckiest Guy', cursive";
+    ctx.textAlign = 'center';
+    ctx.fillText(t.name, r.x + r.w / 2, r.y + r.h - 20);
+
+    // Badge top-right
+    let badgeText = '', badgeColor = '#888', badgeTextColor = '#fff';
+    if (t.tier === 'starter') { badgeText = 'STARTER'; badgeColor = '#616161'; }
+    else if (t.tier === 'campaign') {
+      if (unlocked) { badgeText = 'UNLOCKED'; badgeColor = '#4caf50'; }
+      else { badgeText = 'LVL ' + t.unlockLevel + (t.unlockClearCount > 1 ? ' ×' + t.unlockClearCount : ''); badgeColor = '#263238'; }
+    } else if (t.tier === 'coin') {
+      if (unlocked) { badgeText = 'OWNED'; badgeColor = '#ffd700'; badgeTextColor = '#000'; }
+      else { badgeText = '🪙 ' + t.cost; badgeColor = '#ffd700'; badgeTextColor = '#000'; }
+    } else if (t.tier === 'achievement') {
+      if (unlocked) { badgeText = 'LEGENDARY'; badgeColor = '#e040fb'; }
+      else { badgeText = '???'; badgeColor = '#212121'; }
+    }
+    if (badgeText) {
+      ctx.font = "bold 8px 'Baloo 2', sans-serif";
+      const bw = ctx.measureText(badgeText).width + 10;
+      const bx = r.x + r.w - bw - 4, by = r.y + 4;
+      ctx.fillStyle = badgeColor;
+      ctx.beginPath(); ctx.roundRect(bx, by, bw, 14, 7); ctx.fill();
+      ctx.fillStyle = badgeTextColor;
+      ctx.textAlign = 'center';
+      ctx.fillText(badgeText, bx + bw / 2, by + 10);
+    }
+
+    // Per-truck best score (if unlocked)
+    if (unlocked) {
+      const best = getBestScore(r.idx);
+      if (best > 0) {
+        ctx.fillStyle = '#ffd700'; ctx.font = "9px 'Baloo 2', sans-serif";
+        ctx.fillText('⭐ ' + best, r.x + r.w / 2, r.y + r.h - 6);
+      }
+    }
+  }
+
+  // Toast message
+  if (pickerToast && pickerToast.life > 0) {
+    pickerToast.life -= 0.016;
+    const alpha = Math.min(1, pickerToast.life);
+    ctx.fillStyle = 'rgba(0,0,0,' + (alpha * 0.8) + ')';
+    ctx.beginPath(); ctx.roundRect(W / 2 - 140, H - 60, 280, 32, 8); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+    ctx.font = "bold 14px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
+    ctx.fillText(pickerToast.text, W / 2, H - 40);
+    if (pickerToast.life <= 0) pickerToast = null;
+  }
+
+  // Purchase confirmation modal
+  if (pickerConfirm) {
+    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(0, 0, W, H);
+    const mw = 320, mh = 160, mx = (W - mw) / 2, my = (H - mh) / 2;
+    ctx.fillStyle = 'rgba(30,30,40,0.95)';
+    ctx.beginPath(); ctx.roundRect(mx, my, mw, mh, 12); ctx.fill();
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.fillStyle = '#ffd700'; ctx.font = "bold 18px 'Luckiest Guy', cursive";
+    ctx.textAlign = 'center';
+    ctx.fillText('UNLOCK ' + pickerConfirm.truck.name + '?', W / 2, my + 34);
+
+    ctx.fillStyle = '#fff'; ctx.font = "bold 22px 'Baloo 2', sans-serif";
+    ctx.fillText('🪙 ' + pickerConfirm.truck.cost + ' coins', W / 2, my + 72);
+
+    const btnY = my + mh - 44, btnW = 120, btnH = 34;
+    const yesX = mx + 30, noX = mx + mw - 30 - btnW;
+    ctx.fillStyle = '#4caf50';
+    ctx.beginPath(); ctx.roundRect(yesX, btnY, btnW, btnH, 8); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = "bold 14px 'Luckiest Guy', cursive";
+    ctx.fillText('YES', yesX + btnW / 2, btnY + 22);
+
+    ctx.fillStyle = '#616161';
+    ctx.beginPath(); ctx.roundRect(noX, btnY, btnW, btnH, 8); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText('NO', noX + btnW / 2, btnY + 22);
   }
 
   // Page arrows — glass pills with chevrons
@@ -2784,7 +3162,10 @@ function drawCarVehicle(tx, ty, tw, th, colors, vehicleType, squishY) {
 
 // Unified vehicle preview for picker (works for both monster trucks and cars)
 function drawVehiclePreview(tx, ty, roster, showExhaust, squishY, rosterIdx) {
-  if (roster.renderMode === 'svg') {
+  if (roster.renderMode === 'png') {
+    // Painted PNG truck (new 26-truck roster)
+    drawTruckPNG(tx, ty, 90, 50, roster, showExhaust, squishY, 0);
+  } else if (roster.renderMode === 'svg') {
     const a = hdAssetMap[rosterIdx !== undefined ? rosterIdx : 0];
     drawTruckHD(tx, ty, 90, 50, showExhaust, squishY, a, roster.flameOuter, roster.flameInner, roster.svgMeta);
   } else {
@@ -4029,6 +4410,10 @@ function update() {
         // Save progress (level + sequence so resume uses same levels)
         safeSave('mr_campaign_level', String(campaignLevel + 1));
         saveCampaignSequence();
+        // Truck unlock check — record clear of level (1-based ID)
+        const lvlId = campaignLevel + 1;
+        const newlyUnlocked = TruckUnlocks.recordClear(lvlId);
+        if (newlyUnlocked.length > 0) showTruckUnlockNotification(newlyUnlocked);
         gameState = 'levelcomplete';
         stopEngine();
         stopBigAir();
@@ -4548,7 +4933,10 @@ function drawPlayerTruck(p) {
   }
 
   // Draw the right vehicle type based on style
-  if (colors.renderMode === 'svg') {
+  if (colors.renderMode === 'png') {
+    const tireAngle = (p.tireAngle !== undefined) ? p.tireAngle : (wheelAngle || 0);
+    drawTruckPNG(tk.x, tk.y, tk.w, tk.h, colors, !tk.grounded, squishY, tireAngle);
+  } else if (colors.renderMode === 'svg') {
     const a = hdAssetMap[p.truckIdx];
     drawTruckHD(tk.x, tk.y, tk.w, tk.h, !tk.grounded, squishY, a, colors.flameOuter, colors.flameInner, colors.svgMeta);
   } else {
@@ -4713,6 +5101,9 @@ function draw() {
   if (gameState === 'levelcomplete') drawLevelCompleteScreen();
   if (gameState === 'campaignwin') drawCampaignWinScreen();
   if (gameState === 'leveltransition') drawLevelTransitionScreen();
+
+  // Truck unlock overlay — always on top
+  drawTruckUnlockOverlay();
 
   ctx.restore();
 }
