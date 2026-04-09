@@ -132,10 +132,8 @@ function recalculateW() {
   // the CSS viewport ratio, which is what we care about for game geometry.
   if (!canvas || !canvas.width || !canvas.height) return W;
   const canvasAspect = canvas.width / canvas.height;
-  const isMobile = window.matchMedia('(max-width: 900px)').matches || 'ontouchstart' in window;
-  const maxW = isMobile ? 1000 : W_MAX;
   const target = Math.round(H * canvasAspect);
-  W = Math.max(W_MIN, Math.min(maxW, target));
+  W = Math.max(W_MIN, Math.min(W_MAX, target));
   return W;
 }
 
@@ -147,23 +145,13 @@ function recalculateW() {
 const rotateOverlay = document.getElementById('rotate-msg');
 let rotatePausedGame = false; // track whether we auto-paused
 
-// Adaptive DPR — cap at 1.5 on mobile landscape (visual diff is imperceptible
-// on sprites/painted backgrounds, but ~25% fewer backing-store pixels saves GPU).
-function getDPR() {
-  const raw = window.devicePixelRatio || 1;
-  const isMobile = window.matchMedia('(max-width: 900px)').matches || 'ontouchstart' in window;
-  const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-  if (isMobile && isLandscape) return Math.min(raw, 1.5);
-  return Math.min(raw, 2);
-}
-
 // Canvas backing-store resize (DPR-aware). MUST run on every orientationchange
 // otherwise the canvas will keep its old portrait dimensions after rotation
 // and the page looks blank until refresh.
 function resize() {
   const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
   const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-  const dpr = getDPR();
+  const dpr = window.devicePixelRatio || 1;
   canvas.width = vw * dpr;
   canvas.height = vh * dpr;
   canvas.style.width = vw + 'px';
@@ -434,24 +422,6 @@ const LEVEL_BG_MAP = {
   8: 'rainbow_road'
 };
 
-// Offscreen background cache — avoids per-frame GPU scale of painted PNGs.
-// Key tracks level + viewport so cache auto-invalidates on level/resize changes.
-const bgCache = { canvas: null, key: null };
-
-function getCachedBackground(bgKey, bgImg) {
-  const dpr = getDPR();
-  const key = bgKey + '|' + W + '|' + H + '|' + dpr;
-  if (bgCache.canvas && bgCache.key === key) return bgCache.canvas;
-  const off = document.createElement('canvas');
-  off.width = W * dpr;
-  off.height = H * dpr;
-  const octx = off.getContext('2d');
-  octx.scale(dpr, dpr);
-  octx.drawImage(bgImg, 0, 0, W, H);
-  bgCache.canvas = off;
-  bgCache.key = key;
-  return off;
-}
 
 function generateCampaignSequence() {
   // Pick 4 random unique levels from pool of 7, sort by difficulty (baseSpeed), Rainbow Road is always #5
@@ -1945,7 +1915,7 @@ function drawPauseButton() {
 function drawPickerScreen() {
   // Painted menu background
   if (LEVEL_BG_IMGS['menu_arena'] && LEVEL_BG_IMGS['menu_arena'].complete && LEVEL_BG_IMGS['menu_arena'].naturalWidth > 0) {
-    ctx.drawImage(getCachedBackground('menu_arena', LEVEL_BG_IMGS['menu_arena']), 0, 0, W, H);
+    ctx.drawImage(LEVEL_BG_IMGS['menu_arena'], 0, 0, W, H);
   } else {
     ctx.fillStyle = 'rgba(0,0,0,0.75)';
     ctx.fillRect(0, 0, W, H);
@@ -2188,7 +2158,7 @@ function drawPickerScreen() {
 function drawModeSelectScreen() {
   // Painted menu background
   if (LEVEL_BG_IMGS['menu_arena'] && LEVEL_BG_IMGS['menu_arena'].complete && LEVEL_BG_IMGS['menu_arena'].naturalWidth > 0) {
-    ctx.drawImage(getCachedBackground('menu_arena', LEVEL_BG_IMGS['menu_arena']), 0, 0, W, H);
+    ctx.drawImage(LEVEL_BG_IMGS['menu_arena'], 0, 0, W, H);
   } else {
     ctx.fillStyle = 'rgba(0,0,0,0.85)';
     ctx.fillRect(0, 0, W, H);
@@ -2658,7 +2628,8 @@ function spawnLandParticles(x, y) {
 // Exhaust particle system — continuous trail while airborne + jump burst
 let exhaustParticles = [];
 function exhaustSpawnBudget() {
-  if (getDPR() > 1 && exhaustParticles.length > 60) return 0.5;
+  const dpr = window.devicePixelRatio || 1;
+  if (dpr > 1 && exhaustParticles.length > 60) return 0.5;
   return 1;
 }
 function spawnExhaustTrail(p) {
@@ -2722,7 +2693,6 @@ function drawExhaustParticles() {
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   for (const p of exhaustParticles) {
-    if (p.x + 12 < 0 || p.x - 12 > W || p.y + 12 < 0 || p.y - 12 > H) continue;
     const a = Math.max(0, Math.min(1, p.life));
     const r = p.size * a;
     const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
@@ -2905,7 +2875,6 @@ function drawPowerUpIcon(effect, r) {
 }
 
 function drawPowerUp(pu) {
-  if (pu.x + 30 < 0 || pu.x - 30 > W) return;
   const bob = Math.sin(pu.bobPhase) * 8;
   const px = pu.x, py = pu.y + bob;
   pu.glowPhase += 0.1;
@@ -2928,11 +2897,10 @@ function drawPowerUp(pu) {
 // ENVIRONMENT DRAWING
 // ============================================================
 function drawEnvironmentBg(env) {
-  // Painted background — use cached pre-scaled version to avoid per-frame GPU scale
+  // Painted background — use pre-rendered image if available, else fallback to gradient
   const _bgKey = LEVEL_BG_MAP[currentEnvIndex + 1];
   if (_bgKey && LEVEL_BG_IMGS[_bgKey] && LEVEL_BG_IMGS[_bgKey].complete && LEVEL_BG_IMGS[_bgKey].naturalWidth > 0) {
-    const cached = getCachedBackground(_bgKey, LEVEL_BG_IMGS[_bgKey]);
-    ctx.drawImage(cached, 0, 0, W, H);
+    ctx.drawImage(LEVEL_BG_IMGS[_bgKey], 0, 0, W, H);
     return;
   }
   // Fallback gradient (while image loads or for unknown envs)
@@ -3471,8 +3439,6 @@ function drawVehiclePreview(tx, ty, roster, showExhaust, squishY, rosterIdx) {
 // OBSTACLE DRAWING (including new types)
 // ============================================================
 function drawObstacle(obs) {
-  // Skip offscreen obstacles (they exist until x < -120 for despawn grace)
-  if (obs.x + (obs.w || 110) < 0 || obs.x > W + 50) return;
   if (obs.type === 'barrel') return drawBarrel(obs);
   if (obs.type === 'portapotty') return drawPortaPotty(obs);
   if (obs.type === 'tvstack') return drawTVStack(obs);
@@ -4398,7 +4364,6 @@ function drawStarCoin(r) {
 }
 
 function drawStar(s, starIndex) {
-  if (s.x + 20 < 0 || s.x - 20 > W) return;
   const bobOffset = Math.sin((Date.now() / 1000) * 2 + (starIndex || 0) * 1.2) * (H * 0.01);
   const sx = s.x, sy = s.y + bobOffset;
 
@@ -5091,7 +5056,7 @@ let titleTruckX = -100;
 function drawTitleScreen() {
   // Painted menu background
   if (LEVEL_BG_IMGS['menu_arena'] && LEVEL_BG_IMGS['menu_arena'].complete && LEVEL_BG_IMGS['menu_arena'].naturalWidth > 0) {
-    ctx.drawImage(getCachedBackground('menu_arena', LEVEL_BG_IMGS['menu_arena']), 0, 0, W, H);
+    ctx.drawImage(LEVEL_BG_IMGS['menu_arena'], 0, 0, W, H);
   } else {
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, W, H);
@@ -5337,9 +5302,8 @@ function draw() {
 
     // Exhaust trails (lighter composite, drawn with normal particles)
     drawExhaustParticles();
-    // Draw particles (skip offscreen)
+    // Draw particles
     for (const p of particles) {
-      if (p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) continue;
       ctx.globalAlpha = p.life;
       if (p.type === 'text') {
         ctx.fillStyle = p.color;
