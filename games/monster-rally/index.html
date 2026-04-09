@@ -879,6 +879,22 @@ let combo = 0;
 let comboTimer = 0;
 let bestScore = parseInt(localStorage.getItem('monsterRallyBest', 10) || '0');
 
+// Cached HUD strings — rebuilt only when underlying values change (avoids
+// per-frame string concatenation + toLocaleString allocation).
+let _hudScoreText = '\u2605 0';
+let _hudScoreLast = -1;
+let _hudLvlText = '';
+let _hudLvlLast = -1;
+let _hudComboText = '';
+let _hudComboLast = -1;
+// Pre-allocated power-up list for HUD (avoids per-frame array + object allocation)
+const _hudPuSlots = [
+  { effect: '', timer: 0, dur: 0, color: '', name: '', active: false },
+  { effect: '', timer: 0, dur: 0, color: '', name: '', active: false },
+  { effect: '', timer: 0, dur: 0, color: '', name: '', active: false },
+  { effect: '', timer: 0, dur: 0, color: '', name: '', active: false }
+];
+
 // Power-ups array
 let powerUps = [];
 let powerUpSpawnTimer = 300;
@@ -918,42 +934,45 @@ function initAudio() {
   }
 }
 
-let engineBeatInterval = null;
+// Engine beat — rAF-driven frame counter (no setInterval).
+// A single reusable oscillator+gain pair avoids per-beat node allocation.
+let engineRunning = false;
+let engineBeatFrames = 0;      // frames since last beat
+let engineBeatInterval = 30;   // frames between beats (updated by updateEngineSound)
+let _engineKickOsc = null;
+let _engineKickGain = null;
+
+function _playKick() {
+  if (!audioCtx || audioMuted) return;
+  // Reuse a short-lived osc+gain pair. Web Audio requires a new OscillatorNode
+  // per start/stop cycle, but we can reuse the GainNode.
+  const t = audioCtx.currentTime;
+  if (!_engineKickGain) {
+    _engineKickGain = audioCtx.createGain();
+    _engineKickGain.connect(audioCtx.destination);
+  }
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(60, t);
+  osc.frequency.exponentialRampToValueAtTime(30, t + 0.05);
+  _engineKickGain.gain.setValueAtTime(0.1, t);
+  _engineKickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+  osc.connect(_engineKickGain);
+  osc.start(t);
+  osc.stop(t + 0.08);
+}
 
 function startEngine() {
   if (!audioCtx || audioMuted) return;
-  if (engineBeatInterval) return;
-
-  // Rhythmic kick drum pattern — subtle heartbeat that speeds up with game
-  function playKick() {
-    if (!audioCtx || audioMuted) return;
-    const t = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(60, t);
-    osc.frequency.exponentialRampToValueAtTime(30, t + 0.05);
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.1, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-    osc.connect(g);
-    g.connect(audioCtx.destination);
-    osc.start(t);
-    osc.stop(t + 0.08);
-  }
-
-  // Start the beat
-  playKick();
-  engineBeatInterval = setInterval(() => {
-    if (audioMuted || gameState === 'paused') return;
-    playKick();
-  }, 500); // Will be adjusted by updateEngineSound
+  if (engineRunning) return;
+  engineRunning = true;
+  engineBeatFrames = 0;
+  _playKick();
 }
 
 function stopEngine() {
-  if (engineBeatInterval) {
-    clearInterval(engineBeatInterval);
-    engineBeatInterval = null;
-  }
+  engineRunning = false;
+  _engineKickGain = null;
   engineOsc = null;
   engineGain = null;
   engineLfo = null;
@@ -961,26 +980,18 @@ function stopEngine() {
 }
 
 function updateEngineSound() {
-  if (!audioCtx || audioMuted || !engineBeatInterval) return;
+  if (!audioCtx || audioMuted || !engineRunning) return;
   // Adjust beat interval based on speed — faster game = faster heartbeat
+  // Convert ms interval to frame count: frames = ms / 16.67
   const speedFactor = Math.max(0, (gameSpeed - 1.8) / (maxSpeed - 1.8));
-  const interval = Math.max(200, 600 - speedFactor * 350); // 600ms slow → 250ms fast
-  clearInterval(engineBeatInterval);
-  engineBeatInterval = setInterval(() => {
-    if (audioMuted || gameState === 'paused') return;
-    const t = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(60, t);
-    osc.frequency.exponentialRampToValueAtTime(30, t + 0.05);
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.1, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-    osc.connect(g);
-    g.connect(audioCtx.destination);
-    osc.start(t);
-    osc.stop(t + 0.08);
-  }, interval);
+  const msInterval = Math.max(200, 600 - speedFactor * 350);
+  engineBeatInterval = Math.max(12, Math.round(msInterval / 16.67));
+  // Tick the frame counter and fire beat when interval reached
+  engineBeatFrames++;
+  if (engineBeatFrames >= engineBeatInterval) {
+    engineBeatFrames = 0;
+    if (gameState !== 'paused') _playKick();
+  }
 }
 
 function playSound(type, param) {
@@ -1750,14 +1761,14 @@ function startPlaying() {
 function pauseGame() {
   if (gameState !== 'playing') return;
   gameState = 'paused';
-  // Engine beat skips ticks automatically when paused (checked in setInterval callback)
+  // Engine beat skips ticks automatically when paused (updateEngineSound checks gameState)
   stopBigAir();
 }
 
 function resumeGame() {
   if (gameState !== 'paused') return;
   gameState = 'playing';
-  // Engine beat resumes automatically (checked in setInterval callback)
+  // Engine beat resumes automatically (updateEngineSound checks gameState)
 }
 
 function restartGame() {
@@ -2677,7 +2688,7 @@ function spawnJumpBurst(p) {
   }
 }
 function updateExhaustParticles() {
-  if (exhaustParticles.length > 150) exhaustParticles.splice(0, exhaustParticles.length - 150);
+  if (exhaustParticles.length > 150) exhaustParticles.length = 150;
   for (let i = exhaustParticles.length - 1; i >= 0; i--) {
     const p = exhaustParticles[i];
     p.x += p.vx;
@@ -2685,23 +2696,31 @@ function updateExhaustParticles() {
     p.vx *= 0.96;
     p.vy *= 0.96;
     p.life -= p.decay;
-    if (p.life <= 0) exhaustParticles.splice(i, 1);
+    if (p.life <= 0) { exhaustParticles[i] = exhaustParticles[exhaustParticles.length - 1]; exhaustParticles.pop(); }
   }
 }
 function drawExhaustParticles() {
   if (exhaustParticles.length === 0) return;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  for (const p of exhaustParticles) {
+  // Draw as flat circles — avoids creating a RadialGradient object per
+  // particle per frame (up to 150 gradient allocations eliminated).
+  // Two concentric circles approximate the old gradient look.
+  for (let i = 0; i < exhaustParticles.length; i++) {
+    const p = exhaustParticles[i];
     const a = Math.max(0, Math.min(1, p.life));
     const r = p.size * a;
-    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-    grad.addColorStop(0, p.color1);
-    grad.addColorStop(1, p.color2);
+    if (r < 0.5) continue;
     ctx.globalAlpha = a * 0.9;
-    ctx.fillStyle = grad;
+    // Outer ring (color2)
+    ctx.fillStyle = p.color2;
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+    ctx.fill();
+    // Inner core (color1, brighter)
+    ctx.fillStyle = p.color1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r * 0.5, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -4506,10 +4525,10 @@ function updatePlayer(p) {
   for (let i = p.tireTracks.length - 1; i >= 0; i--) {
     p.tireTracks[i].x -= getEffectiveSpeed() * 0.98;
     p.tireTracks[i].life -= 0.008;
-    if (p.tireTracks[i].life <= 0 || p.tireTracks[i].x < -10) p.tireTracks.splice(i, 1);
+    if (p.tireTracks[i].life <= 0 || p.tireTracks[i].x < -10) { p.tireTracks[i] = p.tireTracks[p.tireTracks.length - 1]; p.tireTracks.pop(); }
   }
   // Cap tire tracks
-  if (p.tireTracks.length > 100) p.tireTracks.splice(0, p.tireTracks.length - 100);
+  if (p.tireTracks.length > 100) p.tireTracks.length = 100;
 
   // Obstacle collision — sync global combo for particle text display
   combo = p.combo;
@@ -4793,54 +4812,54 @@ function update() {
     }
   }
 
-  // Update obstacles
+  // Update obstacles (swap-and-pop removal — no splice)
   for (let i = obstacles.length - 1; i >= 0; i--) {
     obstacles[i].x -= effSpeed;
     if (obstacles[i].crushed) obstacles[i].crushAnim += 0.05;
-    if (obstacles[i].x < -120) obstacles.splice(i, 1);
+    if (obstacles[i].x < -120) { obstacles[i] = obstacles[obstacles.length - 1]; obstacles.pop(); }
   }
 
   // Update stars
   for (let i = stars.length - 1; i >= 0; i--) {
     stars[i].x -= effSpeed;
     stars[i].bobPhase += 0.06;
-    if (stars[i].x < -20 || stars[i].collected) stars.splice(i, 1);
+    if (stars[i].x < -20 || stars[i].collected) { stars[i] = stars[stars.length - 1]; stars.pop(); }
   }
 
   // Update power-ups
   for (let i = powerUps.length - 1; i >= 0; i--) {
     powerUps[i].x -= effSpeed;
     powerUps[i].bobPhase += 0.06;
-    if (powerUps[i].x < -30 || powerUps[i].collected) powerUps.splice(i, 1);
+    if (powerUps[i].x < -30 || powerUps[i].collected) { powerUps[i] = powerUps[powerUps.length - 1]; powerUps.pop(); }
   }
 
-  // Update particles (cap at 150)
-  if (particles.length > 150) particles.splice(0, particles.length - 150);
+  // Update particles (swap-and-pop removal)
+  if (particles.length > 150) particles.length = 150;
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx || 0; p.y += p.vy || 0;
     if (p.type === 'spark' || p.type === 'dust') p.vy += 0.2;
     p.life -= p.decay;
-    if (p.life <= 0) particles.splice(i, 1);
+    if (p.life <= 0) { particles[i] = particles[particles.length - 1]; particles.pop(); }
   }
   // Exhaust particles (trail + burst)
   updateExhaustParticles();
-  for (const p of players) {
-    if (p && p.truck) spawnExhaustTrail(p);
+  for (let i = 0; i < players.length; i++) {
+    if (players[i] && players[i].truck) spawnExhaustTrail(players[i]);
   }
 
-  // Dust trail
-  if (dustTrail.length > 30) dustTrail.splice(0, dustTrail.length - 30);
-  for (const p of players) {
-    if (p.truck.grounded && Math.random() > 0.5) {
-      dustTrail.push({ x: p.truck.x + 5, y: GROUND_Y + 8 + Math.random() * 4, size: 3 + Math.random() * 5, life: 1 });
+  // Dust trail (swap-and-pop removal)
+  if (dustTrail.length > 30) dustTrail.length = 30;
+  for (let i = 0; i < players.length; i++) {
+    if (players[i].truck.grounded && Math.random() > 0.5) {
+      dustTrail.push({ x: players[i].truck.x + 5, y: GROUND_Y + 8 + Math.random() * 4, size: 3 + Math.random() * 5, life: 1 });
     }
   }
   for (let i = dustTrail.length - 1; i >= 0; i--) {
     dustTrail[i].x -= effSpeed * 0.5;
     dustTrail[i].life -= 0.03;
     dustTrail[i].size += 0.1;
-    if (dustTrail[i].life <= 0) dustTrail.splice(i, 1);
+    if (dustTrail[i].life <= 0) { dustTrail[i] = dustTrail[dustTrail.length - 1]; dustTrail.pop(); }
   }
 
   // Update bg (parallax — mountains slow, clouds slower)
@@ -4893,21 +4912,22 @@ function drawPlayerHUD(p, side, showScore) {
     ctx.font = "800 18px 'Luckiest Guy', cursive";
     ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
     const scoreX = isLeft ? x : x + 150;
-    const ct = p.combo + 'x COMBO!';
+    if (p.combo !== _hudComboLast) { _hudComboText = p.combo + 'x COMBO!'; _hudComboLast = p.combo; }
     ctx.textAlign = isLeft ? 'left' : 'right';
-    ctx.strokeText(ct, scoreX, 60);
-    ctx.fillText(ct, scoreX, 60);
+    ctx.strokeText(_hudComboText, scoreX, 60);
+    ctx.fillText(_hudComboText, scoreX, 60);
     ctx.globalAlpha = 1;
   }
 
   // Power-up timer bars (stackable — show all active)
-  const puList = [];
-  if (p.turboActive) puList.push({ effect: 'turbo', timer: p.turboTimer, dur: 240, color: '#ff4400', name: 'TURBO' });
-  if (p.megaActive) puList.push({ effect: 'mega', timer: p.megaTimer, dur: 300, color: '#ff8800', name: 'MEGA' });
-  if (p.magnetActive) puList.push({ effect: 'magnet', timer: p.magnetTimer, dur: 480, color: '#4488ff', name: 'MAGNET' });
-  if (p.superJumpActive) puList.push({ effect: 'superjump', timer: p.superJumpTimer, dur: 480, color: '#8855ff', name: 'JUMP' });
-  for (let pi = 0; pi < puList.length; pi++) {
-    const pu = puList[pi];
+  // Reuse pre-allocated slots to avoid per-frame array + object allocation
+  let _puCount = 0;
+  if (p.turboActive) { const s = _hudPuSlots[_puCount++]; s.effect = 'turbo'; s.timer = p.turboTimer; s.dur = 240; s.color = '#ff4400'; s.name = 'TURBO'; }
+  if (p.megaActive) { const s = _hudPuSlots[_puCount++]; s.effect = 'mega'; s.timer = p.megaTimer; s.dur = 300; s.color = '#ff8800'; s.name = 'MEGA'; }
+  if (p.magnetActive) { const s = _hudPuSlots[_puCount++]; s.effect = 'magnet'; s.timer = p.magnetTimer; s.dur = 480; s.color = '#4488ff'; s.name = 'MAGNET'; }
+  if (p.superJumpActive) { const s = _hudPuSlots[_puCount++]; s.effect = 'superjump'; s.timer = p.superJumpTimer; s.dur = 480; s.color = '#8855ff'; s.name = 'JUMP'; }
+  for (let pi = 0; pi < _puCount; pi++) {
+    const pu = _hudPuSlots[pi];
     const rowY = 69 + pi * 16;
     const iconR = 8;
     const iconX = isLeft ? x + iconR : x + 150 - iconR;
@@ -4947,8 +4967,8 @@ function drawHUD() {
     ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
     ctx.fillStyle = '#ffffff';
     ctx.font = `800 ${Math.max(13, Math.round(W * 0.018))}px 'Luckiest Guy', cursive`;
-    const lvlLabel = lvlNum ? `LVL ${lvlNum}: ${lvlName}` : lvlName;
-    ctx.fillText(lvlLabel, hudX, lvlY);
+    if (campaignLevel !== _hudLvlLast) { _hudLvlText = lvlNum ? 'LVL ' + lvlNum + ': ' + lvlName : lvlName; _hudLvlLast = campaignLevel; }
+    ctx.fillText(_hudLvlText, hudX, lvlY);
     ctx.shadowBlur = 0;
 
     // Speed bar
@@ -4974,7 +4994,8 @@ function drawHUD() {
     ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
     ctx.fillStyle = '#FFD740';
     ctx.font = `800 ${Math.max(13, Math.round(W * 0.018))}px 'Luckiest Guy', cursive`;
-    ctx.fillText('\u2605 ' + player1.score.toLocaleString(), W * 0.97, H * 0.06);
+    if (player1.score !== _hudScoreLast) { _hudScoreText = '\u2605 ' + player1.score.toLocaleString(); _hudScoreLast = player1.score; }
+    ctx.fillText(_hudScoreText, W * 0.97, H * 0.06);
     ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
   }
@@ -5295,15 +5316,16 @@ function draw() {
 
   if (gameState === 'playing' || gameState === 'countdown' || gameState === 'gameover' || gameState === 'paused' || gameState === 'levelcomplete') {
     // Draw stars, power-ups, obstacles, trucks
-    stars.forEach((s, i) => { if (!s.collected) drawStar(s, i); });
+    for (let i = 0; i < stars.length; i++) { if (!stars[i].collected) drawStar(stars[i], i); }
     for (const pu of powerUps) { if (!pu.collected) drawPowerUp(pu); }
     for (const obs of obstacles) drawObstacle(obs);
     if (player1) drawPlayerTruck(player1);
 
     // Exhaust trails (lighter composite, drawn with normal particles)
     drawExhaustParticles();
-    // Draw particles
-    for (const p of particles) {
+    // Draw particles (indexed loop — no closure allocation)
+    for (let _pi = 0; _pi < particles.length; _pi++) {
+      const p = particles[_pi];
       ctx.globalAlpha = p.life;
       if (p.type === 'text') {
         ctx.fillStyle = p.color;
