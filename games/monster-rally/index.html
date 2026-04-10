@@ -97,6 +97,61 @@
     50% { transform: rotate(90deg); }
     75% { transform: rotate(0deg); }
   }
+  #settingsBtn {
+    position: absolute;
+    top: clamp(10px, 2vh, 20px);
+    right: clamp(12px, 2.5vw, 20px);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    color: rgba(255,255,255,0.7);
+    font-size: clamp(22px, 4vw, 30px);
+    padding: 8px 12px;
+    cursor: pointer;
+    pointer-events: auto;
+    z-index: 10;
+    line-height: 1;
+    display: none;
+  }
+  #settingsBtn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+  #pauseMenu {
+    display: none; position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(11,14,24,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 50;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: clamp(12px, 2.5vh, 20px);
+    pointer-events: auto;
+  }
+  #pauseMenu.open { display: flex; }
+  .pause-title {
+    font-family: 'Luckiest Guy', cursive;
+    font-size: clamp(28px, 6vw, 44px);
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+    margin-bottom: clamp(8px, 2vh, 16px);
+  }
+  .pause-btn {
+    font-family: 'Baloo 2', cursive;
+    font-weight: 700;
+    font-size: clamp(14px, 2.5vw, 20px);
+    border: none; border-radius: 12px;
+    padding: clamp(10px, 2vh, 16px) clamp(28px, 5vw, 48px);
+    cursor: pointer; text-decoration: none; text-align: center;
+    min-width: clamp(180px, 40vw, 260px);
+    display: block;
+  }
+  .pause-resume { background: #2E7D32; color: #fff; }
+  .pause-resume:hover { background: #388E3C; }
+  .pause-mute { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.15); }
+  .pause-mute:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .pause-trophy { background: rgba(255,229,53,0.15); color: #FFE135; border: 1px solid rgba(255,229,53,0.25); }
+  .pause-trophy:hover { background: rgba(255,229,53,0.25); }
+  .pause-char { background: #1565C0; color: #fff; }
+  .pause-char:hover { background: #1976D2; }
+  .pause-menu { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+  .pause-menu:hover { background: rgba(255,255,255,0.18); color: #fff; }
 </style>
 </head>
 <body>
@@ -107,6 +162,15 @@
   <a id="rotate-dismiss" class="dismiss" href="#">Play in portrait anyway →</a>
 </div>
 <canvas id="game"></canvas>
+<button id="settingsBtn" onclick="togglePauseMenu()">⚙️</button>
+<div id="pauseMenu">
+  <div class="pause-title">PAUSED</div>
+  <button class="pause-btn pause-resume" onclick="togglePauseMenu()">▶ RESUME</button>
+  <button class="pause-btn pause-mute" id="pauseMuteBtn">🔊 SOUND: ON</button>
+  <button class="pause-btn pause-trophy" onclick="showTrophyToast()">🏆 TROPHIES</button>
+  <button class="pause-btn pause-char" onclick="changeTruckFromPause()">🚛 CHANGE TRUCK</button>
+  <a href="/" class="pause-btn pause-menu">🏠 MENU</a>
+</div>
 <script>
 function safeSave(k, v) { try { safeSave(k, v); } catch(e) {} }
 const canvas = document.getElementById('game');
@@ -1289,7 +1353,7 @@ function handleDown(e) {
   if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
   // Mode select is gated off — handler kept for revival via MODE_FLAGS
   if (gameState === 'modeselect' && (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless)) { handleModeSelectClick(vc.x, vc.y); return; }
-  if (gameState === 'paused') { handlePauseClick(vc.x, vc.y); return; }
+  if (gameState === 'paused') return; // HTML overlay handles pause interactions
   // Game over → back to picker (was 'modeselect' but mode select is gone)
   if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
   if (gameState === 'levelcomplete') {
@@ -1314,10 +1378,8 @@ function handleDown(e) {
   if (gameState === 'leveltransition') return;
   if (gameState === 'countdown') return;
 
-  // Playing state — pause button (50px hit area for mobile, left of mute)
-  if (vc.x > W - 90 && vc.x < W - 50 && vc.y < 40) { pauseGame(); return; }
+  // HONK button (bottom-right)
   if (vc.x > W - 100 && vc.y > H - 60) { playSound('horn'); return; }
-  if (vc.x > W - 45 && vc.y < 45) { toggleMute(); return; }
 
   // Touch zones: left half = P1, right half = P2 (or P1 in single)
   if (numPlayers === 2) {
@@ -1396,12 +1458,10 @@ document.addEventListener('keydown', (e) => {
 
   // Pause controls
   if (gameState === 'paused') {
-    if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'Space') { e.preventDefault(); resumeGame(); }
-    if (e.code === 'KeyR') restartGame();
-    if (e.code === 'KeyQ') quitToMenu();
+    if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'Space') { e.preventDefault(); togglePauseMenu(); }
     return;
   }
-  if (e.code === 'Escape' || e.code === 'KeyP') { pauseGame(); return; }
+  if (e.code === 'Escape' || e.code === 'KeyP') { togglePauseMenu(); return; }
 
   // Player 2 controls: Arrow keys
   if (e.code === 'ArrowUp') {
@@ -1600,6 +1660,15 @@ function handlePickerClick(vx, vy) {
 
 function confirmPicker() {
   safeSave('monsterRallyTruck', selectedTruck);
+  // Returning from Change Truck during a paused run — swap truck, resume
+  if (pickerFromPause) {
+    pickerFromPause = false;
+    gameState = 'playing';
+    document.getElementById('settingsBtn').style.display = 'block';
+    // Restart engine for new truck
+    if (!audioMuted && audioInitialized) startEngine();
+    return;
+  }
   if (pickerPlayer === 1) {
     // Single-mode shipping build: skip mode select, drop straight into the
     // campaign. If crushFrenzy/endless get revived later, restore the
@@ -1761,18 +1830,54 @@ function startPlaying() {
 function pauseGame() {
   if (gameState !== 'playing') return;
   gameState = 'paused';
-  // Engine beat skips ticks automatically when paused (updateEngineSound checks gameState)
   stopBigAir();
+  document.getElementById('pauseMenu').classList.add('open');
+  document.getElementById('settingsBtn').style.display = 'none';
 }
 
 function resumeGame() {
   if (gameState !== 'paused') return;
   gameState = 'playing';
-  // Engine beat resumes automatically (updateEngineSound checks gameState)
+  document.getElementById('pauseMenu').classList.remove('open');
+  document.getElementById('settingsBtn').style.display = 'block';
 }
 
+function togglePauseMenu() {
+  if (gameState === 'playing') pauseGame();
+  else if (gameState === 'paused') resumeGame();
+}
+
+function toggleMuteBtn() {
+  toggleMute();
+  var btn = document.getElementById('pauseMuteBtn');
+  if (btn) btn.textContent = audioMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
+}
+
+function showTrophyToast() {
+  // Trophies coming soon — brief toast, stay paused
+  var el = document.createElement('div');
+  el.textContent = '🏆 Coming Soon!';
+  el.style.cssText = 'position:fixed;top:20%;left:50%;transform:translateX(-50%);background:rgba(255,202,40,0.9);color:#000;font-family:Luckiest Guy,cursive;font-size:24px;padding:12px 32px;border-radius:12px;z-index:60;pointer-events:none;';
+  document.body.appendChild(el);
+  setTimeout(function() { el.remove(); }, 1500);
+}
+
+function changeTruckFromPause() {
+  // Preserve run: go to picker, remember we came from pause
+  stopEngine();
+  stopBigAir();
+  document.getElementById('pauseMenu').classList.remove('open');
+  document.getElementById('settingsBtn').style.display = 'none';
+  gameState = 'picker';
+  pickerPlayer = 1;
+  pickerPage = 0;
+  pickerFromPause = true;
+}
+
+let pickerFromPause = false;
+
 function restartGame() {
-  gameState = 'playing'; // temporarily so stopEngine works
+  gameState = 'playing';
   stopEngine();
   stopBigAir();
   initGame();
@@ -1782,89 +1887,11 @@ function restartGame() {
 function quitToMenu() {
   stopEngine();
   stopBigAir();
-  // Mode select is gone — quit goes back to the truck picker.
+  document.getElementById('pauseMenu').classList.remove('open');
+  document.getElementById('settingsBtn').style.display = 'none';
   gameState = 'picker';
   pickerPlayer = 1;
   pickerPage = 0;
-}
-
-function handlePauseClick(vx, vy) {
-  // MUST match drawPauseOverlay layout exactly
-  const btnW = 200, btnH = 45, gap = 12;
-  const bx = W / 2 - btnW / 2;
-  const baseY = 130;
-
-  // Resume button
-  if (vx >= bx && vx <= bx + btnW && vy >= baseY && vy <= baseY + btnH) {
-    resumeGame(); return;
-  }
-  // Restart button
-  const ry = baseY + btnH + gap;
-  if (vx >= bx && vx <= bx + btnW && vy >= ry && vy <= ry + btnH) {
-    restartGame(); return;
-  }
-  // Quit button
-  const qy = ry + btnH + gap;
-  if (vx >= bx && vx <= bx + btnW && vy >= qy && vy <= qy + btnH) {
-    quitToMenu(); return;
-  }
-  // Main Menu button (back to landing page)
-  const my = qy + btnH + gap;
-  if (vx >= bx && vx <= bx + btnW && vy >= my && vy <= my + btnH) {
-    window.location.href = '/'; return;
-  }
-}
-
-function drawPauseOverlay() {
-  // Semi-transparent dark overlay
-  ctx.fillStyle = 'rgba(0,0,0,0.7)';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.textAlign = 'center';
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
-
-  // "PAUSED" title
-  ctx.fillStyle = '#fff';
-  ctx.font = "bold 44px 'Luckiest Guy', cursive";
-  ctx.strokeText('PAUSED', W / 2, 100);
-  ctx.fillText('PAUSED', W / 2, 100);
-
-  // Buttons
-  const btnW = 200, btnH = 45, gap = 12;
-  const bx = W / 2 - btnW / 2;
-  const baseY = 130;
-
-  // Resume (green)
-  ctx.fillStyle = '#22cc44';
-  ctx.beginPath(); ctx.roundRect(bx, baseY, btnW, btnH, 12); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = "bold 22px 'Luckiest Guy', cursive";
-  ctx.fillText('\u25B6  RESUME', W / 2, baseY + 33);
-
-  // Restart (orange)
-  const ry = baseY + btnH + gap;
-  ctx.fillStyle = '#ff8800';
-  ctx.beginPath(); ctx.roundRect(bx, ry, btnW, btnH, 12); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText('\u21BA  RESTART', W / 2, ry + 33);
-
-  // Quit (red)
-  const qy = ry + btnH + gap;
-  ctx.fillStyle = '#cc2222';
-  ctx.beginPath(); ctx.roundRect(bx, qy, btnW, btnH, 12); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText('\u2715  QUIT', W / 2, qy + 33);
-
-  // Main Menu (blue)
-  const my = qy + btnH + gap;
-  ctx.fillStyle = '#2266aa';
-  ctx.beginPath(); ctx.roundRect(bx, my, btnW, btnH, 12); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.fillText('\uD83C\uDFE0  MENU', W / 2, my + 33);
-
-  // Keyboard hints
-  ctx.fillStyle = '#888'; ctx.font = "12px 'Baloo 2', sans-serif";
-  ctx.fillText('ESC/P = Resume  \u2022  R = Restart  \u2022  Q = Quit', W / 2, my + btnH + 25);
-  ctx.textAlign = 'left';
 }
 
 function drawGamesButton(x, y) {
@@ -1906,21 +1933,6 @@ function drawChangeTruckButton(x, y) {
   ctx.textAlign = 'center';
   ctx.fillText('\uD83D\uDE9B TRUCKS', x + 65, y + 30);
   ctx.restore();
-}
-
-function drawPauseButton() {
-  // Glass rounded square with gear icon — 44x44, top-right
-  const px = W - 70, py = 18;
-  const bSz = 44, bx = px - bSz / 2, by = py - bSz / 2;
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.roundRect(bx, by, bSz, bSz, 12); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = "22px 'Baloo 2', sans-serif";
-  ctx.textAlign = 'center';
-  ctx.fillText('⚙', px, py + 8);
-  ctx.textAlign = 'left';
 }
 
 function drawPickerScreen() {
@@ -5036,13 +5048,6 @@ function drawHUD() {
     ctx.textAlign = 'left';
   }
 
-  // Mute button
-  const muteX = W - 20, muteY = 15;
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath(); ctx.arc(muteX, muteY, 12, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = "12px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
-  ctx.fillText(audioMuted ? '🔇' : '🔊', muteX, muteY + 4); ctx.textAlign = 'left';
-
   // HONK button
   const honkX = W - 70, honkY = H - 40;
   const honkPulse = 0.9 + Math.sin(Date.now() * 0.005) * 0.1;
@@ -5250,6 +5255,7 @@ function drawPlayerTruck(p) {
 // MAIN DRAW
 // ============================================================
 function draw() {
+  document.getElementById('settingsBtn').style.display = (gameState === 'playing') ? 'block' : 'none';
   // Letterbox scaling — preserve 800×450 aspect ratio regardless of viewport
   // shape. In landscape the bars are zero width; in portrait the playfield
   // sits in a centered horizontal strip with dark navy bars above/below.
@@ -5381,7 +5387,6 @@ function draw() {
 
     if (gameState === 'playing' || gameState === 'paused') {
       drawHUD();
-      drawPauseButton();
 
       // Campaign HUD: level indicator + max speed text + countdown
       if (gameMode === 'rally') {
@@ -5416,7 +5421,6 @@ function draw() {
         ctx.textAlign = 'left';
       }
     }
-    if (gameState === 'paused') drawPauseOverlay();
     if (gameState === 'countdown') drawCountdown();
   }
 
@@ -5449,6 +5453,43 @@ function gameLoop(timestamp) {
     draw();
   }
   requestAnimationFrame(gameLoop);
+}
+
+// --- HTML PAUSE BUTTON WIRING ---
+(function() {
+  var btn = document.getElementById('pauseMuteBtn');
+  if (!btn) return;
+  var lastToggle = 0;
+  function doToggle() {
+    var now = Date.now();
+    if (now - lastToggle < 300) return;
+    lastToggle = now;
+    toggleMuteBtn();
+  }
+  btn.addEventListener('click', doToggle);
+  btn.addEventListener('touchend', function(e) { e.preventDefault(); doToggle(); }, { passive: false });
+})();
+
+document.querySelectorAll('#pauseMenu button, #pauseMenu .pause-btn').forEach(function(btn) {
+  btn.addEventListener('touchend', function(e) {
+    e.preventDefault();
+    if (btn.id === 'pauseMuteBtn') { /* handled by debounce above */ }
+    else if (btn.classList.contains('pause-resume')) { togglePauseMenu(); }
+    else if (btn.classList.contains('pause-trophy')) { showTrophyToast(); }
+    else if (btn.classList.contains('pause-char')) { changeTruckFromPause(); }
+    else if (btn.classList.contains('pause-menu')) { window.location.href = '/'; }
+    else { btn.click(); }
+  }, { passive: false });
+});
+
+document.getElementById('settingsBtn')?.addEventListener('touchend', (e) => {
+  e.preventDefault(); togglePauseMenu();
+}, { passive: false });
+
+// Sync mute button text with saved state
+if (audioMuted) {
+  var mb = document.getElementById('pauseMuteBtn');
+  if (mb) mb.textContent = '🔇 SOUND: OFF';
 }
 
 // Polyfill roundRect if needed
