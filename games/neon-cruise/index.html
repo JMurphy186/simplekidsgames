@@ -546,7 +546,7 @@ const WORLDS = [
         { pos: 1.00, color: '#3B1F3A' },
       ],
     },
-    sun: { x: 0.72, y: 0.62, radius: 90, color: '#FFD48C', glow: '#FFEAC2', striped: false },
+    sun: { x: 0.72, y: 0.62, radius: 55, color: '#FFD48C', glow: '#FFEAC2', striped: false },
     horizon: { type: 'ocean', color: '#2B5F6E', shimmer: '#FFD48C' },
     roadside: { left: { sprite: 'palm', density: 0.25 }, right: { sprite: 'palm', density: 0.25 } },
     road: { asphalt: ['#2A2428', '#332B30'], stripe: '#FFFFFF', shoulder: '#6B5A4F' },
@@ -564,7 +564,7 @@ const WORLDS = [
         { pos: 1.00, color: '#120628' },
       ],
     },
-    sun: { x: 0.50, y: 0.60, radius: 110, color: '#FF2E88', glow: '#FFB8D8', striped: true, stripeColor: '#2A0A44' },
+    sun: { x: 0.50, y: 0.60, radius: 95, color: '#FF2E88', glow: '#FFB8D8', striped: true, stripeColor: '#2A0A44' },
     horizon: { type: 'city', color: '#1B0A3A', windows: '#FF2E88' },
     roadside: { gridFloor: true, gridColor: '#FF2E88', gridSpacing: 80 },
     road: { asphalt: ['#0A0418', '#15082A'], stripe: '#00F0FF', shoulder: '#FF2E88' },
@@ -848,42 +848,111 @@ const NPC_COLORS = ['#E53935', '#43A047', '#1E88E5', '#FB8C00', '#8E24AA', '#00A
 // ROAD ENGINE
 // ============================================================
 const RENDER = {
-  cameraDepth: 0.84,
-  cameraHeight: 800,
-  drawDistance: 200,
+  fieldOfView: 100,
+  cameraHeight: 1000,
+  cameraDepth: 1 / Math.tan((100 / 2) * Math.PI / 180),
+  drawDistance: 300,
+  fogDensity: 5,
   segmentLength: 200,
+  rumbleLength: 3,
   roadWidth: 2000,
   lanes: 3,
 };
 
-const TOTAL_SEGMENTS = 3000;
+// Per-world segment color tables (LIGHT/DARK alternating)
+const COLORS = {
+  'sunset-coast': {
+    LIGHT: { road: '#332B30', grass: '#6B5A4F', rumble: '#FFFFFF', lane: '#FFFFFF' },
+    DARK:  { road: '#2A2428', grass: '#5E4E44', rumble: '#FFFFFF', lane: null },
+  },
+  'neon-city': {
+    LIGHT: { road: '#15082A', grass: '#0A041A', rumble: '#FF2E88', lane: '#00F0FF' },
+    DARK:  { road: '#0A0418', grass: '#05020F', rumble: '#FF2E88', lane: null },
+  },
+  'desert-run': {
+    LIGHT: { road: '#453028', grass: '#8A5A3A', rumble: '#F0D88C', lane: '#F0D88C' },
+    DARK:  { road: '#3A2A24', grass: '#7A4E32', rumble: '#F0D88C', lane: null },
+  },
+};
+
+const TOTAL_SEGMENTS = 500;
 let segments = [];
 
-function buildSegments() {
+function buildSegments(worldId) {
   segments = [];
+  const colorSet = COLORS[worldId] || COLORS['sunset-coast'];
   for (let i = 0; i < TOTAL_SEGMENTS; i++) {
     segments.push({
       index: i,
       p1: { world: { x: 0, y: 0, z: i * RENDER.segmentLength }, camera: {}, screen: {} },
       p2: { world: { x: 0, y: 0, z: (i + 1) * RENDER.segmentLength }, camera: {}, screen: {} },
-      color: i % 2,
-      coin: null,
-      npc: null,
+      curve: 0,
+      colors: (Math.floor(i / RENDER.rumbleLength) % 2) ? colorSet.DARK : colorSet.LIGHT,
     });
   }
 }
-buildSegments();
+buildSegments(save.selectedWorld || 'sunset-coast');
 
-function project(p, cameraX, cameraY, cameraZ) {
-  p.camera.x = p.world.x - cameraX;
-  p.camera.y = p.world.y - cameraY;
-  p.camera.z = p.world.z - cameraZ;
-  if (p.camera.z <= 0) { p.screen.scale = 0; return; }
-  p.screen.scale = RENDER.cameraDepth / p.camera.z;
-  p.screen.x = Math.round(W / 2 + p.screen.scale * p.camera.x * W / 2);
-  p.screen.y = Math.round(H / 2 - p.screen.scale * p.camera.y * H / 2);
-  p.screen.w = Math.round(p.screen.scale * RENDER.roadWidth * W / 2);
+function project(p, cameraX, cameraY, cameraZ, cameraDepth, width, height, roadWidth) {
+  p.camera.x = (p.world.x || 0) - cameraX;
+  p.camera.y = (p.world.y || 0) - cameraY;
+  p.camera.z = (p.world.z || 0) - cameraZ;
+  if (p.camera.z <= 0) { p.screen.scale = 0; p.screen.x = 0; p.screen.y = 0; p.screen.w = 0; return; }
+  p.screen.scale = cameraDepth / p.camera.z;
+  p.screen.x = Math.round((width / 2) + (p.screen.scale * p.camera.x * width / 2));
+  p.screen.y = Math.round((height / 2) - (p.screen.scale * p.camera.y * height / 2));
+  p.screen.w = Math.round(p.screen.scale * roadWidth * width / 2);
 }
+
+function drawPolygon(ctx, x1, y1, x2, y2, x3, y3, x4, y4, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x3, y3);
+  ctx.lineTo(x4, y4);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function renderSegment(ctx, width, lanes, x1, y1, w1, x2, y2, w2, fog, colors) {
+  const r1 = Math.max(6, Math.floor(w1 / Math.max(6, 2 * lanes)));
+  const r2 = Math.max(6, Math.floor(w2 / Math.max(6, 2 * lanes)));
+  const l1 = Math.max(1, Math.floor(w1 / Math.max(32, 8 * lanes)));
+  const l2 = Math.max(1, Math.floor(w2 / Math.max(32, 8 * lanes)));
+
+  // Grass fill
+  ctx.fillStyle = colors.grass;
+  ctx.fillRect(0, y2, width, y1 - y2);
+
+  // Rumble strips
+  drawPolygon(ctx, x1 - w1 - r1, y1, x1 - w1, y1, x2 - w2, y2, x2 - w2 - r2, y2, colors.rumble);
+  drawPolygon(ctx, x1 + w1 + r1, y1, x1 + w1, y1, x2 + w2, y2, x2 + w2 + r2, y2, colors.rumble);
+
+  // Road surface
+  drawPolygon(ctx, x1 - w1, y1, x1 + w1, y1, x2 + w2, y2, x2 - w2, y2, colors.road);
+
+  // Lane markers
+  if (colors.lane) {
+    const lw1 = (w1 * 2) / lanes;
+    const lw2 = (w2 * 2) / lanes;
+    let lx1 = x1 - w1 + lw1;
+    let lx2 = x2 - w2 + lw2;
+    for (let lane = 1; lane < lanes; lane++, lx1 += lw1, lx2 += lw2) {
+      drawPolygon(ctx, lx1 - l1 / 2, y1, lx1 + l1 / 2, y1, lx2 + l2 / 2, y2, lx2 - l2 / 2, y2, colors.lane);
+    }
+  }
+
+  // Fog overlay
+  if (fog < 1) {
+    ctx.fillStyle = 'rgba(0,0,0,' + ((1 - fog) * 0.35) + ')';
+    ctx.fillRect(0, y2, width, y1 - y2);
+  }
+}
+
+function interpolate(a, b, percent) { return a + (b - a) * percent; }
+function exponentialFog(distance, density) { return 1 / Math.pow(Math.E, distance * distance * density); }
+function findSegment(z) { return segments[Math.floor(z / RENDER.segmentLength) % segments.length]; }
 
 // ============================================================
 // PLAYER STATE
@@ -1105,11 +1174,12 @@ function drawSun(world) {
   const r = s.radius * (W / 800);
 
   // Glow
-  const glow = ctx.createRadialGradient(sx, sy, r * 0.2, sx, sy, r * 2);
-  glow.addColorStop(0, s.glow + '44');
+  const glow = ctx.createRadialGradient(sx, sy, r * 0.3, sx, sy, r * 1.5);
+  glow.addColorStop(0, s.glow + '55');
+  glow.addColorStop(0.6, s.glow + '18');
   glow.addColorStop(1, 'transparent');
   ctx.fillStyle = glow;
-  ctx.fillRect(sx - r * 2, sy - r * 2, r * 4, r * 4);
+  ctx.fillRect(sx - r * 1.5, sy - r * 1.5, r * 3, r * 3);
 
   // Sun circle
   ctx.fillStyle = s.color;
@@ -1140,14 +1210,14 @@ function drawHorizon(world) {
 
   if (h.type === 'ocean') {
     ctx.fillStyle = h.color;
-    ctx.fillRect(0, skyH - 20, W, 25);
-    // Shimmer line
+    ctx.fillRect(0, skyH - 8, W, 12);
+    // Subtle shimmer highlight — thin line, reduced opacity
     ctx.strokeStyle = h.shimmer;
-    ctx.lineWidth = 2;
-    ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.003) * 0.3;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.25 + Math.sin(Date.now() * 0.003) * 0.15;
     ctx.beginPath();
-    ctx.moveTo(0, skyH - 5);
-    ctx.lineTo(W, skyH - 5);
+    ctx.moveTo(0, skyH - 2);
+    ctx.lineTo(W, skyH - 2);
     ctx.stroke();
     ctx.globalAlpha = 1;
   } else if (h.type === 'city') {
@@ -1199,72 +1269,68 @@ function drawHorizon(world) {
   }
 }
 
+// ── Shared projection state for roadside/NPC/coin rendering ──
+let _renderPlayerY = 0;
+
 function drawRoadScene() {
   const world = getWorld();
   const skyH = H * 0.45;
 
   // Ground fill below horizon
-  ctx.fillStyle = world.road.shoulder;
+  ctx.fillStyle = (COLORS[world.id] || COLORS['sunset-coast']).DARK.grass;
   ctx.fillRect(0, skyH, W, H - skyH);
 
-  // Draw segments far-to-near
-  const baseSegment = Math.floor(player.z / RENDER.segmentLength);
+  const baseSegment = findSegment(player.z);
+  const basePercent = (player.z % RENDER.segmentLength) / RENDER.segmentLength;
+  const playerSegment = findSegment(player.z + RENDER.cameraHeight);
+  const playerY = interpolate(playerSegment.p1.world.y || 0, playerSegment.p2.world.y || 0, basePercent);
+  _renderPlayerY = playerY;
+
   let maxY = H;
+  let x = 0;
+  let dx = 0;
 
-  for (let n = RENDER.drawDistance; n > 0; n--) {
-    const segIdx = (baseSegment + n) % TOTAL_SEGMENTS;
-    const seg = segments[segIdx];
+  for (let n = 0; n < RENDER.drawDistance; n++) {
+    const seg = segments[(baseSegment.index + n) % segments.length];
+    seg.looped = seg.index < baseSegment.index;
+    seg.fog = exponentialFog(n / RENDER.drawDistance, RENDER.fogDensity);
 
-    project(seg.p1, player.x * RENDER.roadWidth, RENDER.cameraHeight, player.z);
-    project(seg.p2, player.x * RENDER.roadWidth, RENDER.cameraHeight, player.z);
+    const loopOffset = seg.looped ? segments.length * RENDER.segmentLength : 0;
 
-    if (seg.p1.screen.scale <= 0 || seg.p2.screen.scale <= 0) continue;
+    project(seg.p1,
+      (player.x * RENDER.roadWidth) - x,
+      playerY + RENDER.cameraHeight,
+      player.z - loopOffset,
+      RENDER.cameraDepth, W, H, RENDER.roadWidth
+    );
+    project(seg.p2,
+      (player.x * RENDER.roadWidth) - x - dx,
+      playerY + RENDER.cameraHeight,
+      player.z - loopOffset,
+      RENDER.cameraDepth, W, H, RENDER.roadWidth
+    );
+
+    x = x + dx;
+    dx = dx + (seg.curve || 0);
+
+    // Cull
+    if (seg.p1.camera.z <= RENDER.cameraDepth) continue;
+    if (seg.p2.screen.y >= seg.p1.screen.y) continue;
     if (seg.p2.screen.y >= maxY) continue;
 
-    const y1 = seg.p2.screen.y;
-    const y2 = seg.p1.screen.y;
-    const w1 = seg.p2.screen.w;
-    const w2 = seg.p1.screen.w;
-    const x1 = seg.p2.screen.x;
-    const x2 = seg.p1.screen.x;
+    renderSegment(ctx, W, RENDER.lanes,
+      seg.p1.screen.x, seg.p1.screen.y, seg.p1.screen.w,
+      seg.p2.screen.x, seg.p2.screen.y, seg.p2.screen.w,
+      seg.fog, seg.colors
+    );
 
-    if (y1 >= y2) continue;
-
-    // Shoulder
-    ctx.fillStyle = world.road.shoulder;
-    drawTrapezoid(x1, y1, w1 * 1.3, x2, y2, w2 * 1.3);
-
-    // Road surface
-    ctx.fillStyle = world.road.asphalt[seg.color];
-    drawTrapezoid(x1, y1, w1, x2, y2, w2);
-
-    // Center stripe (every other segment)
-    if (seg.color === 0) {
-      ctx.fillStyle = world.road.stripe;
-      drawTrapezoid(x1, y1, w1 * 0.02, x2, y2, w2 * 0.02);
-    }
-
-    // Lane lines
-    if (seg.color === 0) {
-      ctx.fillStyle = world.road.stripe + '66';
-      drawTrapezoid(x1, y1, w1 * 0.008, x2, y2, w2 * 0.008, -w1 / 3, -w2 / 3);
-      drawTrapezoid(x1, y1, w1 * 0.008, x2, y2, w2 * 0.008, w1 / 3, w2 / 3);
-    }
-
-    // Shoulder glow for Neon City
-    if (world.id === 'neon-city' && seg.color === 0) {
-      ctx.fillStyle = world.road.shoulder + '44';
-      drawTrapezoid(x1, y1, w1 * 1.32, x2, y2, w2 * 1.32);
-    }
-
-    maxY = y1;
+    maxY = seg.p2.screen.y;
   }
 
   // Grid floor for Neon City
   if (world.roadside && world.roadside.gridFloor) {
-    ctx.strokeStyle = world.roadside.gridColor + '33';
+    ctx.strokeStyle = world.roadside.gridColor + '22';
     ctx.lineWidth = 1;
-    // Horizontal lines
     for (let y = skyH; y < H; y += 20) {
       ctx.beginPath();
       ctx.moveTo(0, y);
@@ -1274,48 +1340,47 @@ function drawRoadScene() {
   }
 }
 
-function drawTrapezoid(x1, y1, w1, x2, y2, w2, off1, off2) {
-  off1 = off1 || 0;
-  off2 = off2 || 0;
-  ctx.beginPath();
-  ctx.moveTo(x1 - w1 + off1, y1);
-  ctx.lineTo(x1 + w1 + off1, y1);
-  ctx.lineTo(x2 + w2 + off2, y2);
-  ctx.lineTo(x2 - w2 + off2, y2);
-  ctx.closePath();
-  ctx.fill();
-}
-
 // ── Roadside sprites ──
 function drawRoadsideSprites() {
   const world = getWorld();
   if (!world.roadside || world.roadside.gridFloor) return;
 
-  const baseSegment = Math.floor(player.z / RENDER.segmentLength);
-  for (let n = RENDER.drawDistance; n > 10; n--) {
-    const segIdx = (baseSegment + n) % TOTAL_SEGMENTS;
-    const seg = segments[segIdx];
-    if (seg.p1.screen.scale <= 0) continue;
+  const spriteType = world.roadside.left ? world.roadside.left.sprite : 'palm';
+  const density = world.roadside.left ? world.roadside.left.density : 0.25;
+  const baseSegment = findSegment(player.z);
 
-    const density = world.roadside.left ? world.roadside.left.density : 0;
+  // Draw far to near so nearer sprites overlap farther ones
+  for (let n = RENDER.drawDistance - 1; n > 5; n--) {
+    const segIdx = (baseSegment.index + n) % segments.length;
+    const seg = segments[segIdx];
+
+    // Deterministic density — use segment index as pseudo-random seed
     if (((segIdx * 7 + 3) % 100) / 100 > density) continue;
 
-    const sc = seg.p1.screen.scale * W * 0.5;
-    const yy = seg.p1.screen.y;
-    if (yy > H || yy < H * 0.3) continue;
+    // Skip if segment not projected yet or behind camera
+    if (seg.p1.screen.scale <= 0 || seg.p1.screen.y <= 0 || seg.p1.screen.y >= H) continue;
 
-    const spriteType = world.roadside.left ? world.roadside.left.sprite : 'palm';
-    const roadEdge = seg.p1.screen.w * 1.4;
-    const leftX = seg.p1.screen.x - roadEdge;
-    const rightX = seg.p1.screen.x + roadEdge;
-    const sprSize = sc * 400;
+    // Roadside offset: sprites sit at 1.1-1.35x road width past center
+    const offsets = [0.10, 0.25]; // near road edge, farther out
+    const roadW = seg.p1.screen.w;
+    const screenX = seg.p1.screen.x;
+    const screenY = seg.p1.screen.y;
+    const sprSize = roadW * 0.4; // scale with road width (perspective)
 
-    if (spriteType === 'palm') {
-      drawPalm(leftX, yy, sprSize);
-      if (((segIdx * 13 + 5) % 100) / 100 < density) drawPalm(rightX, yy, sprSize);
-    } else if (spriteType === 'cactus') {
-      drawCactus(leftX, yy, sprSize);
-      if (((segIdx * 13 + 5) % 100) / 100 < density) drawCactus(rightX, yy, sprSize);
+    if (sprSize < 2) continue;
+
+    // Left side sprite
+    const leftOffset = offsets[segIdx % 2];
+    const leftX = screenX - roadW - roadW * leftOffset;
+    if (spriteType === 'palm') drawPalm(leftX, screenY, sprSize);
+    else drawCactus(leftX, screenY, sprSize);
+
+    // Right side sprite (slightly different offset for variety)
+    if (((segIdx * 13 + 5) % 100) / 100 < density) {
+      const rightOffset = offsets[(segIdx + 1) % 2];
+      const rightX = screenX + roadW + roadW * rightOffset;
+      if (spriteType === 'palm') drawPalm(rightX, screenY, sprSize);
+      else drawCactus(rightX, screenY, sprSize);
     }
   }
 }
@@ -1349,46 +1414,60 @@ function drawCactus(x, y, size) {
 
 // ── Draw NPC vehicles in the road ──
 function drawNPCs() {
-  // Sort far to near
-  const visible = npcs.filter(n => n.z > player.z - 200 && n.z < player.z + RENDER.drawDistance * RENDER.segmentLength);
+  const maxZ = player.z + RENDER.drawDistance * RENDER.segmentLength;
+  const visible = npcs.filter(n => n.z > player.z && n.z < maxZ);
   visible.sort((a, b) => b.z - a.z);
 
+  const tempP = { world: { x: 0, y: 0, z: 0 }, camera: {}, screen: {} };
   for (const npc of visible) {
-    const dz = npc.z - player.z;
-    if (dz <= 0) continue;
-    // Project NPC position
-    const camZ = dz;
-    if (camZ <= 0) continue;
-    const sc = RENDER.cameraDepth / camZ * RENDER.segmentLength;
-    const sx = W / 2 + sc * (npc.x - player.x) * RENDER.roadWidth * W / 2;
-    const sy = H / 2 - sc * (-RENDER.cameraHeight) * H / 2;
-    const drawSc = sc * 80;
+    tempP.world.x = npc.x * RENDER.roadWidth;
+    tempP.world.y = 0;
+    tempP.world.z = npc.z;
+    project(tempP,
+      player.x * RENDER.roadWidth,
+      _renderPlayerY + RENDER.cameraHeight,
+      player.z,
+      RENDER.cameraDepth, W, H, RENDER.roadWidth
+    );
+    if (tempP.screen.scale <= 0) continue;
+    const sx = tempP.screen.x;
+    const sy = tempP.screen.y;
+    const drawSc = tempP.screen.w / RENDER.roadWidth * 3.5;
 
-    if (sy > 0 && sy < H && drawSc > 0.5) {
-      npc.drawFn(ctx, sx, sy, Math.min(drawSc, 2), npc.color);
+    if (sy > 0 && sy < H && drawSc > 0.3) {
+      npc.drawFn(ctx, sx, sy, Math.min(drawSc, 2.5), npc.color);
     }
   }
 }
 
 // ── Draw coins in the road ──
 function drawCoins() {
+  const tempP = { world: { x: 0, y: 0, z: 0 }, camera: {}, screen: {} };
   for (const c of coins) {
     if (c.collected) continue;
     const dz = c.z - player.z;
     if (dz <= 0 || dz > RENDER.drawDistance * RENDER.segmentLength) continue;
-    const camZ = dz;
-    const sc = RENDER.cameraDepth / camZ * RENDER.segmentLength;
-    const sx = W / 2 + sc * (c.x - player.x) * RENDER.roadWidth * W / 2;
-    const sy = H / 2 - sc * (-RENDER.cameraHeight + 100) * H / 2;
-    const drawSc = sc * 60;
 
-    if (sy > 0 && sy < H && drawSc > 0.3) {
-      // Spinning coin — ellipse squash
+    tempP.world.x = c.x * RENDER.roadWidth;
+    tempP.world.y = 80; // Hover slightly above road
+    tempP.world.z = c.z;
+    project(tempP,
+      player.x * RENDER.roadWidth,
+      _renderPlayerY + RENDER.cameraHeight,
+      player.z,
+      RENDER.cameraDepth, W, H, RENDER.roadWidth
+    );
+    if (tempP.screen.scale <= 0) continue;
+    const sx = tempP.screen.x;
+    const sy = tempP.screen.y;
+    const drawSc = tempP.screen.w / RENDER.roadWidth * 3;
+
+    if (sy > 0 && sy < H && drawSc > 0.2) {
       const spin = Math.sin(Date.now() * 0.005 + c.z * 0.01);
-      const r = Math.max(2, drawSc * 12);
+      const r = Math.max(2, drawSc * 14);
       ctx.fillStyle = '#FFD700';
       ctx.beginPath();
-      ctx.ellipse(sx, sy, r * Math.abs(spin), r, 0, 0, Math.PI * 2);
+      ctx.ellipse(sx, sy, r * Math.max(0.2, Math.abs(spin)), r, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#B8860B';
       ctx.lineWidth = 1;
@@ -1484,6 +1563,7 @@ function startGame() {
   initAudio();
   playUIClick();
   resetPlayer();
+  buildSegments(save.selectedWorld);
   gameState = 'playing';
   paused = false;
   hideAllScreens();
@@ -1540,6 +1620,7 @@ function showTitle() {
   document.getElementById('titleScreen').classList.add('active');
 
   // Render a still frame of the world background
+  buildSegments(world.id);
   render();
 }
 
