@@ -1,37 +1,43 @@
 /**
- * SKG-100 Commit 5 — Vehicle sprite crop + chroma-key pipeline (v2).
+ * SKG-100 Commit 5.1 — Vehicle sprite crop + chroma-key pipeline (v3).
  *
- * Reads art/neon-cruise/vehicles-main-sheet-v2.png (pure rear view, solid
- * magenta #FF00FF background), crops 3 bounding boxes from the Phase A.2
- * picker manifest, applies a two-pass magenta chroma-key (hard cut + 1px
- * alpha feather), resizes to 500px wide (retina-safe for in-game display),
- * base64-encodes each sprite, and writes art/neon-cruise/sprites-v2.json.
+ * Reads art/neon-cruise/vehicles-main-sheet-v3.png (pure rear view, solid
+ * magenta #FF00FF background, NO ground shadows, near-black tinted glass),
+ * crops 3 bounding boxes from the Phase A.2 picker manifest (re-run against
+ * v3), applies a two-pass magenta chroma-key (hard cut + 1px alpha feather),
+ * resizes to 500px wide (retina-safe for in-game display), base64-encodes
+ * each sprite, and writes:
+ *   art/neon-cruise/sprites-v3.json         — runtime base64 data URIs
  *
  * Kept in repo as reference for future vehicle additions / re-runs.
+ *
+ * NOTE (history): Commit 5 v2 sprites carried dark-magenta painted ground
+ * shadows that survived the hard chroma-key. An iterative adjacency-gated
+ * pass 2 was attempted but hit a geometry wall (feather pixels broke the
+ * adjacency chain to shadow islands). Resolved by re-running Gemini with
+ * an explicit "no ground shadow" instruction — v3 source art is clean and
+ * doesn't need pass 2. The iterative cleanup logic was removed in 5.1.
  *
  * Usage (from repo root):
  *   npm install --no-save sharp    # if not already installed locally
  *   node art/neon-cruise/crop-sprites.js
- *
- * Output: art/neon-cruise/sprites-v2.json
- *         Paste base64 strings into games/neon-cruise/index.html VEHICLES[].sprite
  */
 
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const SOURCE = path.join(__dirname, 'vehicles-main-sheet-v2.png');
-const OUTPUT = path.join(__dirname, 'sprites-v2.json');
+const SOURCE = path.join(__dirname, 'vehicles-main-sheet-v3.png');
+const OUTPUT = path.join(__dirname, 'sprites-v3.json');
 
-// Manifest — exported from picker (Phase A.2) against the v2 sheet.
+// Manifest — exported from picker (Phase A.2 patched for v3) against v3 sheet.
 const MANIFEST = {
   sourceWidth: 3616,
   sourceHeight: 1184,
   sprites: {
-    'road-runner': { x: 212,  y: 155, w: 886, h: 916 },
-    'sunset-fury': { x: 1340, y: 409, w: 937, h: 662 },
-    'lil-kart':    { x: 2512, y: 392, w: 928, h: 679 },
+    'road-runner': { x: 203,  y: 136, w: 871, h: 818 },
+    'sunset-fury': { x: 1361, y: 325, w: 900, h: 629 },
+    'lil-kart':    { x: 2587, y: 334, w: 848, h: 620 },
   },
 };
 
@@ -112,6 +118,7 @@ async function main() {
   }
 
   const results = {};
+  const metrics = {};
   let totalB64 = 0;
 
   for (const [id, box] of Object.entries(MANIFEST.sprites)) {
@@ -135,6 +142,21 @@ async function main() {
     // Apply two-pass chroma-key in place
     chromaKey(rawBuf, info.width, info.height, info.channels);
 
+    // Audit metrics on the pre-resize buffer — most accurate reading of
+    // the chroma-key's output before interpolation blurs alpha.
+    const pxCount = info.width * info.height;
+    let mTrans = 0, mOpaque = 0, mFeather = 0, mMagentaRes = 0;
+    for (let i = 0; i < pxCount; i++) {
+      const r = rawBuf[i * 4];
+      const g = rawBuf[i * 4 + 1];
+      const b = rawBuf[i * 4 + 2];
+      const a = rawBuf[i * 4 + 3];
+      if (a === 0) mTrans++;
+      else if (a === 255) mOpaque++;
+      else mFeather++;
+      if (a > 100 && r > 200 && g < 80 && b > 200) mMagentaRes++;
+    }
+
     // Encode back to PNG, resize to 500px wide (alpha preserved)
     const pngBuf = await sharp(rawBuf, {
       raw: { width: info.width, height: info.height, channels: info.channels }
@@ -150,13 +172,32 @@ async function main() {
     console.log('  Resized: ' + resizedMeta.width + 'x' + resizedMeta.height);
     console.log('  PNG: ' + pngBuf.length + ' bytes (' + (pngBuf.length / 1024).toFixed(1) + ' KB)');
     console.log('  Base64: ' + b64.length + ' chars (' + (b64.length / 1024).toFixed(1) + ' KB)');
+    console.log('  Alpha: ' + (mTrans/pxCount*100).toFixed(1) + '% transparent, ' +
+                (mOpaque/pxCount*100).toFixed(1) + '% opaque, ' +
+                (mFeather/pxCount*100).toFixed(2) + '% feather');
+    console.log('  Magenta residue: ' + mMagentaRes + ' px');
 
     results[id] = dataUri;
+    metrics[id] = {
+      cropDims: resizedMeta.width + 'x' + resizedMeta.height,
+      pngBytes: pngBuf.length,
+      base64Chars: b64.length,
+      transparentPct: +(mTrans/pxCount*100).toFixed(2),
+      opaquePct:     +(mOpaque/pxCount*100).toFixed(2),
+      featherPct:    +(mFeather/pxCount*100).toFixed(3),
+      magentaResidue: mMagentaRes,
+    };
     totalB64 += b64.length;
   }
 
-  // Write JSON output
-  fs.writeFileSync(OUTPUT, JSON.stringify(results, null, 2) + '\n', 'utf8');
+  // Write JSON output with metrics metadata
+  const output = {
+    source: path.basename(SOURCE),
+    generated: new Date().toISOString(),
+    metrics,
+    sprites: results,
+  };
+  fs.writeFileSync(OUTPUT, JSON.stringify(output, null, 2) + '\n', 'utf8');
   const outSize = fs.statSync(OUTPUT).size;
 
   console.log('\n========================================');

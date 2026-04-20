@@ -1,0 +1,26 @@
+{
+  "source": "vehicles-main-sheet-v3.png",
+  "sourceWidth": 3616,
+  "sourceHeight": 1184,
+  "sprites": {
+    "road-runner": {
+      "x": 203,
+      "y": 136,
+      "w": 871,
+      "h": 818
+    },
+    "sunset-fury": {
+      "x": 1361,
+      "y": 325,
+      "w": 900,
+      "h": 629
+    },
+    "lil-kart": {
+      "x": 2587,
+      "y": 334,
+      "w": 848,
+      "h": 620
+    }
+  },
+  "generated": "2026-04-20T20:19:01.142Z"
+}
