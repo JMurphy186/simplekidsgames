@@ -652,7 +652,7 @@ function drawVehicle(ctx, cx, cy, veh, sc, lean) {
 
     // Lean skew via transform
     if (lean) {
-      ctx.transform(1, 0, lean * 0.00 * sc, 1, 0, 0);
+      ctx.transform(1, 0, lean * 0.02 * sc, 1, 0, 0);
     }
 
     // Target display size — reference width at sc=1.0
