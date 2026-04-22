@@ -647,12 +647,17 @@ function drawVehicle(ctx, cx, cy, veh, sc, lean) {
     ctx.translate(cx, cy);
     ctx.scale(sc, sc);
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    ctx.beginPath(); ctx.ellipse(lean, 6, bw * 0.8, 4, 0, 0, Math.PI * 2); ctx.fill();
+    // SKG-103: shadow x-offset now tracks player.x (position) rather than
+    // steering velocity alone. Coefficient (W/2)/sc places shadow at road
+    // edge when player.x=1.0 in post-scale local units. `lean` preserved
+    // as minor tilt contribution. Scales naturally with viewport width.
+    const shadowX = player.x * (W / 2) / sc + lean;
+    ctx.beginPath(); ctx.ellipse(shadowX, 6, bw * 0.8, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
     // Lean skew via transform
     if (lean) {
-      ctx.transform(1, 0, lean * 0.08 * sc, 1, 0, 0);
+      ctx.transform(1, 0, lean * 0.04 * sc, 1, 0, 0);
     }
 
     // Target display size — reference width at sc=1.0
@@ -1109,9 +1114,12 @@ function update(dt) {
 
     // Collision check
     if (player.invincible <= 0 && player.spinout <= 0) {
-      const dz = Math.abs(npc.z - player.z);
+      // SKG-103: directional Z gate (was Math.abs < 120). Small -40 behind
+      // window preserves side-swipe feel; caps the invisible-behind tail
+      // since renderer only draws NPCs with z > player.z.
+      const dz = npc.z - player.z;
       const dx = Math.abs(npc.x - player.x);
-      if (dz < 120 && dx < 0.35) {
+      if (dz > -40 && dz < 120 && dx < 0.25) {
         // CRASH!
         player.lives--;
         player.spinout = 0.8;
@@ -1146,7 +1154,7 @@ function update(dt) {
     if (!c.collected) {
       const dz = Math.abs(c.z - player.z);
       const dx = Math.abs(c.x - player.x);
-      if (dz < 100 && dx < 0.4) {
+      if (dz < 100 && dx < 0.22) {
         c.collected = true;
         player.coins++;
         playCoinSound();
