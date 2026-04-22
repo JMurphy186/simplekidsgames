@@ -1028,6 +1028,63 @@ function resetPlayer() {
 function getWorld() { return WORLDS.find(w => w.id === save.selectedWorld) || WORLDS[0]; }
 function getVehicle() { return VEHICLES.find(v => v.id === save.selectedVehicle) || VEHICLES[0]; }
 
+// ── SKG-103 DEBUG_COLLISIONS overlay (diagnostic-only; default off; removable as a single block) ──
+window.DEBUG_COLLISIONS = false;
+const _dbg = (() => {
+  const events = []; const lc = new WeakMap(); let f = 0;
+  return {
+    push(m) { if (!window.DEBUG_COLLISIONS) return; events.push(`f${f} ${m}`); if (events.length > 5) events.shift(); },
+    collideOnce(n) { if (lc.get(n) === f) return false; lc.set(n, f); return true; },
+    frame: () => f, tick: () => { f++; }, events: () => events,
+  };
+})();
+function drawDebugOverlay() {
+  if (!window.DEBUG_COLLISIONS) { _dbg.tick(); return; }
+  ctx.save();
+  ctx.font = '11px monospace'; ctx.textBaseline = 'top'; ctx.lineWidth = 2;
+  const maxZ = player.z + RENDER.drawDistance * RENDER.segmentLength;
+  const tp = { world:{x:0,y:0,z:0}, camera:{}, screen:{} };
+  const proj = (wx, wy, wz) => {
+    tp.world.x = wx * RENDER.roadWidth; tp.world.y = wy; tp.world.z = wz;
+    project(tp, player.x * RENDER.roadWidth, _renderPlayerY + RENDER.cameraHeight, player.z, RENDER.cameraDepth, W, H, RENDER.roadWidth);
+    return tp.screen.scale > 0 ? tp.screen : null;
+  };
+  for (const n of npcs) {
+    const dz = n.z - player.z; if (dz <= 0 || n.z >= maxZ) continue;
+    const s = proj(n.x, 0, n.z); if (!s) continue;
+    const sc = s.w / RENDER.roadWidth * 3.5, bw = 40 * sc, bh = 60 * sc;
+    ctx.strokeStyle = '#FF3333'; ctx.strokeRect(s.x - bw/2, s.y - bh, bw, bh);
+    ctx.fillStyle = '#FF3333'; ctx.fillText(`N dz=${dz.toFixed(0)} dx=${(n.x-player.x).toFixed(2)}`, s.x - bw/2, s.y - bh - 12);
+  }
+  for (const c of coins) {
+    const dz = c.z - player.z; if (dz <= 0 || c.z >= maxZ) continue;
+    const s = proj(c.x, 80, c.z); if (!s) continue;
+    const sc = s.w / RENDER.roadWidth * 3, bw = 30 * sc, bh = 30 * sc;
+    ctx.strokeStyle = '#FFD700'; ctx.strokeRect(s.x - bw/2, s.y - bh/2, bw, bh);
+    ctx.fillStyle = '#FFD700'; ctx.fillText(`C dz=${dz.toFixed(0)} dx=${(c.x-player.x).toFixed(2)}`, s.x - bw/2, s.y - bh/2 - 12);
+  }
+  const pY = H * 0.75;
+  ctx.strokeStyle = '#00FF00'; ctx.strokeRect(W/2 - 30, pY - 40, 60, 80);
+  ctx.fillStyle = '#00FF00'; ctx.fillText(`P z=${player.z.toFixed(0)} x=${player.x.toFixed(2)}`, W/2 - 50, pY - 55);
+  let by = pY + 50;
+  ctx.fillStyle = '#FFA500'; ctx.fillText('behind-band (dz in -40..0):', 10, by); by += 12;
+  for (const n of npcs) {
+    const dz = n.z - player.z;
+    if (dz > -40 && dz <= 0) { ctx.fillText(`  N dz=${dz.toFixed(0)} dx=${(n.x-player.x).toFixed(2)}`, 10, by); by += 12; }
+  }
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(8, 96, 320, 54);
+  ctx.fillStyle = '#FFF';
+  ctx.fillText(`frame: ${_dbg.frame()}  pZ: ${player.z.toFixed(0)}  pX: ${player.x.toFixed(2)}`, 12, 100);
+  ctx.fillText(`coins alive: ${coins.length}   npcs alive: ${npcs.length}`, 12, 114);
+  ctx.fillText(`DEBUG_COLLISIONS on   shear: 0.02`, 12, 128);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(8, H - 84, 420, 72);
+  ctx.fillStyle = '#FFF'; ctx.font = '10px monospace';
+  const evs = _dbg.events();
+  for (let i = 0; i < evs.length; i++) ctx.fillText(evs[i], 12, H - 80 + i * 12);
+  ctx.restore();
+  _dbg.tick();
+}
+
 function update(dt) {
   if (player.spinout > 0) {
     player.spinout -= dt;
@@ -1115,6 +1172,7 @@ function update(dt) {
       const dz = npc.z - player.z;
       const dx = Math.abs(npc.x - player.x);
       if (dz > -40 && dz < 120 && dx < 0.25) {
+        if (_dbg.collideOnce(npc)) _dbg.push(`COLLIDE npc dz=${dz.toFixed(0)} dx=${dx.toFixed(2)}`);
         // CRASH!
         player.lives--;
         player.spinout = 0.8;
@@ -1145,7 +1203,7 @@ function update(dt) {
   // Update coins
   for (let i = coins.length - 1; i >= 0; i--) {
     const c = coins[i];
-    if (c.z < player.z - 200) { coins.splice(i, 1); continue; }
+    if (c.z < player.z - 200) { _dbg.push(`DESPAWN coin z=${c.z.toFixed(0)}`); coins.splice(i, 1); continue; }
     if (!c.collected) {
       const dz = Math.abs(c.z - player.z);
       const dx = Math.abs(c.x - player.x);
@@ -1153,6 +1211,7 @@ function update(dt) {
         c.collected = true;
         player.coins++;
         playCoinSound();
+        _dbg.push(`COLLECT coin dz=${(c.z-player.z).toFixed(0)} dx=${dx.toFixed(2)}`);
         coins.splice(i, 1);
       }
     }
@@ -1761,6 +1820,7 @@ function render() {
   drawCoins();
   drawPlayer();
   drawParticles();
+  drawDebugOverlay();
 }
 
 // ============================================================
