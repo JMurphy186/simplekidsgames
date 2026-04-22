@@ -647,17 +647,12 @@ function drawVehicle(ctx, cx, cy, veh, sc, lean) {
     ctx.translate(cx, cy);
     ctx.scale(sc, sc);
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
-    // SKG-103: shadow x-offset now tracks player.x (position) rather than
-    // steering velocity alone. Coefficient (W/2)/sc places shadow at road
-    // edge when player.x=1.0 in post-scale local units. `lean` preserved
-    // as minor tilt contribution. Scales naturally with viewport width.
-    const shadowX = player.x * (W / 2) / sc + lean;
-    ctx.beginPath(); ctx.ellipse(shadowX, 6, bw * 0.8, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(lean, 6, bw * 0.8, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
     // Lean skew via transform
     if (lean) {
-      ctx.transform(1, 0, lean * 0.04 * sc, 1, 0, 0);
+      ctx.transform(1, 0, lean * 0.00 * sc, 1, 0, 0);
     }
 
     // Target display size — reference width at sc=1.0
