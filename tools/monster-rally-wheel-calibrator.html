@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monster Rally — Wheel Calibrator (SKG-111)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #2a2a2a; color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 16px 16px 140px;
+    min-height: 100%;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  h1 { color: #FFD700; font-size: 22px; margin-bottom: 2px; }
+  .subtitle { color: #888; font-size: 13px; margin-bottom: 14px; }
+
+  .progress-bar {
+    background: #1f1f1f; border: 1px solid #444; border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .progress-bar .truck-title {
+    font-size: 18px; font-weight: bold; color: #FFD700;
+  }
+  .progress-bar .truck-id {
+    font-family: 'Consolas', 'Monaco', monospace; color: #9ec5ff; font-size: 13px;
+  }
+  .progress-bar .truck-tier {
+    background: #333; padding: 3px 10px; border-radius: 4px; font-size: 12px;
+  }
+  .progress-bar .truck-tier.starter     { background: rgba(46,125,50,0.4);  color: #66BB6A; }
+  .progress-bar .truck-tier.campaign    { background: rgba(13,71,161,0.4);  color: #64b5f6; }
+  .progress-bar .truck-tier.coin        { background: rgba(245,127,23,0.4); color: #ffb74d; }
+  .progress-bar .truck-tier.achievement { background: rgba(123,31,162,0.4); color: #ba68c8; }
+  .progress-bar .counter {
+    margin-left: auto; color: #aaa; font-size: 13px;
+  }
+  .progress-bar .calibrated-badge {
+    background: rgba(46,125,50,0.4); color: #66BB6A;
+    padding: 3px 10px; border-radius: 4px; font-size: 12px;
+  }
+
+  /* ── Stage ──────────────────────────────────────────────────── */
+  .stage-wrap {
+    background: #1f1f1f; border: 1px solid #333; border-radius: 8px;
+    padding: 16px; margin-bottom: 14px;
+    display: flex; align-items: center; justify-content: center;
+    /* checkered transparency indicator */
+    background-color: #1f1f1f;
+    background-image:
+      linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    min-height: 400px;
+    overflow: hidden;
+  }
+  .stage {
+    position: relative;
+    user-select: none;
+    line-height: 0;
+  }
+  .stage img.truck {
+    display: block;
+    pointer-events: none;
+    position: relative;
+    /* Default z=1 so wheels sit IN FRONT, matching in-game drawTruckPNG render order
+       (body first, tires drawn on top). Toggle button can flip this. */
+    z-index: 1;
+  }
+  .stage.body-on-top img.truck { z-index: 3; }
+  .stage .wheel {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    transform: translate(-50%, -50%);
+    /* No rotation in calibrator — the painted wheel asset is symmetric enough at rest */
+  }
+  .stage.body-on-top .wheel { z-index: 1; }
+  .stage .handle {
+    position: absolute;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: rgba(255,215,0,0.5);
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    z-index: 3;
+    box-shadow: 0 0 6px rgba(0,0,0,0.6);
+    transition: transform 0.05s, background 0.1s;
+  }
+  .stage .handle:hover { background: rgba(255,215,0,0.8); }
+  .stage .handle.dragging { cursor: grabbing; transform: translate(-50%, -50%) scale(1.15); background: #FFD700; }
+  .stage .handle .label {
+    position: absolute;
+    top: -22px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); color: #FFD700;
+    padding: 1px 8px; border-radius: 3px;
+    font-size: 11px; font-weight: bold; font-family: 'Consolas', monospace;
+    white-space: nowrap;
+  }
+
+  /* ── Sliders ────────────────────────────────────────────────── */
+  .controls {
+    background: #1f1f1f; border: 1px solid #333; border-radius: 8px;
+    padding: 14px 16px; margin-bottom: 14px;
+    display: grid; grid-template-columns: 1fr auto auto; gap: 12px;
+    align-items: center;
+  }
+  .controls .slider-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .controls label {
+    font-size: 13px; color: #aaa; min-width: 120px;
+  }
+  .controls input[type="range"] {
+    flex: 1;
+    accent-color: #FFD700;
+  }
+  .controls .value {
+    min-width: 60px; text-align: right;
+    font-family: 'Consolas', 'Monaco', monospace; color: #9ec5ff; font-size: 13px;
+  }
+  .controls button.reset-btn {
+    background: #333; color: #e0e0e0; border: 1px solid #555;
+    border-radius: 6px; padding: 6px 14px; font-size: 13px;
+    cursor: pointer;
+  }
+  .controls button.reset-btn:hover { background: #444; }
+
+  .live-readout {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px; color: #888;
+    background: #141414; padding: 8px 12px; border-radius: 4px;
+    margin-bottom: 14px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  /* ── Bottom toolbar ─────────────────────────────────────────── */
+  .toolbar {
+    position: fixed; left: 16px; right: 16px; bottom: 16px;
+    background: #1a1a1a; border: 1px solid #444; border-radius: 10px;
+    padding: 12px 16px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+  }
+  .toolbar button {
+    background: #333; color: #e0e0e0; border: 1px solid #555;
+    border-radius: 6px; padding: 8px 16px; font-size: 14px;
+    cursor: pointer; font-weight: 500;
+  }
+  .toolbar button:hover { background: #444; }
+  .toolbar button:disabled { background: #222; color: #666; cursor: not-allowed; }
+  .toolbar button.primary {
+    background: #FFD700; color: #000; border-color: #FFD700; font-weight: bold;
+  }
+  .toolbar button.primary:hover { background: #FFC107; }
+  .toolbar button.export {
+    background: #2E7D32; color: #fff; border-color: #2E7D32; margin-left: auto;
+  }
+  .toolbar button.export:hover { background: #388E3C; }
+
+  /* ── Export modal ───────────────────────────────────────────── */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+    padding: 20px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #1f1f1f; border: 1px solid #444; border-radius: 10px;
+    padding: 20px; max-width: 800px; width: 100%; max-height: 90vh;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .modal h2 { color: #FFD700; font-size: 18px; }
+  .modal textarea {
+    flex: 1; min-height: 360px; padding: 12px;
+    background: #0f0f0f; color: #66BB6A; border: 1px solid #333; border-radius: 6px;
+    font-family: 'Consolas', 'Monaco', monospace; font-size: 12px;
+    resize: vertical;
+  }
+  .modal .row { display: flex; gap: 10px; }
+  .modal .summary {
+    color: #888; font-size: 12px; line-height: 1.6;
+  }
+  .modal .summary code {
+    color: #9ec5ff; background: #141414; padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* ── Status / errors ────────────────────────────────────────── */
+  .toast {
+    position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
+    background: rgba(46,125,50,0.95); color: #fff;
+    padding: 8px 16px; border-radius: 6px; font-size: 13px;
+    opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none; z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+</style>
+</head>
+<body>
+
+<h1>Monster Rally — Wheel Calibrator</h1>
+<p class="subtitle">SKG-111 Phase C. Drag the FRONT and REAR handles to position the wheels under each axle. Adjust wheelScale slider for size. Save & next when satisfied.</p>
+
+<div class="progress-bar">
+  <span class="truck-title" id="truckTitle">—</span>
+  <span class="truck-id" id="truckId">—</span>
+  <span class="truck-tier" id="truckTier">—</span>
+  <span class="calibrated-badge" id="calibratedBadge" style="display:none">✓ Calibrated</span>
+  <span class="counter" id="counter">— / 35</span>
+</div>
+
+<div class="stage-wrap">
+  <div class="stage" id="stage">
+    <!-- truck img + 2 wheels + 2 handles injected dynamically -->
+  </div>
+</div>
+
+<div class="controls">
+  <div class="slider-row">
+    <label for="wheelScaleSlider">Wheel size (sizePct):</label>
+    <input type="range" id="wheelScaleSlider" min="0.10" max="0.50" step="0.005" value="0.32">
+    <span class="value" id="wheelScaleValue">0.320</span>
+  </div>
+  <button class="reset-btn" id="layerToggleBtn" title="Flip whether the truck body or wheels render on top">Layers: wheels on top</button>
+  <button class="reset-btn" id="resetBtn">Reset to defaults</button>
+  <button class="reset-btn" id="copyCurrentBtn">Copy this truck</button>
+</div>
+
+<div class="live-readout" id="liveReadout">—</div>
+
+<div class="toolbar">
+  <button id="prevBtn">← Prev truck</button>
+  <button id="saveNextBtn" class="primary">Save & next →</button>
+  <button id="nextBtn">Skip (don't save) →</button>
+  <button class="export" id="exportBtn">Export JSON</button>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Calibration Export</h2>
+    <div class="summary" id="exportSummary">—</div>
+    <textarea id="exportTextarea" readonly></textarea>
+    <div class="row">
+      <button class="reset-btn" id="copyExportBtn">Copy to clipboard</button>
+      <button class="reset-btn" id="downloadExportBtn">Download JSON file</button>
+      <button class="reset-btn" style="margin-left:auto" id="closeModalBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">—</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const SPRITE_BASE = '../art/sprites/monster-rally';
+const STAGE_MAX_WIDTH = 900;     // calibration display max — sprite scales to fit
+const STAGE_MAX_HEIGHT = 520;    // also fit vertically
+const DEFAULT_AXLES = {
+  front:    { xPct: 0.22, yPct: 0.78 },
+  rear:     { xPct: 0.78, yPct: 0.78 },
+  sizePct:  0.32,
+};
+
+// Truck order matches calibration intent (starter first since least visually complex)
+// Each: { id, name, tier }
+const TRUCKS = [
+  // Starter (8)
+  { id: 'muscle-car',  name: 'Red Rocket',     tier: 'starter' },
+  { id: 'dino-jeep',   name: 'Jurassic Jeep',  tier: 'starter' },
+  { id: 'hero-truck',  name: 'Star Striker',   tier: 'starter' },
+  { id: 'camper-van',  name: 'Highway Hippie', tier: 'starter' },
+  { id: 'dog',         name: 'Doghouse Demo',  tier: 'starter' },
+  { id: 'crane-truck', name: 'Hook & Wreck',   tier: 'starter' },
+  { id: 'trash-truck', name: 'Junkyard Jaws',  tier: 'starter' },
+  { id: 'fire-engine', name: 'Siren Storm',    tier: 'starter' },
+  // Campaign (13)
+  { id: 'bull',         name: 'Horn Blaster',     tier: 'campaign' },
+  { id: 'alligator',    name: 'Swamp Snapper',    tier: 'campaign' },
+  { id: 'shark-truck',  name: 'Fin Fury',         tier: 'campaign' },
+  { id: 'octopus',      name: 'Tentacle Terror',  tier: 'campaign' },
+  { id: 'skull-truck',  name: 'Skull Crusher',    tier: 'campaign' },
+  { id: 'spike-truck',  name: 'Spike Storm',      tier: 'campaign' },
+  { id: 'robot-truck',  name: 'Mech Smash',       tier: 'campaign' },
+  { id: 'cyber-truck',  name: 'Glitch Storm',     tier: 'campaign' },
+  { id: 'ice-truck',    name: 'Frost Bite',       tier: 'campaign' },
+  { id: 'zombie',       name: 'Slime Squad',      tier: 'campaign' },
+  { id: 'moldy',        name: 'Rust Bucket',      tier: 'campaign' },
+  { id: 'laser-truck',  name: 'Laser Strike',     tier: 'campaign' },
+  { id: 'dino-bones',   name: 'Bone Rattler',     tier: 'campaign' },
+  // Coin (7)
+  { id: 'unicorn',     name: 'Sparkle Storm', tier: 'coin' },
+  { id: 'joker',       name: 'Wild Card',     tier: 'coin' },
+  { id: 'electric',    name: 'Volt Runner',   tier: 'coin' },
+  { id: 'nasa',        name: 'Apollo Ace',    tier: 'coin' },
+  { id: 'moon-truck',  name: 'Lunar Lander',  tier: 'coin' },
+  { id: 'submarine',   name: 'Deep Diver',    tier: 'coin' },
+  { id: 'radar-truck', name: 'Signal Shock',  tier: 'coin' },
+  // Achievement (7)
+  { id: 'dragon',      name: 'Dragon Roar',     tier: 'achievement' },
+  { id: 'reaper',      name: 'Soul Reaper',     tier: 'achievement' },
+  { id: 'lava-truck',  name: 'Magma Crusher',   tier: 'achievement' },
+  { id: 'pirate-ship', name: 'Plank Plunge',    tier: 'achievement' },
+  { id: 'ufo',         name: 'Alien Invader',   tier: 'achievement' },
+  { id: 'locomotive',  name: 'Iron Express',    tier: 'achievement' },
+  { id: 'golden-king', name: 'Crown Crusher',   tier: 'achievement' },
+];
+
+const STORAGE_KEY = 'skg111_calibration';
+
+// ── State ──────────────────────────────────────────────────────────────────
+let currentIdx = 0;
+let calibration = loadCalibration();   // { id: { front, rear, sizePct } }
+let liveAxles = cloneDefaults();       // mutable working set for the active truck
+let stageScale = 1;                    // how the displayed sprite is scaled vs natural
+let wheelImg = null;
+let truckImg = null;
+
+function cloneDefaults() {
+  return {
+    front: { xPct: DEFAULT_AXLES.front.xPct, yPct: DEFAULT_AXLES.front.yPct },
+    rear:  { xPct: DEFAULT_AXLES.rear.xPct,  yPct: DEFAULT_AXLES.rear.yPct },
+    sizePct: DEFAULT_AXLES.sizePct,
+  };
+}
+
+function loadCalibration() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) {
+    console.warn('Calibration load failed:', e);
+    return {};
+  }
+}
+
+function saveCalibration() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(calibration));
+  } catch (e) {
+    alert('Failed to persist calibration. localStorage may be full or blocked: ' + e.message);
+  }
+}
+
+// ── Wheel asset preload ────────────────────────────────────────────────────
+function preloadWheel() {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load wheel.png'));
+    img.src = SPRITE_BASE + '/wheel.png';
+  });
+}
+
+// ── Truck loading + render ─────────────────────────────────────────────────
+function loadTruck(idx) {
+  return new Promise((resolve, reject) => {
+    const truck = TRUCKS[idx];
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load ' + truck.id + '.png'));
+    img.src = SPRITE_BASE + '/' + truck.id + '.png';
+  });
+}
+
+function setLiveAxles(stored) {
+  liveAxles = stored
+    ? {
+        front:    { xPct: stored.front.xPct, yPct: stored.front.yPct },
+        rear:     { xPct: stored.rear.xPct,  yPct: stored.rear.yPct },
+        sizePct:  stored.sizePct,
+      }
+    : cloneDefaults();
+}
+
+function renderStage() {
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  if (!truckImg || !wheelImg) return;
+
+  // Compute display size — fit within STAGE_MAX_WIDTH x STAGE_MAX_HEIGHT
+  const naturalW = truckImg.naturalWidth;
+  const naturalH = truckImg.naturalHeight;
+  const fitScale = Math.min(STAGE_MAX_WIDTH / naturalW, STAGE_MAX_HEIGHT / naturalH, 1);
+  stageScale = fitScale;
+  const dispW = Math.round(naturalW * fitScale);
+  const dispH = Math.round(naturalH * fitScale);
+  stage.style.width  = dispW + 'px';
+  stage.style.height = dispH + 'px';
+
+  // Wheels first (z-index 1, behind truck body)
+  for (const corner of ['front', 'rear']) {
+    const wheel = document.createElement('img');
+    wheel.className = 'wheel';
+    wheel.src = wheelImg.src;
+    const wheelDispW = dispW * liveAxles.sizePct;
+    wheel.style.width  = wheelDispW + 'px';
+    wheel.style.height = wheelDispW + 'px';   // square — wheel asset is 1:1
+    wheel.style.left = (liveAxles[corner].xPct * dispW) + 'px';
+    wheel.style.top  = (liveAxles[corner].yPct * dispH) + 'px';
+    wheel.dataset.corner = corner;
+    stage.appendChild(wheel);
+  }
+
+  // Truck body (z-index 2)
+  const body = document.createElement('img');
+  body.className = 'truck';
+  body.src = truckImg.src;
+  body.width  = dispW;
+  body.height = dispH;
+  body.draggable = false;
+  stage.appendChild(body);
+
+  // Drag handles last (z-index 3, on top so they're always grabbable)
+  for (const corner of ['front', 'rear']) {
+    const h = document.createElement('div');
+    h.className = 'handle';
+    h.dataset.corner = corner;
+    h.style.left = (liveAxles[corner].xPct * dispW) + 'px';
+    h.style.top  = (liveAxles[corner].yPct * dispH) + 'px';
+    const lab = document.createElement('span');
+    lab.className = 'label';
+    lab.textContent = corner.toUpperCase();
+    h.appendChild(lab);
+    stage.appendChild(h);
+    attachDrag(h, corner, dispW, dispH);
+  }
+
+  updateReadout();
+}
+
+function attachDrag(handle, corner, dispW, dispH) {
+  let dragging = false;
+
+  function moveTo(clientX, clientY) {
+    const rect = document.getElementById('stage').getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const xPct = Math.max(0, Math.min(1, x / dispW));
+    const yPct = Math.max(0, Math.min(1, y / dispH));
+    liveAxles[corner].xPct = xPct;
+    liveAxles[corner].yPct = yPct;
+
+    handle.style.left = (xPct * dispW) + 'px';
+    handle.style.top  = (yPct * dispH) + 'px';
+
+    const wheelEl = document.querySelector('.stage .wheel[data-corner="' + corner + '"]');
+    if (wheelEl) {
+      wheelEl.style.left = (xPct * dispW) + 'px';
+      wheelEl.style.top  = (yPct * dispH) + 'px';
+    }
+
+    updateReadout();
+  }
+
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    dragging = true;
+    handle.classList.add('dragging');
+    handle.setPointerCapture(e.pointerId);
+    moveTo(e.clientX, e.clientY);
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    moveTo(e.clientX, e.clientY);
+  });
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+}
+
+function updateWheelSize() {
+  const stage = document.getElementById('stage');
+  const dispW = parseFloat(stage.style.width) || 0;
+  const wheels = stage.querySelectorAll('.wheel');
+  const wheelDispW = dispW * liveAxles.sizePct;
+  for (const w of wheels) {
+    w.style.width  = wheelDispW + 'px';
+    w.style.height = wheelDispW + 'px';
+  }
+  updateReadout();
+}
+
+function updateReadout() {
+  const truck = TRUCKS[currentIdx];
+  const fmt = (n) => n.toFixed(3);
+  const text =
+    'truck: ' + truck.id + ' (' + truck.name + ')\n' +
+    'front:    xPct=' + fmt(liveAxles.front.xPct) + '  yPct=' + fmt(liveAxles.front.yPct) + '\n' +
+    'rear:     xPct=' + fmt(liveAxles.rear.xPct)  + '  yPct=' + fmt(liveAxles.rear.yPct)  + '\n' +
+    'sizePct:  ' + fmt(liveAxles.sizePct);
+  document.getElementById('liveReadout').textContent = text;
+  document.getElementById('wheelScaleValue').textContent = fmt(liveAxles.sizePct);
+}
+
+function updateProgressBar() {
+  const truck = TRUCKS[currentIdx];
+  document.getElementById('truckTitle').textContent = truck.name;
+  document.getElementById('truckId').textContent = truck.id;
+  const tierEl = document.getElementById('truckTier');
+  tierEl.textContent = truck.tier;
+  tierEl.className = 'truck-tier ' + truck.tier;
+  document.getElementById('counter').textContent =
+    'Truck ' + (currentIdx + 1) + ' of ' + TRUCKS.length +
+    ' · ' + countCalibrated() + ' calibrated';
+  document.getElementById('calibratedBadge').style.display =
+    calibration[truck.id] ? 'inline-block' : 'none';
+}
+
+function countCalibrated() {
+  return TRUCKS.filter(t => !!calibration[t.id]).length;
+}
+
+// ── Truck navigation ───────────────────────────────────────────────────────
+async function loadCurrentTruck() {
+  const truck = TRUCKS[currentIdx];
+  setLiveAxles(calibration[truck.id]);
+  document.getElementById('wheelScaleSlider').value = liveAxles.sizePct;
+  try {
+    truckImg = await loadTruck(currentIdx);
+    renderStage();
+    updateProgressBar();
+  } catch (e) {
+    document.getElementById('stage').innerHTML =
+      '<div style="color:#EF5350;padding:40px;text-align:center">' +
+      'Failed to load <code>' + truck.id + '.png</code>.<br>' +
+      '<span style="color:#888;font-size:12px">Make sure you ran the chroma-key script and you opened this via http:// (not file://).</span>' +
+      '</div>';
+  }
+}
+
+function goPrev() {
+  if (currentIdx <= 0) return;
+  currentIdx--;
+  loadCurrentTruck();
+}
+function goNext() {
+  if (currentIdx >= TRUCKS.length - 1) {
+    showToast('End of list. Click Export when ready.');
+    return;
+  }
+  currentIdx++;
+  loadCurrentTruck();
+}
+function saveAndNext() {
+  const truck = TRUCKS[currentIdx];
+  calibration[truck.id] = {
+    front:   { xPct: liveAxles.front.xPct, yPct: liveAxles.front.yPct },
+    rear:    { xPct: liveAxles.rear.xPct,  yPct: liveAxles.rear.yPct },
+    sizePct: liveAxles.sizePct,
+  };
+  saveCalibration();
+  showToast('Saved ' + truck.id + ' · ' + countCalibrated() + '/' + TRUCKS.length);
+  if (currentIdx >= TRUCKS.length - 1) {
+    updateProgressBar();
+    return;
+  }
+  goNext();
+}
+function resetCurrent() {
+  liveAxles = cloneDefaults();
+  document.getElementById('wheelScaleSlider').value = liveAxles.sizePct;
+  renderStage();
+}
+function copyCurrentToAllRemaining() {
+  if (!confirm('Apply current truck calibration to all later trucks that are NOT yet calibrated? Already-calibrated trucks are skipped.')) return;
+  let count = 0;
+  for (let i = currentIdx + 1; i < TRUCKS.length; i++) {
+    const tid = TRUCKS[i].id;
+    if (calibration[tid]) continue;
+    calibration[tid] = {
+      front:   { xPct: liveAxles.front.xPct, yPct: liveAxles.front.yPct },
+      rear:    { xPct: liveAxles.rear.xPct,  yPct: liveAxles.rear.yPct },
+      sizePct: liveAxles.sizePct,
+    };
+    count++;
+  }
+  saveCalibration();
+  showToast('Stamped ' + count + ' downstream truck(s) with current settings.');
+  updateProgressBar();
+}
+
+// ── Export ─────────────────────────────────────────────────────────────────
+function buildExportObject() {
+  // Emit ALL trucks in canonical order. Use saved calibration where present,
+  // otherwise emit DEFAULT_AXLES so the consumer always gets 35 entries.
+  const out = {};
+  for (const t of TRUCKS) {
+    out[t.id] = calibration[t.id] || cloneDefaults();
+  }
+  return out;
+}
+
+function openExportModal() {
+  const obj = buildExportObject();
+  const json = JSON.stringify(obj, null, 2);
+  document.getElementById('exportTextarea').value = json;
+  const completed = countCalibrated();
+  const summary =
+    '<code>' + completed + ' / ' + TRUCKS.length + '</code> calibrated. ' +
+    (completed < TRUCKS.length
+      ? 'Uncalibrated trucks ship with DEFAULT_AXLES (front 0.22/0.78, rear 0.78/0.78, sizePct 0.32).'
+      : 'All 35 trucks calibrated. ✓');
+  document.getElementById('exportSummary').innerHTML = summary;
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function copyExportToClipboard() {
+  const ta = document.getElementById('exportTextarea');
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('Copied to clipboard.');
+  } catch (e) {
+    alert('Copy failed: ' + e.message);
+  }
+}
+
+function downloadExport() {
+  const obj = buildExportObject();
+  const json = JSON.stringify(obj, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'skg111-calibration.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimeout = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ── Wire up ─────────────────────────────────────────────────────────────────
+document.getElementById('prevBtn').addEventListener('click', goPrev);
+document.getElementById('nextBtn').addEventListener('click', goNext);
+document.getElementById('saveNextBtn').addEventListener('click', saveAndNext);
+document.getElementById('layerToggleBtn').addEventListener('click', () => {
+  const stage = document.getElementById('stage');
+  const onTop = stage.classList.toggle('body-on-top');
+  document.getElementById('layerToggleBtn').textContent =
+    onTop ? 'Layers: body on top' : 'Layers: wheels on top';
+});
+document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+document.getElementById('copyCurrentBtn').addEventListener('click', copyCurrentToAllRemaining);
+document.getElementById('exportBtn').addEventListener('click', openExportModal);
+document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+document.getElementById('copyExportBtn').addEventListener('click', copyExportToClipboard);
+document.getElementById('downloadExportBtn').addEventListener('click', downloadExport);
+document.getElementById('modalBg').addEventListener('click', (e) => {
+  if (e.target.id === 'modalBg') closeModal();
+});
+
+document.getElementById('wheelScaleSlider').addEventListener('input', (e) => {
+  liveAxles.sizePct = parseFloat(e.target.value);
+  updateWheelSize();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowLeft')  { goPrev(); }
+  if (e.key === 'ArrowRight') { goNext(); }
+  if (e.key === 'Enter')      { saveAndNext(); }
+  if (e.key === 'r' || e.key === 'R') { resetCurrent(); }
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+(async function init() {
+  try {
+    wheelImg = await preloadWheel();
+  } catch (e) {
+    document.getElementById('stage').innerHTML =
+      '<div style="color:#EF5350;padding:40px;text-align:center">' +
+      'Failed to load wheel.png.<br>' +
+      '<span style="color:#888;font-size:12px">Make sure you ran <code>python tools/monster-rally-chroma-key.py</code> and you opened this via http:// (not file://).</span>' +
+      '</div>';
+    return;
+  }
+  await loadCurrentTruck();
+})();
+</script>
+</body>
+</html>

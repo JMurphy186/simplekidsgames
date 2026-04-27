@@ -595,56 +595,151 @@ const tcAssets = loadHdAssets(TC_BODY_SVG, TC_WHEEL_SVG);
 const hdAssetMap = {};
 
 // ============================================================
-// TRUCK ROSTER — 26 painted PNG sprites + 4-tier unlock progression
+// SKG-111 ONE-TIME LOCALSTORAGE MIGRATION
 // ============================================================
-// NOTE: Old 15-entry SVG/car roster commented out below for rollback.
-// The Gemini-painted PNGs live in games/monster-rally/assets/trucks/
+// Old roster (26 trucks) → new roster (35 trucks). Three IDs preserve
+// player state: bone-rattler (identity), frostbite→frost-bite, magma-maw
+// →magma-crusher. The other 23 retire — their unlocks/highs are dropped.
+// Also: monsterRallyBest_<idx> rekey → monsterRallyBest_<id>.
+// Migration is idempotent — guarded by mr_skg111_migrated flag.
+(function migrateSkg111() {
+  try {
+    if (localStorage.getItem('mr_skg111_migrated') === '1') return;
+
+    // Old roster index → old ID, in the exact order they shipped pre-SKG-111.
+    const OLD_IDX_TO_ID = [
+      'blaze-brigade', 'hook-and-haul', 'trail-blazer', 'iron-dispatch', 'bull-rush', 'crimson-comet',
+      'voltrex', 'graveyard-howler', 'swamp-king', 'frostbite', 'magma-maw', 'toxic-crawler',
+      'emerald-wyrm', 'iron-maw', 'steam-stomper', 'road-hermit',
+      'bone-rattler', 'reef-reaper', 'black-tide', 'hysteria', 'red-planet',
+      'xeno-crawler', 'krakenfist', 'king-midas', 'soul-reaver', 'abyss-runner',
+    ];
+    const ROSTER_ID_MIGRATION = {
+      'bone-rattler': 'bone-rattler',
+      'frostbite':    'frost-bite',
+      'magma-maw':    'magma-crusher',
+    };
+    const migrateId = (oldId) => ROSTER_ID_MIGRATION[oldId] || null;
+
+    // 1. mr_unlocked_trucks — JSON array of IDs. Keep mapped, drop the rest.
+    try {
+      const raw = localStorage.getItem('mr_unlocked_trucks');
+      if (raw) {
+        const oldIds = JSON.parse(raw) || [];
+        const newIds = [];
+        for (const id of oldIds) {
+          const newId = migrateId(id);
+          if (newId) newIds.push(newId);
+        }
+        localStorage.setItem('mr_unlocked_trucks', JSON.stringify(newIds));
+      }
+    } catch (e) { console.warn('[SKG-111] mr_unlocked_trucks migration failed:', e); }
+
+    // 2. mr_selected_truck — string ID. Map preserved, otherwise reset to red-rocket.
+    try {
+      const sel = localStorage.getItem('mr_selected_truck');
+      if (sel) {
+        const newSel = migrateId(sel);
+        localStorage.setItem('mr_selected_truck', newSel || 'red-rocket');
+      }
+    } catch (e) { console.warn('[SKG-111] mr_selected_truck migration failed:', e); }
+
+    // 3. monsterRallyBest_<idx> — index-keyed scores → ID-keyed.
+    //    Look up old roster index, apply ID migration, write to new key.
+    //    Retired-truck scores are dropped silently.
+    try {
+      const toRemove = [];
+      const toWrite = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        const m = key.match(/^monsterRallyBest_(\d+)$/);
+        if (!m) continue;
+        const oldIdx = parseInt(m[1], 10);
+        const oldId = OLD_IDX_TO_ID[oldIdx];
+        toRemove.push(key);
+        if (!oldId) continue;
+        const newId = migrateId(oldId);
+        if (!newId) continue;
+        const score = localStorage.getItem(key);
+        if (score !== null) toWrite['monsterRallyBest_' + newId] = score;
+      }
+      for (const k of toRemove) localStorage.removeItem(k);
+      for (const k of Object.keys(toWrite)) localStorage.setItem(k, toWrite[k]);
+    } catch (e) { console.warn('[SKG-111] monsterRallyBest_<idx> migration failed:', e); }
+
+    localStorage.setItem('mr_skg111_migrated', '1');
+  } catch (e) {
+    console.warn('[SKG-111] migration aborted:', e);
+  }
+})();
+
+// ============================================================
+// TRUCK ROSTER — 35 painted PNG sprites + 4-tier unlock progression
+// ============================================================
+// Sprites in games/monster-rally/assets/trucks/<sprite-stem>.png.
+// Wheel asset (universal): assets/trucks/wheel.png.
+// Per-truck axles calibrated via tools/monster-rally-wheel-calibrator.html.
+// Per-truck colors used by exhaust particles + UI accents (see drawTruckPNG).
+// Aspect ratio handled by drawTruckPNG using natural sprite dims with a max
+// height clamp — see DRAWN_TRUCK_MAX_DISPLAY_H below.
 const DEFAULT_AXLES = { front: { xPct: 0.22, yPct: 0.78 }, rear: { xPct: 0.78, yPct: 0.78 }, sizePct: 0.32 };
 
 const TRUCK_ROSTER = [
-  // ===== STARTER (6) — unlocked from launch =====
-  { id: 'blaze-brigade',    name: 'Blaze Brigade',    sprite: 'assets/trucks/blaze-brigade.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#e74c3c', accent: '#FFD600', highlight: '#b71c1c', flameOuter: '#ff4400', flameInner: '#ffcc00' },
-  { id: 'hook-and-haul',    name: 'Hook & Haul',      sprite: 'assets/trucks/hook-and-haul.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#f39c12', accent: '#ffeaa7', highlight: '#e67e22', flameOuter: '#ff6600', flameInner: '#ffcc00' },
-  { id: 'trail-blazer',     name: 'Trail Blazer',     sprite: 'assets/trucks/trail-blazer.png',     tier: 'starter', renderMode: 'png', type: 'monster', body: '#795548', accent: '#bcaaa4', highlight: '#3e2723', flameOuter: '#ff6600', flameInner: '#ffcc00' },
-  { id: 'iron-dispatch',    name: 'Iron Dispatch',    sprite: 'assets/trucks/iron-dispatch.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#546e7a', accent: '#b0bec5', highlight: '#263238', flameOuter: '#4fc3f7', flameInner: '#e1f5fe' },
-  { id: 'bull-rush',        name: 'Bull Rush',        sprite: 'assets/trucks/bull-rush.png',        tier: 'starter', renderMode: 'png', type: 'monster', body: '#8d6e63', accent: '#d7ccc8', highlight: '#4e342e', flameOuter: '#ff4400', flameInner: '#ffcc00' },
-  { id: 'crimson-comet',    name: 'Crimson Comet',    sprite: 'assets/trucks/crimson-comet.png',    tier: 'starter', renderMode: 'png', type: 'monster', body: '#c62828', accent: '#ef9a9a', highlight: '#8e0000', flameOuter: '#ff4400', flameInner: '#ffcc00' },
+  // ===== STARTER (8) — unlocked from launch =====
+  { id: 'red-rocket',      name: 'Red Rocket',     sprite: 'assets/trucks/muscle-car.png',  tier: 'starter', renderMode: 'png', type: 'monster', body: '#e6231e', accent: '#1a1a1a', highlight: '#f06864', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.159, yPct: 0.968 }, rear: { xPct: 0.871, yPct: 0.968 }, sizePct: 0.34 } },
+  { id: 'jurassic-jeep',   name: 'Jurassic Jeep',  sprite: 'assets/trucks/dino-jeep.png',   tier: 'starter', renderMode: 'png', type: 'monster', body: '#646440', accent: '#3d4d3d', highlight: '#8a8a6a', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.134, yPct: 0.970 }, rear: { xPct: 0.814, yPct: 0.967 }, sizePct: 0.32 } },
+  { id: 'star-striker',    name: 'Star Striker',   sprite: 'assets/trucks/hero-truck.png',  tier: 'starter', renderMode: 'png', type: 'monster', body: '#cbd2da', accent: '#e25504', highlight: '#e6ebf0', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.122, yPct: 0.957 }, rear: { xPct: 0.902, yPct: 0.954 }, sizePct: 0.395 } },
+  { id: 'highway-hippie',  name: 'Highway Hippie', sprite: 'assets/trucks/camper-van.png',  tier: 'starter', renderMode: 'png', type: 'monster', body: '#f3e2bf', accent: '#d35017', highlight: '#f9eed4', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.211, yPct: 0.972 }, rear: { xPct: 0.839, yPct: 0.970 }, sizePct: 0.30 } },
+  { id: 'doghouse-demo',   name: 'Doghouse Demo',  sprite: 'assets/trucks/dog.png',         tier: 'starter', renderMode: 'png', type: 'monster', body: '#7a4f36', accent: '#e8d8c8', highlight: '#a87a5e', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.111, yPct: 0.961 }, rear: { xPct: 0.889, yPct: 0.961 }, sizePct: 0.34 } },
+  { id: 'hook-and-wreck',  name: 'Hook & Wreck',   sprite: 'assets/trucks/crane-truck.png', tier: 'starter', renderMode: 'png', type: 'monster', body: '#a3580f', accent: '#1e1612', highlight: '#c98850', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.148, yPct: 0.959 }, rear: { xPct: 0.806, yPct: 0.959 }, sizePct: 0.32 } },
+  { id: 'junkyard-jaws',   name: 'Junkyard Jaws',  sprite: 'assets/trucks/trash-truck.png', tier: 'starter', renderMode: 'png', type: 'monster', body: '#5a5a3e', accent: '#2c2820', highlight: '#8a8a72', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.161, yPct: 0.958 }, rear: { xPct: 0.796, yPct: 0.955 }, sizePct: 0.32 } },
+  { id: 'siren-storm',     name: 'Siren Storm',    sprite: 'assets/trucks/fire-engine.png', tier: 'starter', renderMode: 'png', type: 'monster', body: '#d70906', accent: '#fad42a', highlight: '#e85a55', flameOuter: '#ff3c14', flameInner: '#ffc864', axles: { front: { xPct: 0.169, yPct: 0.972 }, rear: { xPct: 0.859, yPct: 0.972 }, sizePct: 0.32 } },
 
-  // ===== CAMPAIGN (10) — unlock by clearing levels =====
-  { id: 'voltrex',          name: 'Voltrex',          sprite: 'assets/trucks/voltrex.png',          tier: 'campaign', renderMode: 'png', type: 'monster', body: '#1e88e5', accent: '#64b5f6', highlight: '#0d47a1', flameOuter: '#2962ff', flameInner: '#64b5f6', unlockLevel: 1, unlockClearCount: 1 },
-  { id: 'graveyard-howler', name: 'Graveyard Howler', sprite: 'assets/trucks/graveyard-howler.png', tier: 'campaign', renderMode: 'png', type: 'monster', body: '#212121', accent: '#616161', highlight: '#000', flameOuter: '#9c27b0', flameInner: '#e1bee7', unlockLevel: 2, unlockClearCount: 1 },
-  { id: 'swamp-king',       name: 'Swamp King',       sprite: 'assets/trucks/swamp-king.png',       tier: 'campaign', renderMode: 'png', type: 'monster', body: '#33691e', accent: '#aed581', highlight: '#1b5e20', flameOuter: '#76ff03', flameInner: '#ccff90', unlockLevel: 3, unlockClearCount: 1 },
-  { id: 'frostbite',        name: 'Frostbite',        sprite: 'assets/trucks/frostbite.png',        tier: 'campaign', renderMode: 'png', type: 'monster', body: '#b3e5fc', accent: '#e1f5fe', highlight: '#01579b', flameOuter: '#4fc3f7', flameInner: '#e1f5fe', unlockLevel: 4, unlockClearCount: 1 },
-  { id: 'magma-maw',        name: 'Magma Maw',        sprite: 'assets/trucks/magma-maw.png',        tier: 'campaign', renderMode: 'png', type: 'monster', body: '#bf360c', accent: '#ff8a65', highlight: '#3e2723', flameOuter: '#ff4400', flameInner: '#ffcc00', unlockLevel: 5, unlockClearCount: 1 },
-  { id: 'toxic-crawler',    name: 'Toxic Crawler',    sprite: 'assets/trucks/toxic-crawler.png',    tier: 'campaign', renderMode: 'png', type: 'monster', body: '#558b2f', accent: '#c5e1a5', highlight: '#33691e', flameOuter: '#76ff03', flameInner: '#ccff90', unlockLevel: 6, unlockClearCount: 1 },
-  { id: 'emerald-wyrm',     name: 'Emerald Wyrm',     sprite: 'assets/trucks/emerald-wyrm.png',     tier: 'campaign', renderMode: 'png', type: 'monster', body: '#00695c', accent: '#80cbc4', highlight: '#004d40', flameOuter: '#00e676', flameInner: '#b9f6ca', unlockLevel: 7, unlockClearCount: 1 },
-  { id: 'iron-maw',         name: 'Iron Maw',         sprite: 'assets/trucks/iron-maw.png',         tier: 'campaign', renderMode: 'png', type: 'monster', body: '#37474f', accent: '#90a4ae', highlight: '#102027', flameOuter: '#ff4400', flameInner: '#ffcc00', unlockLevel: 8, unlockClearCount: 1 },
-  { id: 'steam-stomper',    name: 'Steam Stomper',    sprite: 'assets/trucks/steam-stomper.png',    tier: 'campaign', renderMode: 'png', type: 'monster', body: '#6d4c41', accent: '#bcaaa4', highlight: '#3e2723', flameOuter: '#ff6600', flameInner: '#ffcc00', unlockLevel: 1, unlockClearCount: 2 },
-  { id: 'road-hermit',      name: 'Road Hermit',      sprite: 'assets/trucks/road-hermit.png',      tier: 'campaign', renderMode: 'png', type: 'monster', body: '#8d6e63', accent: '#d7ccc8', highlight: '#3e2723', flameOuter: '#ff6600', flameInner: '#ffcc00', unlockLevel: 2, unlockClearCount: 2 },
+  // ===== CAMPAIGN (13) — unlock by clearing levels =====
+  { id: 'horn-blaster',    name: 'Horn Blaster',    sprite: 'assets/trucks/bull.png',         tier: 'campaign', renderMode: 'png', type: 'monster', body: '#8a3e25', accent: '#fad42a', highlight: '#b87055', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.169, yPct: 0.959 }, rear: { xPct: 0.848, yPct: 0.959 }, sizePct: 0.40 }, unlockLevel: 1, unlockClearCount: 1 },
+  { id: 'swamp-snapper',   name: 'Swamp Snapper',   sprite: 'assets/trucks/alligator.png',    tier: 'campaign', renderMode: 'png', type: 'monster', body: '#475a2c', accent: '#d8d090', highlight: '#7a8b58', flameOuter: '#c8e664', flameInner: '#f0ffb4', axles: { front: { xPct: 0.179, yPct: 0.950 }, rear: { xPct: 0.846, yPct: 0.950 }, sizePct: 0.32 }, unlockLevel: 1, unlockClearCount: 2 },
+  { id: 'fin-fury',        name: 'Fin Fury',        sprite: 'assets/trucks/shark-truck.png',  tier: 'campaign', renderMode: 'png', type: 'monster', body: '#7595ad', accent: '#1e2530', highlight: '#a8bccb', flameOuter: '#5aaae6', flameInner: '#c8ebff', axles: { front: { xPct: 0.201, yPct: 0.909 }, rear: { xPct: 0.828, yPct: 0.914 }, sizePct: 0.32 }, unlockLevel: 2, unlockClearCount: 1 },
+  { id: 'tentacle-terror', name: 'Tentacle Terror', sprite: 'assets/trucks/octopus.png',      tier: 'campaign', renderMode: 'png', type: 'monster', body: '#d83c25', accent: '#fad42a', highlight: '#e8857a', flameOuter: '#dc6450', flameInner: '#ffc896', axles: { front: { xPct: 0.188, yPct: 0.893 }, rear: { xPct: 0.842, yPct: 0.893 }, sizePct: 0.32 }, unlockLevel: 2, unlockClearCount: 2 },
+  { id: 'skull-crusher',   name: 'Skull Crusher',   sprite: 'assets/trucks/skull-truck.png',  tier: 'campaign', renderMode: 'png', type: 'monster', body: '#62583a', accent: '#d2c8a8', highlight: '#9a9078', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.225, yPct: 0.973 }, rear: { xPct: 0.861, yPct: 0.967 }, sizePct: 0.32 }, unlockLevel: 3, unlockClearCount: 1 },
+  { id: 'spike-storm',     name: 'Spike Storm',     sprite: 'assets/trucks/spike-truck.png',  tier: 'campaign', renderMode: 'png', type: 'monster', body: '#a3262b', accent: '#5a5258', highlight: '#cb6d70', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.158, yPct: 0.959 }, rear: { xPct: 0.826, yPct: 0.961 }, sizePct: 0.32 }, unlockLevel: 3, unlockClearCount: 2 },
+  { id: 'mech-smash',      name: 'Mech Smash',      sprite: 'assets/trucks/robot-truck.png',  tier: 'campaign', renderMode: 'png', type: 'monster', body: '#8c1812', accent: '#6a7078', highlight: '#bd5a55', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.152, yPct: 0.963 }, rear: { xPct: 0.814, yPct: 0.960 }, sizePct: 0.32 }, unlockLevel: 4, unlockClearCount: 1 },
+  { id: 'glitch-storm',    name: 'Glitch Storm',    sprite: 'assets/trucks/cyber-truck.png',  tier: 'campaign', renderMode: 'png', type: 'monster', body: '#c8cfd6', accent: '#42d18a', highlight: '#e0e5ea', flameOuter: '#8cffdc', flameInner: '#dcfff5', axles: { front: { xPct: 0.122, yPct: 0.958 }, rear: { xPct: 0.866, yPct: 0.958 }, sizePct: 0.36 }, unlockLevel: 4, unlockClearCount: 2 },
+  { id: 'frost-bite',      name: 'Frost Bite',      sprite: 'assets/trucks/ice-truck.png',    tier: 'campaign', renderMode: 'png', type: 'monster', body: '#42a9d2', accent: '#dceefa', highlight: '#86c8e0', flameOuter: '#8cdcff', flameInner: '#dcf5ff', axles: { front: { xPct: 0.114, yPct: 0.953 }, rear: { xPct: 0.884, yPct: 0.953 }, sizePct: 0.335 }, unlockLevel: 5, unlockClearCount: 1 },
+  { id: 'slime-squad',     name: 'Slime Squad',     sprite: 'assets/trucks/zombie.png',       tier: 'campaign', renderMode: 'png', type: 'monster', body: '#82876e', accent: '#5fc24a', highlight: '#aeb29a', flameOuter: '#8cdc50', flameInner: '#dcff8c', axles: { front: { xPct: 0.146, yPct: 0.959 }, rear: { xPct: 0.868, yPct: 0.962 }, sizePct: 0.305 }, unlockLevel: 5, unlockClearCount: 2 },
+  { id: 'rust-bucket',     name: 'Rust Bucket',     sprite: 'assets/trucks/moldy.png',        tier: 'campaign', renderMode: 'png', type: 'monster', body: '#4a4422', accent: '#7a9540', highlight: '#82785a', flameOuter: '#8cdc50', flameInner: '#dcff8c', axles: { front: { xPct: 0.162, yPct: 0.961 }, rear: { xPct: 0.835, yPct: 0.963 }, sizePct: 0.32 }, unlockLevel: 6, unlockClearCount: 1 },
+  { id: 'laser-strike',    name: 'Laser Strike',    sprite: 'assets/trucks/laser-truck.png',  tier: 'campaign', renderMode: 'png', type: 'monster', body: '#1c4582', accent: '#42d18a', highlight: '#5380bc', flameOuter: '#ff5050', flameInner: '#ffb4b4', axles: { front: { xPct: 0.134, yPct: 0.932 }, rear: { xPct: 0.821, yPct: 0.937 }, sizePct: 0.355 }, unlockLevel: 7, unlockClearCount: 1 },
+  { id: 'bone-rattler',    name: 'Bone Rattler',    sprite: 'assets/trucks/dino-bones.png',   tier: 'campaign', renderMode: 'png', type: 'monster', body: '#d2bd95', accent: '#3d6b3a', highlight: '#e6d6b8', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.208, yPct: 0.965 }, rear: { xPct: 0.851, yPct: 0.959 }, sizePct: 0.36 }, unlockLevel: 8, unlockClearCount: 1 },
 
-  // ===== COIN (5) — purchase with mr_coins =====
-  { id: 'bone-rattler',     name: 'Bone Rattler',     sprite: 'assets/trucks/bone-rattler.png',     tier: 'coin', renderMode: 'png', type: 'monster', body: '#424242', accent: '#eceff1', highlight: '#000', flameOuter: '#e040fb', flameInner: '#f3e5f5', cost: 500 },
-  { id: 'reef-reaper',      name: 'Reef Reaper',      sprite: 'assets/trucks/reef-reaper.png',      tier: 'coin', renderMode: 'png', type: 'monster', body: '#00838f', accent: '#80deea', highlight: '#006064', flameOuter: '#00e5ff', flameInner: '#84ffff', cost: 750 },
-  { id: 'black-tide',       name: 'Black Tide',       sprite: 'assets/trucks/black-tide.png',       tier: 'coin', renderMode: 'png', type: 'monster', body: '#1a237e', accent: '#7986cb', highlight: '#000051', flameOuter: '#304ffe', flameInner: '#8c9eff', cost: 1000 },
-  { id: 'hysteria',         name: 'Hysteria',         sprite: 'assets/trucks/hysteria.png',         tier: 'coin', renderMode: 'png', type: 'monster', body: '#7b1fa2', accent: '#ce93d8', highlight: '#4a148c', flameOuter: '#e040fb', flameInner: '#f3e5f5', cost: 1250 },
-  { id: 'red-planet',       name: 'Red Planet',       sprite: 'assets/trucks/red-planet.png',       tier: 'coin', renderMode: 'png', type: 'monster', body: '#bf360c', accent: '#ffab91', highlight: '#3e2723', flameOuter: '#ff4400', flameInner: '#ffcc00', cost: 1500 },
+  // ===== COIN (7) — purchase with mr_coins =====
+  { id: 'sparkle-storm',   name: 'Sparkle Storm',   sprite: 'assets/trucks/unicorn.png',     tier: 'coin', renderMode: 'png', type: 'monster', body: '#f6c8ab', accent: '#ff85b8', highlight: '#fadccd', flameOuter: '#ff8cc8', flameInner: '#ffdcf0', axles: { front: { xPct: 0.254, yPct: 0.967 }, rear: { xPct: 0.864, yPct: 0.970 }, sizePct: 0.32 }, cost: 500 },
+  { id: 'wild-card',       name: 'Wild Card',       sprite: 'assets/trucks/joker.png',       tier: 'coin', renderMode: 'png', type: 'monster', body: '#3a8a4a', accent: '#dfd9c0', highlight: '#7ab384', flameOuter: '#8cc850', flameInner: '#d2ff96', axles: { front: { xPct: 0.128, yPct: 0.962 }, rear: { xPct: 0.908, yPct: 0.964 }, sizePct: 0.32 }, cost: 750 },
+  { id: 'volt-runner',     name: 'Volt Runner',     sprite: 'assets/trucks/electric.png',    tier: 'coin', renderMode: 'png', type: 'monster', body: '#5e7280', accent: '#5ec8e8', highlight: '#a0b4c0', flameOuter: '#b4e6ff', flameInner: '#ebf8ff', axles: { front: { xPct: 0.125, yPct: 0.961 }, rear: { xPct: 0.856, yPct: 0.961 }, sizePct: 0.32 }, cost: 1000 },
+  { id: 'apollo-ace',      name: 'Apollo Ace',      sprite: 'assets/trucks/nasa.png',        tier: 'coin', renderMode: 'png', type: 'monster', body: '#1f2e4d', accent: '#f38623', highlight: '#5a6985', flameOuter: '#c8dcff', flameInner: '#f0f5ff', axles: { front: { xPct: 0.284, yPct: 0.977 }, rear: { xPct: 0.862, yPct: 0.977 }, sizePct: 0.32 }, cost: 1250 },
+  { id: 'lunar-lander',    name: 'Lunar Lander',    sprite: 'assets/trucks/moon-truck.png',  tier: 'coin', renderMode: 'png', type: 'monster', body: '#dde0e6', accent: '#d5641b', highlight: '#f0f1f4', flameOuter: '#dce6ff', flameInner: '#f5f8ff', axles: { front: { xPct: 0.239, yPct: 0.935 }, rear: { xPct: 0.868, yPct: 0.938 }, sizePct: 0.235 }, cost: 1500 },
+  { id: 'deep-diver',      name: 'Deep Diver',      sprite: 'assets/trucks/submarine.png',   tier: 'coin', renderMode: 'png', type: 'monster', body: '#3d5478', accent: '#f0b820', highlight: '#7a8aa3', flameOuter: '#5ac8f0', flameInner: '#b4ebff', axles: { front: { xPct: 0.226, yPct: 0.952 }, rear: { xPct: 0.829, yPct: 0.957 }, sizePct: 0.32 }, cost: 1750 },
+  { id: 'signal-shock',    name: 'Signal Shock',    sprite: 'assets/trucks/radar-truck.png', tier: 'coin', renderMode: 'png', type: 'monster', body: '#5e6168', accent: '#f1cb1d', highlight: '#9095a0', flameOuter: '#b4dcff', flameInner: '#e6f5ff', axles: { front: { xPct: 0.102, yPct: 0.953 }, rear: { xPct: 0.825, yPct: 0.950 }, sizePct: 0.32 }, cost: 2000 },
 
-  // ===== ACHIEVEMENT (5) — locked silhouettes, future system =====
-  { id: 'xeno-crawler',     name: '???',              sprite: 'assets/trucks/xeno-crawler.png',     tier: 'achievement', renderMode: 'png', type: 'monster', body: '#4527a0', accent: '#9575cd', highlight: '#311b92', flameOuter: '#7c4dff', flameInner: '#b388ff', realName: 'Xeno Crawler' },
-  { id: 'krakenfist',       name: '???',              sprite: 'assets/trucks/krakenfist.png',       tier: 'achievement', renderMode: 'png', type: 'monster', body: '#00695c', accent: '#4db6ac', highlight: '#004d40', flameOuter: '#00e676', flameInner: '#b9f6ca', realName: 'Krakenfist' },
-  { id: 'king-midas',       name: '???',              sprite: 'assets/trucks/king-midas.png',       tier: 'achievement', renderMode: 'png', type: 'monster', body: '#f9a825', accent: '#fff59d', highlight: '#f57f17', flameOuter: '#ffc107', flameInner: '#fff9c4', realName: 'King Midas' },
-  { id: 'soul-reaver',      name: '???',              sprite: 'assets/trucks/soul-reaver.png',      tier: 'achievement', renderMode: 'png', type: 'monster', body: '#212121', accent: '#616161', highlight: '#000', flameOuter: '#d500f9', flameInner: '#ea80fc', realName: 'Soul Reaver' },
-  { id: 'abyss-runner',     name: '???',              sprite: 'assets/trucks/abyss-runner.png',     tier: 'achievement', renderMode: 'png', type: 'monster', body: '#0d47a1', accent: '#64b5f6', highlight: '#000051', flameOuter: '#2962ff', flameInner: '#82b1ff', realName: 'Abyss Runner' },
+  // ===== ACHIEVEMENT (7) — endgame trophies =====
+  { id: 'dragon-roar',     name: 'Dragon Roar',     sprite: 'assets/trucks/dragon.png',      tier: 'achievement', renderMode: 'png', type: 'monster', body: '#1a4d2e', accent: '#d49a1f', highlight: '#5a8068', flameOuter: '#ff5a1e', flameInner: '#ffdc78', axles: { front: { xPct: 0.268, yPct: 0.963 }, rear: { xPct: 0.876, yPct: 0.960 }, sizePct: 0.32 } },
+  { id: 'soul-reaper',     name: 'Soul Reaper',     sprite: 'assets/trucks/reaper.png',      tier: 'achievement', renderMode: 'png', type: 'monster', body: '#2a2630', accent: '#ca37d2', highlight: '#5a5363', flameOuter: '#b48cdc', flameInner: '#e6d2f5', axles: { front: { xPct: 0.222, yPct: 0.943 }, rear: { xPct: 0.868, yPct: 0.946 }, sizePct: 0.32 } },
+  { id: 'magma-crusher',   name: 'Magma Crusher',   sprite: 'assets/trucks/lava-truck.png',  tier: 'achievement', renderMode: 'png', type: 'monster', body: '#2a1d18', accent: '#ed290a', highlight: '#5a4036', flameOuter: '#ff5a1e', flameInner: '#ffdc78', axles: { front: { xPct: 0.158, yPct: 0.955 }, rear: { xPct: 0.829, yPct: 0.958 }, sizePct: 0.32 } },
+  { id: 'plank-plunge',    name: 'Plank Plunge',    sprite: 'assets/trucks/pirate-ship.png', tier: 'achievement', renderMode: 'png', type: 'monster', body: '#5a3e28', accent: '#b38040', highlight: '#8a6b50', flameOuter: '#ff8232', flameInner: '#ffdc8c', axles: { front: { xPct: 0.161, yPct: 0.968 }, rear: { xPct: 0.814, yPct: 0.968 }, sizePct: 0.32 } },
+  { id: 'alien-invader',   name: 'Alien Invader',   sprite: 'assets/trucks/ufo.png',         tier: 'achievement', renderMode: 'png', type: 'monster', body: '#9bb89a', accent: '#5fbf66', highlight: '#c5d8c4', flameOuter: '#b4ffc8', flameInner: '#ebfff5', axles: { front: { xPct: 0.145, yPct: 0.973 }, rear: { xPct: 0.869, yPct: 0.975 }, sizePct: 0.36 } },
+  { id: 'iron-express',    name: 'Iron Express',    sprite: 'assets/trucks/locomotive.png',  tier: 'achievement', renderMode: 'png', type: 'monster', body: '#1f1c1a', accent: '#a87f2e', highlight: '#4d4844', flameOuter: '#ff6e28', flameInner: '#ffe68c', axles: { front: { xPct: 0.119, yPct: 0.967 }, rear: { xPct: 0.824, yPct: 0.967 }, sizePct: 0.32 } },
+  { id: 'crown-crusher',   name: 'Crown Crusher',   sprite: 'assets/trucks/golden-king.png', tier: 'achievement', renderMode: 'png', type: 'monster', body: '#d39516', accent: '#7a4d08', highlight: '#e8be5e', flameOuter: '#ff911e', flameInner: '#ffeb82', axles: { front: { xPct: 0.148, yPct: 0.937 }, rear: { xPct: 0.848, yPct: 0.939 }, sizePct: 0.32 } },
 ];
 
-// Apply default axles to all entries (calibrate per-truck later if needed)
+// Per-truck axles already populated inline above. Any future entries that
+// omit the axles field should fall back to DEFAULT_AXLES — this loop fills
+// only the gaps, never overwrites a calibrated value.
 for (const t of TRUCK_ROSTER) {
-  t.axles = DEFAULT_AXLES;
+  if (!t.axles) t.axles = DEFAULT_AXLES;
 }
 
 const ROSTER_COUNT = TRUCK_ROSTER.length;
 
-// Preload all 26 truck sprites + universal tire.
+// Preload all 35 truck sprites + universal wheel.
 // Each sprite is tracked in truckDecodeStatus so drawTruckPNG can skip
 // rendering until its decode has finished. This prevents the main thread
 // from decoding a sprite on the first frame it's drawn, which was causing
@@ -657,21 +752,32 @@ for (const t of TRUCK_ROSTER) {
   truckImages[t.id] = img;
   truckDecodeStatus[t.id] = 'loading';
   const id = t.id;
+  // SKG-111: simplified handler. Earlier version gated 'ready' on img.decode()
+  // resolving, but with 35 sprites in a tight preload loop, decode() can hang
+  // silently in some environments — leaving the truck in 'loading' forever
+  // and showing only the colored fallback rectangle. Now we flip 'ready' on
+  // onload directly. img.decode() is still kicked off as a non-gating hint
+  // so the GPU upload happens before first paint where possible.
   img.onload = () => {
+    truckDecodeStatus[id] = 'ready';
     if (typeof img.decode === 'function') {
-      img.decode()
-        .then(() => { truckDecodeStatus[id] = 'ready'; })
-        .catch(() => { truckDecodeStatus[id] = 'ready'; }); // image loaded, decode hint failed — still drawable
-    } else {
-      truckDecodeStatus[id] = 'ready';
+      img.decode().catch(() => {}); // best-effort hint; fire and forget
     }
   };
   img.onerror = () => { truckDecodeStatus[id] = 'failed'; };
   img.src = t.sprite;
+  // Defensive: if the image is already complete by the time we attach the
+  // handler (cached / synchronous decode), onload won't fire again — flip now.
+  if (img.complete && img.naturalWidth > 0) {
+    truckDecodeStatus[id] = 'ready';
+  }
 }
+// SKG-111: universal wheel sprite (replaces tire-universal.png).
+// Variable name kept as `tireImage` for minimum diff churn — the underlying
+// asset is now wheel.png from the SKG-111 sprite drop.
 const tireImage = new Image();
 tireImage.decoding = 'async';
-tireImage.src = 'assets/trucks/tire-universal.png';
+tireImage.src = 'assets/trucks/wheel.png';
 
 // Legacy: preloadTruckDecodes() kept as a no-op for any callers that still
 // await it. All decoding happens via the per-image handlers above.
@@ -744,7 +850,7 @@ function getSelectedTruckIndex() {
       if (idx >= 0 && TruckUnlocks.isUnlocked(TRUCK_ROSTER[idx])) return idx;
     }
   } catch (e) {}
-  return 0; // default to Blaze Brigade (first starter)
+  return 0; // default to Red Rocket (first starter — SKG-111)
 }
 function setSelectedTruckIndex(idx) {
   if (idx < 0 || idx >= TRUCK_ROSTER.length) return;
@@ -752,7 +858,17 @@ function setSelectedTruckIndex(idx) {
   try { localStorage.setItem('monsterRallyTruck', String(idx)); } catch (e) {} // backward compat
 }
 
-// ─── drawTruckPNG — unified PNG truck renderer with tire overlay ────────────
+// SKG-111: aspect-ratio handling for painted truck sprites.
+// Old roster sprites were ~1.8:1 and matched the logical 90×50 truck box.
+// New roster sprites are individually cropped (varied aspects from ~1.4:1
+// to ~2.5:1). Stretching them into a fixed 90×50 box would distort silhouettes
+// (pirate-ship squashed, dino-bones stretched, etc.). Instead: preserve each
+// sprite's natural aspect, fit width to the logical tw, anchor to the bottom
+// of the logical box, and clamp to a max display height (1.4× the logical
+// 50px = 70px). Physics still operates on the logical (tx, ty, tw, th).
+const DRAWN_TRUCK_MAX_DISPLAY_H = 70;
+
+// ─── drawTruckPNG — unified PNG truck renderer with wheel overlay ───────────
 function drawTruckPNG(tx, ty, tw, th, truck, showExhaust, squishY, tireAngle) {
   const img = truckImages[truck.id];
   const status = truckDecodeStatus[truck.id];
@@ -765,19 +881,35 @@ function drawTruckPNG(tx, ty, tw, th, truck, showExhaust, squishY, tireAngle) {
     ctx.fillRect(tx, ty + squishY, tw, th - squishY);
     return;
   }
-  // Draw truck body
-  const drawY = ty + squishY;
-  const drawH = th - squishY;
-  ctx.drawImage(img, tx, drawY, tw, drawH);
 
-  // Draw tire overlay at front + rear axles
+  // Compute display rect from sprite's natural aspect, fit to tw, max H clamp.
+  // Anchor sprite bottom to logical box bottom (ty + th) so wheels land on
+  // the road consistently regardless of sprite height.
+  const naturalRatio = img.naturalWidth / img.naturalHeight; // e.g. 700/470 ≈ 1.49
+  let dispW = tw;
+  let dispH = tw / naturalRatio;
+  if (dispH > DRAWN_TRUCK_MAX_DISPLAY_H) {
+    dispH = DRAWN_TRUCK_MAX_DISPLAY_H;
+    dispW = dispH * naturalRatio;
+  }
+  // Squish (jump landing) shrinks vertical only — same effect as before.
+  const drawH = dispH - squishY;
+  if (drawH <= 0) return;
+  // Anchor to logical box bottom; center horizontally on logical box.
+  const drawY = ty + th - drawH;
+  const drawX = tx + (tw - dispW) / 2;
+  ctx.drawImage(img, drawX, drawY, dispW, drawH);
+
+  // Draw wheel overlay at front + rear axles. Axle positions are in fractions
+  // of the DISPLAYED sprite, so calibration tracks the painted body, not the
+  // logical hitbox. Wheel size also scales off the displayed width.
   if (tireImage && tireImage.complete && tireImage.naturalWidth > 0) {
     const ax = truck.axles || DEFAULT_AXLES;
-    const tireSize = tw * ax.sizePct;
+    const tireSize = dispW * ax.sizePct;
     const tireHalf = tireSize / 2;
     const axles = [ax.front, ax.rear];
     for (const axle of axles) {
-      const cx = tx + tw * axle.xPct;
+      const cx = drawX + dispW * axle.xPct;
       const cy = drawY + drawH * axle.yPct;
       ctx.save();
       ctx.translate(cx, cy);
@@ -1348,14 +1480,25 @@ function handleDown(e) {
   if (gameState === 'title') {
     // Back to games button (top-left, 130x50 orange button)
     if (vc.x < 150 && vc.y < 60) { window.location.href = '/'; return; }
-    gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return;
+    gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return;
   }
-  if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
+  if (gameState === 'picker') {
+    // SKG-111: defer click commit to handleUp so we can distinguish
+    // tap-to-pick from drag-to-scroll. Stash the start point + current scroll
+    // so handleMove can compute delta and handleUp knows whether to fire.
+    pickerTouchDrag = {
+      startVX: vc.x, startVY: vc.y,
+      lastVY: vc.y,
+      scrollAtStart: pickerScrollY,
+      isScroll: false,
+    };
+    return;
+  }
   // Mode select is gated off — handler kept for revival via MODE_FLAGS
   if (gameState === 'modeselect' && (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless)) { handleModeSelectClick(vc.x, vc.y); return; }
   if (gameState === 'paused') return; // HTML overlay handles pause interactions
   // Game over → back to picker (was 'modeselect' but mode select is gone)
-  if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+  if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
   if (gameState === 'levelcomplete') {
     if (campaignLevel < campaignSequence.length - 1) {
       campaignLevel++;
@@ -1374,7 +1517,7 @@ function handleDown(e) {
     return;
   }
   // Campaign complete → back to picker (was 'modeselect')
-  if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+  if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
   if (gameState === 'leveltransition') return;
   if (gameState === 'countdown') return;
 
@@ -1392,14 +1535,55 @@ function handleDown(e) {
 
 function handleUp(e) {
   e.preventDefault();
+  // SKG-111: picker click is committed here (deferred from handleDown) so we
+  // can suppress it when the gesture turned into a scroll drag.
+  if (gameState === 'picker' && pickerTouchDrag) {
+    const drag = pickerTouchDrag;
+    pickerTouchDrag = null;
+    if (!drag.isScroll) {
+      handlePickerClick(drag.startVX, drag.startVY);
+    }
+    return;
+  }
   if (player1) player1.jumpHeld = false;
   if (player2) player2.jumpHeld = false;
 }
 
+// SKG-111: scroll-drag for the picker. Active only while pickerTouchDrag is
+// live (set in handleDown). Once movement crosses the threshold it locks into
+// a scroll gesture and the eventual handleUp will not fire a card click.
+function handleMove(e) {
+  if (gameState !== 'picker' || !pickerTouchDrag) return;
+  let vc;
+  try { vc = getVirtualCoords(e); } catch (err) { return; }
+  if (!vc) return;
+  const dy = pickerTouchDrag.lastVY - vc.y;
+  pickerTouchDrag.lastVY = vc.y;
+  if (Math.abs(vc.y - pickerTouchDrag.startVY) > PICKER_SCROLL_DRAG_THRESHOLD) {
+    pickerTouchDrag.isScroll = true;
+  }
+  if (pickerTouchDrag.isScroll) {
+    pickerScrollY += dy;
+    clampPickerScroll();
+    e.preventDefault();
+  }
+}
+
+// Mouse wheel — desktop scroll. Only active in picker state.
+function handleWheel(e) {
+  if (gameState !== 'picker') return;
+  e.preventDefault();
+  pickerScrollY += e.deltaY;
+  clampPickerScroll();
+}
+
 canvas.addEventListener('mousedown', handleDown);
 canvas.addEventListener('mouseup', handleUp);
+canvas.addEventListener('mousemove', handleMove);
 canvas.addEventListener('touchstart', handleDown, { passive: false });
 canvas.addEventListener('touchend', handleUp, { passive: false });
+canvas.addEventListener('touchmove', handleMove, { passive: false });
+canvas.addEventListener('wheel', handleWheel, { passive: false });
 
 document.addEventListener('keydown', (e) => {
   initAudio();
@@ -1407,10 +1591,10 @@ document.addEventListener('keydown', (e) => {
   // Menu navigation
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
-    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
     if (gameState === 'picker') { confirmPicker(); return; }
     if (gameState === 'modeselect') return;
-    if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+    if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
     if (gameState === 'levelcomplete') {
       if (campaignLevel < campaignSequence.length - 1) { campaignLevel++; startLevelTransition(); }
       else {
@@ -1423,7 +1607,7 @@ document.addEventListener('keydown', (e) => {
       }
       return;
     }
-    if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+    if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
   }
 
   // Mode select keyboard shortcuts — dead code unless crushFrenzy/endless revived
@@ -1544,6 +1728,46 @@ function drawTruckUnlockOverlay() {
 // Tier-grouped picker state
 let pickerTier = 'starter'; // 'starter' | 'campaign' | 'coin' | 'achievement'
 let pickerToast = null;     // { text, life }
+
+// SKG-111 picker scroll state. Tier pages now hold up to 13 cards (5 rows)
+// which doesn't fit in the 450 virtual landscape height. Scrolling makes
+// off-screen rows reachable.
+let pickerScrollY = 0;            // virtual px, 0 = top, positive = scrolled down
+let pickerTouchDrag = null;       // { startVX, startVY, lastVY, scrollAtStart, isScroll }
+const PICKER_SCROLL_DRAG_THRESHOLD = 8;  // virtual px before a touch becomes a scroll
+
+function getPickerScrollViewport() {
+  // Visible scroll region: from just below the tab bar to just above the bottom.
+  // Cards are clipped to this region during draw and excluded from hit-test
+  // when fully outside it.
+  return { top: 105, bottom: H - 20 };
+}
+
+function getPickerScrollMax() {
+  const indices = getTruckIndicesInTier(pickerTier);
+  const cols = 3;
+  const cardH = 118, gapY = 14;
+  const rows = Math.ceil(indices.length / cols);
+  if (rows === 0) return 0;
+  const totalGridH = rows * cardH + (rows - 1) * gapY;
+  const vp = getPickerScrollViewport();
+  const visibleH = vp.bottom - vp.top;
+  // Cards start at virtual y=110 (5px below viewport top), so account for that
+  // small intra-viewport offset too.
+  const cardsTopOffset = 110 - vp.top;
+  return Math.max(0, totalGridH + cardsTopOffset - visibleH + 10);
+}
+
+function clampPickerScroll() {
+  const max = getPickerScrollMax();
+  if (pickerScrollY < 0) pickerScrollY = 0;
+  if (pickerScrollY > max) pickerScrollY = max;
+}
+
+function resetPickerScroll() {
+  pickerScrollY = 0;
+  pickerTouchDrag = null;
+}
 let pickerConfirm = null;   // { truck } — coin purchase confirmation
 
 const PICKER_TIERS = ['starter', 'campaign', 'coin', 'achievement'];
@@ -1559,7 +1783,9 @@ function getTruckIndicesInTier(tier) {
 }
 
 function getPickerTruckRects() {
-  // Grid of cards for current tier: 3 columns, variable rows
+  // Grid of cards for current tier: 3 columns, variable rows.
+  // Y is offset by pickerScrollY so the same rect array works for draw + click
+  // hit-testing — both honor the live scroll position automatically.
   const rects = [];
   const indices = getTruckIndicesInTier(pickerTier);
   const cols = 3;
@@ -1567,7 +1793,7 @@ function getPickerTruckRects() {
   const gapX = 16, gapY = 14;
   const gridW = cols * cardW + (cols - 1) * gapX;
   const startX = (W - gridW) / 2;
-  const startY = 110;
+  const startY = 110 - pickerScrollY;
   for (let i = 0; i < indices.length; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
@@ -1619,9 +1845,18 @@ function handlePickerClick(vx, vy) {
   if (vy >= tabY && vy <= tabY + tabH) {
     for (let i = 0; i < PICKER_TIERS.length; i++) {
       const tx = tabStartX + i * tabW;
-      if (vx >= tx && vx <= tx + tabW) { pickerTier = PICKER_TIERS[i]; return; }
+      if (vx >= tx && vx <= tx + tabW) {
+        pickerTier = PICKER_TIERS[i];
+        resetPickerScroll();   // SKG-111: tier change resets scroll to top
+        return;
+      }
     }
   }
+
+  // Picker click hit-test below the tab bar — ignore taps that landed on a
+  // card that's clipped above or below the visible scroll viewport.
+  const vp = getPickerScrollViewport();
+  if (vy < vp.top || vy > vp.bottom) return;
 
   // Truck cards
   const rects = getPickerTruckRects();
@@ -1688,7 +1923,7 @@ function handleModeSelectClick(vx, vy) {
   // Back to games (top-left)
   if (vx < 145 && vy < 55) { window.location.href = '/'; return; }
   // Change truck (top-right, 130x44 button at W-145, 5)
-  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); gameState = 'picker'; return; }
+  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); gameState = 'picker'; resetPickerScroll(); return; }
 
   const btnW = 220, btnH = 52, gap = 10;
   const by = 195;
@@ -1872,6 +2107,7 @@ function changeTruckFromPause() {
   pickerPlayer = 1;
   pickerPage = 0;
   pickerFromPause = true;
+  resetPickerScroll();
 }
 
 let pickerFromPause = false;
@@ -1892,6 +2128,7 @@ function quitToMenu() {
   gameState = 'picker';
   pickerPlayer = 1;
   pickerPage = 0;
+  resetPickerScroll();
 }
 
 function drawGamesButton(x, y) {
@@ -1990,7 +2227,17 @@ function drawPickerScreen() {
   const rects = getPickerTruckRects();
   const activeTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
 
+  // SKG-111: clip card drawing to the scroll viewport so off-screen cards
+  // don't bleed onto the tab bar or the toast area.
+  const scrollVp = getPickerScrollViewport();
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, scrollVp.top, W, scrollVp.bottom - scrollVp.top);
+  ctx.clip();
+
   for (const r of rects) {
+    // Skip cards entirely outside the viewport — speeds up + avoids extra GC
+    if (r.y + r.h < scrollVp.top || r.y > scrollVp.bottom) continue;
     const t = TRUCK_ROSTER[r.idx];
     const unlocked = TruckUnlocks.isUnlocked(t);
     const isSelected = r.idx === activeTruck && unlocked;
@@ -2079,6 +2326,46 @@ function drawPickerScreen() {
         ctx.fillText('⭐ ' + best, r.x + r.w / 2, r.y + r.h - 6);
       }
     }
+  }
+
+  ctx.restore();   // end scroll viewport clip
+
+  // SKG-111: scroll cues. Subtle gradients at viewport top/bottom indicate
+  // there's more above/below; a thin track on the right shows progress.
+  const scrollMax = getPickerScrollMax();
+  if (scrollMax > 0) {
+    const vp = scrollVp;
+
+    // Top fade: only when scrolled away from top
+    if (pickerScrollY > 1) {
+      const g = ctx.createLinearGradient(0, vp.top, 0, vp.top + 18);
+      g.addColorStop(0, 'rgba(0,0,0,0.55)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, vp.top, W, 18);
+    }
+    // Bottom fade: only when not at bottom
+    if (pickerScrollY < scrollMax - 1) {
+      const g = ctx.createLinearGradient(0, vp.bottom - 18, 0, vp.bottom);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, vp.bottom - 18, W, 18);
+    }
+
+    // Right-edge scroll track + thumb
+    const trackX = W - 8;
+    const trackY = vp.top + 4;
+    const trackH = (vp.bottom - vp.top) - 8;
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.beginPath(); ctx.roundRect(trackX, trackY, 4, trackH, 2); ctx.fill();
+    const visibleH = vp.bottom - vp.top;
+    const totalContentH = visibleH + scrollMax;
+    const thumbH = Math.max(20, trackH * (visibleH / totalContentH));
+    const thumbRange = trackH - thumbH;
+    const thumbY = trackY + thumbRange * (pickerScrollY / scrollMax);
+    ctx.fillStyle = 'rgba(255,215,0,0.7)';
+    ctx.beginPath(); ctx.roundRect(trackX, thumbY, 4, thumbH, 2); ctx.fill();
   }
 
   // Toast message
