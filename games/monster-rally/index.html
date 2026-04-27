@@ -828,13 +828,12 @@ const TruckUnlocks = {
   purchaseCoinTruck(truck) {
     if (truck.tier !== 'coin') return { success: false, reason: 'not-coin-truck' };
     if (this.isUnlocked(truck)) return { success: false, reason: 'already-owned' };
-    let coins = 0;
-    try { coins = parseInt(localStorage.getItem('mr_coins') || '0', 10); } catch (e) {}
-    if (coins < truck.cost) return { success: false, reason: 'insufficient-coins', coins, cost: truck.cost };
+    // SKG-112: read from in-memory wallet (kept in sync with localStorage).
+    if (lifetimeCoins < truck.cost) return { success: false, reason: 'insufficient-coins', coins: lifetimeCoins, cost: truck.cost };
     try {
-      localStorage.setItem('mr_coins', String(coins - truck.cost));
+      addLifetimeCoins(-truck.cost);
       this.addUnlock(truck.id);
-      return { success: true, remainingCoins: coins - truck.cost };
+      return { success: true, remainingCoins: lifetimeCoins };
     } catch (e) {
       return { success: false, reason: 'storage-error' };
     }
@@ -1074,6 +1073,41 @@ let score = 0;
 let combo = 0;
 let comboTimer = 0;
 let bestScore = parseInt(localStorage.getItem('monsterRallyBest', 10) || '0');
+
+// SKG-112: Coin economy state.
+// - lifetimeCoins: localStorage-backed wallet (key 'mr_coins' preserved for
+//   migration safety — kids' existing balances roll over). Drives shop.
+// - runCoins: ephemeral, in-memory only. Resets at run start. Drives the
+//   in-game HUD counter. Rolls into lifetime as coins are picked up — both
+//   counters increment on the same pickup event.
+let lifetimeCoins = (function() {
+  try { return parseInt(localStorage.getItem('mr_coins') || '0', 10) || 0; }
+  catch (e) { return 0; }
+})();
+let runCoins = 0;
+
+function addRunCoins(amount) {
+  if (!amount) return;
+  runCoins += amount;
+  // No persist. Run coins are ephemeral.
+}
+function addLifetimeCoins(amount) {
+  if (!amount) return;
+  lifetimeCoins += amount;
+  try { localStorage.setItem('mr_coins', String(lifetimeCoins)); } catch (e) {}
+}
+function addCoins(amount) {
+  // Convenience: most pickups want both. Crushing → score only, never this.
+  addRunCoins(amount);
+  addLifetimeCoins(amount);
+}
+function resetRunCoins() {
+  runCoins = 0;
+}
+function formatLifetimeCoins() {
+  // Thousands separator for the menu / picker readout once kids pile up.
+  return lifetimeCoins.toLocaleString();
+}
 
 // Cached HUD strings — rebuilt only when underlying values change (avoids
 // per-frame string concatenation + toLocaleString allocation).
@@ -1506,8 +1540,10 @@ function handleDown(e) {
     } else {
       // Campaign complete! Show win screen
       campaignWinTimer = 0;
-      // Award coin + unlock endless
-      safeSave('mr_coins', String(parseInt(localStorage.getItem('mr_coins', 10) || '0') + 1));
+      // SKG-112: route through addLifetimeCoins so both in-memory counter
+      // and localStorage stay in sync (the old direct-localStorage write
+      // would have caused lifetimeCoins to drift stale until next page load).
+      addLifetimeCoins(1);
       safeSave('mr_endless_unlocked', 'true');
       safeSave('mr_campaign_beaten', 'true');
       localStorage.removeItem('mr_campaign_level');
@@ -1599,7 +1635,7 @@ document.addEventListener('keydown', (e) => {
       if (campaignLevel < campaignSequence.length - 1) { campaignLevel++; startLevelTransition(); }
       else {
         campaignWinTimer = 0;
-        safeSave('mr_coins', String(parseInt(localStorage.getItem('mr_coins', 10) || '0') + 1));
+        addLifetimeCoins(1);  // SKG-112: route through helper
         safeSave('mr_endless_unlocked', 'true');
         safeSave('mr_campaign_beaten', 'true');
         localStorage.removeItem('mr_campaign_level');
@@ -2047,6 +2083,10 @@ function initGame() {
 
   // Compat aliases
   score = 0; combo = 0; comboTimer = 0;
+
+  // SKG-112: reset ephemeral run-coin counter on every run start.
+  // Lifetime coins are NOT touched — they live in localStorage.
+  resetRunCoins();
 }
 
 function startPlaying() {
@@ -2192,12 +2232,19 @@ function drawPickerScreen() {
   const title = pickerPlayer === 1 ? 'CHOOSE YOUR RIDE' : 'PLAYER 2 — PICK YOUR RIDE';
   ctx.strokeText(title, W / 2, 40); ctx.fillText(title, W / 2, 40);
 
-  // Coin balance (top-right)
-  let coins = 0;
-  try { coins = parseInt(localStorage.getItem('mr_coins') || '0', 10); } catch (e) {}
+  // Lifetime coin balance (top-right) — SKG-112
+  // Was: emoji 🪙 + raw integer. Now: drawStarCoin sprite + thousands-separated.
+  // Reads in-memory `lifetimeCoins` (kept in sync with localStorage 'mr_coins').
   ctx.fillStyle = '#ffd700'; ctx.font = "bold 14px 'Baloo 2', sans-serif";
   ctx.textAlign = 'right';
-  ctx.fillText('🪙 ' + coins, W - 15, 30);
+  const coinsLabel = formatLifetimeCoins();
+  ctx.fillText(coinsLabel, W - 15, 34);
+  // Coin sprite to the LEFT of the number
+  const coinsTextW = ctx.measureText(coinsLabel).width;
+  ctx.save();
+  ctx.translate(W - 15 - coinsTextW - 12, 28);
+  drawStarCoin(8);
+  ctx.restore();
 
   // Tier tabs
   const tabY = 70, tabH = 30;
@@ -5287,16 +5334,28 @@ function drawHUD() {
     ctx.fillText('SPEED', barX, barY + barH + 10);
   }
 
-  // ── Top-right: ★ Score (1P only) ─────────────────────────────────────────
+  // ── Top-right: Run-coin counter (1P only) — SKG-112 ──────────────────────
   if (numPlayers === 1 && player1) {
     ctx.textAlign = 'right';
     ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
     ctx.fillStyle = '#FFD740';
     ctx.font = `800 ${Math.max(13, Math.round(W * 0.018))}px 'Luckiest Guy', cursive`;
-    if (player1.score !== _hudScoreLast) { _hudScoreText = '\u2605 ' + player1.score.toLocaleString(); _hudScoreLast = player1.score; }
+    // SKG-112: was '\u2605 ' + player1.score (\u2605 + score). Now run-coin counter.
+    // Score still tracked internally (player1.score) for level-summary screens.
+    if (runCoins !== _hudScoreLast) { _hudScoreText = String(runCoins); _hudScoreLast = runCoins; }
     ctx.fillText(_hudScoreText, W * 0.97, H * 0.06);
     ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
+
+    // Coin sprite to the LEFT of the number \u2014 drawStarCoin is canvas-drawn
+    // (not the new coin-common.png, which is reserved for in-world pickups).
+    const coinIconR = Math.max(8, Math.round(W * 0.012));
+    const fontPx = Math.max(13, Math.round(W * 0.018));
+    const approxTextW = _hudScoreText.length * fontPx * 0.62;
+    ctx.save();
+    ctx.translate(W * 0.97 - approxTextW - coinIconR - 4, H * 0.06 - coinIconR * 0.2);
+    drawStarCoin(coinIconR);
+    ctx.restore();
   }
 
   // ── Player HUDs (score in 2P, combo + power-up bars always) ──────────────
@@ -5675,13 +5734,11 @@ function draw() {
     if (gameState === 'playing' || gameState === 'paused') {
       drawHUD();
 
-      // Campaign HUD: level indicator + max speed text + countdown
+      // Campaign HUD: max speed text + countdown
+      // SKG-112: redundant center "LEVEL N: name" label removed — drawHUD()
+      // already shows it top-left. Only one source of truth for the label.
       if (gameMode === 'rally') {
-        const lvl = campaignSequence[campaignLevel] || campaignSequence[0];
         ctx.textAlign = 'center';
-        // Level indicator (top center)
-        ctx.fillStyle = '#fff'; ctx.font = "700 11px 'Baloo 2', sans-serif";
-        ctx.fillText('LEVEL ' + (campaignLevel + 1) + ': ' + lvl.name, W / 2, 12);
 
         // MAX SPEED! text when max reached
         if (campaignMaxSpeedReached) {
