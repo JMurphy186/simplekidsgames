@@ -521,12 +521,14 @@ function loadCampaignSequence() {
 }
 
 
-// Power-up configs
+// Power-up configs. SKG-115: dropped the dead `icon` emoji field — never
+// read at render time after canvas-icon functions were retired. Sprite
+// render now dispatches by `effect` through powerupImages[effect].
 const POWERUP_TYPES = [
-  { name: 'MEGA TRUCK', color: '#ff8800', icon: '↑', duration: 300, effect: 'mega' },
-  { name: 'MAGNET', color: '#4488ff', icon: '⊃', duration: 480, effect: 'magnet' },
-  { name: 'TURBO BOOST', color: '#ff4400', icon: '⚡', duration: 240, effect: 'turbo' },
-  { name: 'SUPER JUMP', color: '#8855ff', icon: '\u2191', duration: 480, effect: 'superjump' }
+  { name: 'MEGA TRUCK', color: '#ff8800', duration: 300, effect: 'mega' },
+  { name: 'MAGNET', color: '#4488ff', duration: 480, effect: 'magnet' },
+  { name: 'TURBO BOOST', color: '#ff4400', duration: 240, effect: 'turbo' },
+  { name: 'SUPER JUMP', color: '#8855ff', duration: 480, effect: 'superjump' }
 ];
 
 // Sound constants
@@ -1149,6 +1151,26 @@ let floatTexts = [];
 function spawnFloatText(x, y, text, color) {
   floatTexts.push({ x, y, text, life: 1.0, color: color || '#ffd700' });
   if (floatTexts.length > 16) floatTexts.shift();
+}
+
+// SKG-115: power-up sprite preload (mirrors hardened truck/coin pattern).
+// Replaces the four canvas-drawn icons (drawTurboIcon / drawMegaIcon /
+// drawMagnetIcon / drawJumpIcon) with painted-realism PNGs.
+const powerupImages = {};
+const powerupDecodeStatus = {};   // 'mega'|'magnet'|'turbo'|'superjump' -> 'loading'|'ready'|'failed'
+for (const effect of ['mega', 'magnet', 'turbo', 'superjump']) {
+  const img = new Image();
+  img.decoding = 'async';
+  powerupImages[effect] = img;
+  powerupDecodeStatus[effect] = 'loading';
+  const e = effect;
+  img.onload = () => {
+    powerupDecodeStatus[e] = 'ready';
+    if (typeof img.decode === 'function') img.decode().catch(() => {});
+  };
+  img.onerror = () => { powerupDecodeStatus[e] = 'failed'; };
+  img.src = 'assets/powerups/' + effect + '.png';
+  if (img.complete && img.naturalWidth > 0) powerupDecodeStatus[e] = 'ready';
 }
 
 // Cached HUD strings — rebuilt only when underlying values change (avoids
@@ -3186,7 +3208,9 @@ function spawnFlipParticles(x, y, truckIdx, flipCount) {
 // POWER-UP SPAWNING
 // ============================================================
 function spawnPowerUp() {
-  // Frenzy: only Mega Truck and Turbo Boost (no stars to magnetize)
+  // Frenzy: only Mega Truck and Turbo Boost. Magnet would still magnetize
+  // coins post-SKG-113, but Frenzy spawns no coins so the power-up'd be inert.
+  // Super Jump is rally-only by design — no jumping puzzles in Frenzy arena.
   let pool = POWERUP_TYPES;
   if (gameMode === 'frenzy') {
     pool = POWERUP_TYPES.filter(p => p.effect === 'mega' || p.effect === 'turbo');
@@ -3205,108 +3229,42 @@ function spawnPowerUp() {
 }
 
 // ============================================================
-// POWER-UP ICON DRAWING (polished Canvas-drawn icons)
+// POWER-UP ICON DRAWING (painted PNG sprites — SKG-115)
 // ============================================================
-function drawPowerUpGlow(ctx, r, color, intensity) {
-  const grad = ctx.createRadialGradient(0, 0, r * 0.3, 0, 0, r * 1.5);
-  grad.addColorStop(0, color + (intensity || '44'));
-  grad.addColorStop(1, 'transparent');
-  ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.arc(0, 0, r * 1.5, 0, Math.PI * 2); ctx.fill();
-}
+// drawPowerUpGlow removed alongside the four canvas-drawn icon functions
+// (its only callers). Painted sprites carry their own glow / shading.
 
-// Turbo Boost — Speed Bolt (orange circle, speed lines, lightning bolt)
-function drawTurboIcon(ctx, r) {
-  drawPowerUpGlow(ctx, r, '#ff4400');
-  const g = ctx.createRadialGradient(-r*0.1, -r*0.1, 0, 0, 0, r);
-  g.addColorStop(0, '#ffaa00'); g.addColorStop(0.6, '#ff4400'); g.addColorStop(1, '#cc2200');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-  // Speed lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = r * 0.06;
-  for (let i = 0; i < 3; i++) {
-    const ly = -r*0.3 + i * r * 0.3;
-    ctx.beginPath(); ctx.moveTo(-r * 0.85, ly); ctx.lineTo(-r * 0.45, ly); ctx.stroke();
-  }
-  // Lightning bolt
-  ctx.fillStyle = '#fff'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = r * 0.3;
-  ctx.beginPath();
-  ctx.moveTo(-r*0.25, -r*0.6); ctx.lineTo(r*0.15, -r*0.08); ctx.lineTo(-r*0.05, -r*0.08);
-  ctx.lineTo(r*0.25, r*0.6); ctx.lineTo(-r*0.15, r*0.08); ctx.lineTo(r*0.05, r*0.08);
-  ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
-}
-
-// Mega Truck — Shield Star (red circle, hexagonal shield, up-arrow)
-function drawMegaIcon(ctx, r) {
-  drawPowerUpGlow(ctx, r, '#ff3333');
-  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
-  g.addColorStop(0, '#ff6644'); g.addColorStop(1, '#bb1100');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-  // Shield shape
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.beginPath();
-  ctx.moveTo(0, -r*0.7); ctx.lineTo(r*0.55, -r*0.35); ctx.lineTo(r*0.55, r*0.2);
-  ctx.lineTo(0, r*0.65); ctx.lineTo(-r*0.55, r*0.2); ctx.lineTo(-r*0.55, -r*0.35);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = r * 0.05; ctx.stroke();
-  // Up arrow
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.moveTo(0, -r*0.4); ctx.lineTo(r*0.25, -r*0.05); ctx.lineTo(r*0.1, -r*0.05);
-  ctx.lineTo(r*0.1, r*0.3); ctx.lineTo(-r*0.1, r*0.3); ctx.lineTo(-r*0.1, -r*0.05);
-  ctx.lineTo(-r*0.25, -r*0.05); ctx.closePath(); ctx.fill();
-}
-
-// Magnet — Horseshoe Magnet (blue circle, red U-magnet, field lines)
-function drawMagnetIcon(ctx, r) {
-  drawPowerUpGlow(ctx, r, '#4488ff');
-  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
-  g.addColorStop(0, '#6699ff'); g.addColorStop(1, '#2244aa');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-  // Magnet U-shape
-  ctx.strokeStyle = '#ff3333'; ctx.lineWidth = r * 0.2; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.arc(0, -r*0.05, r*0.4, 0, Math.PI); ctx.stroke();
-  // Silver tips
-  ctx.strokeStyle = '#cccccc'; ctx.lineWidth = r * 0.2;
-  ctx.beginPath(); ctx.moveTo(-r*0.4, -r*0.05); ctx.lineTo(-r*0.4, -r*0.35); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(r*0.4, -r*0.05); ctx.lineTo(r*0.4, -r*0.35); ctx.stroke();
-  // Field lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = r * 0.03;
-  ctx.setLineDash([r*0.05, r*0.05]);
-  for (let i = 0; i < 3; i++) {
-    const mr = r * (0.55 + i * 0.12);
-    ctx.beginPath(); ctx.arc(0, -r*0.05, mr, 0.3, Math.PI - 0.3); ctx.stroke();
-  }
-  ctx.setLineDash([]); ctx.lineCap = 'butt';
-}
-
-// Super Jump — Spring Coil (purple circle, white spring, yellow arrow)
-function drawJumpIcon(ctx, r) {
-  drawPowerUpGlow(ctx, r, '#8855ff');
-  const g = ctx.createRadialGradient(0, -r*0.1, 0, 0, 0, r);
-  g.addColorStop(0, '#aa77ff'); g.addColorStop(1, '#5522aa');
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-  // Spring coils
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = r * 0.08; ctx.lineCap = 'round';
-  const coils = 4, springW = r * 0.4, springH = r * 1.2, startY = r * 0.5;
-  ctx.beginPath();
-  for (let i = 0; i <= coils * 20; i++) {
-    const t = i / (coils * 20);
-    const x = Math.sin(t * coils * Math.PI * 2) * springW;
-    const y = startY - t * springH;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.stroke(); ctx.lineCap = 'butt';
-  // Up arrow at top
-  ctx.fillStyle = '#ffcc00';
-  ctx.beginPath(); ctx.moveTo(0, -r*0.75); ctx.lineTo(r*0.2, -r*0.45); ctx.lineTo(-r*0.2, -r*0.45);
-  ctx.closePath(); ctx.fill();
-}
-
+// SKG-115: power-up icon dispatcher — sprite-first, with a colored-disc
+// fallback if a sprite hasn't preloaded yet (or fails to decode).
+//
+// Replaces the prior canvas-drawn drawTurboIcon / drawMegaIcon /
+// drawMagnetIcon / drawJumpIcon (deleted in this commit). Sprites live in
+// games/monster-rally/assets/powerups/<effect>.png and are preloaded into
+// powerupImages with status tracked in powerupDecodeStatus.
+//
+// Both call sites — drawPowerUp() in-world pickup at radius 22, and the
+// drawPlayerHUD() timer-bar tray at radius ~8 — flow through this single
+// dispatcher, so there's one source of truth for power-up rendering.
 function drawPowerUpIcon(effect, r) {
-  if (effect === 'turbo') drawTurboIcon(ctx, r);
-  else if (effect === 'mega') drawMegaIcon(ctx, r);
-  else if (effect === 'magnet') drawMagnetIcon(ctx, r);
-  else if (effect === 'superjump') drawJumpIcon(ctx, r);
+  const img = powerupImages[effect];
+  const ready = powerupDecodeStatus[effect] === 'ready' && img && img.complete && img.naturalWidth > 0;
+  if (ready) {
+    // Aspect-preserved draw — 192×194 source so heights match widths within ~1%
+    const aspect = img.naturalHeight / img.naturalWidth;
+    const w = r * 2;
+    const h = w * aspect;
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    return;
+  }
+  // Fallback while loading / on decode failure: colored disc using the
+  // POWERUP_TYPES color table, tinted ring so it still reads as a power-up.
+  const cfg = (POWERUP_TYPES.find(t => t.effect === effect)) || null;
+  const color = cfg ? cfg.color : '#888';
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = Math.max(1, r * 0.1);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
 }
 
 function drawPowerUp(pu) {
