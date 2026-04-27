@@ -1480,14 +1480,25 @@ function handleDown(e) {
   if (gameState === 'title') {
     // Back to games button (top-left, 130x50 orange button)
     if (vc.x < 150 && vc.y < 60) { window.location.href = '/'; return; }
-    gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return;
+    gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return;
   }
-  if (gameState === 'picker') { handlePickerClick(vc.x, vc.y); return; }
+  if (gameState === 'picker') {
+    // SKG-111: defer click commit to handleUp so we can distinguish
+    // tap-to-pick from drag-to-scroll. Stash the start point + current scroll
+    // so handleMove can compute delta and handleUp knows whether to fire.
+    pickerTouchDrag = {
+      startVX: vc.x, startVY: vc.y,
+      lastVY: vc.y,
+      scrollAtStart: pickerScrollY,
+      isScroll: false,
+    };
+    return;
+  }
   // Mode select is gated off — handler kept for revival via MODE_FLAGS
   if (gameState === 'modeselect' && (MODE_FLAGS.crushFrenzy || MODE_FLAGS.endless)) { handleModeSelectClick(vc.x, vc.y); return; }
   if (gameState === 'paused') return; // HTML overlay handles pause interactions
   // Game over → back to picker (was 'modeselect' but mode select is gone)
-  if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+  if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
   if (gameState === 'levelcomplete') {
     if (campaignLevel < campaignSequence.length - 1) {
       campaignLevel++;
@@ -1506,7 +1517,7 @@ function handleDown(e) {
     return;
   }
   // Campaign complete → back to picker (was 'modeselect')
-  if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+  if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
   if (gameState === 'leveltransition') return;
   if (gameState === 'countdown') return;
 
@@ -1524,14 +1535,55 @@ function handleDown(e) {
 
 function handleUp(e) {
   e.preventDefault();
+  // SKG-111: picker click is committed here (deferred from handleDown) so we
+  // can suppress it when the gesture turned into a scroll drag.
+  if (gameState === 'picker' && pickerTouchDrag) {
+    const drag = pickerTouchDrag;
+    pickerTouchDrag = null;
+    if (!drag.isScroll) {
+      handlePickerClick(drag.startVX, drag.startVY);
+    }
+    return;
+  }
   if (player1) player1.jumpHeld = false;
   if (player2) player2.jumpHeld = false;
 }
 
+// SKG-111: scroll-drag for the picker. Active only while pickerTouchDrag is
+// live (set in handleDown). Once movement crosses the threshold it locks into
+// a scroll gesture and the eventual handleUp will not fire a card click.
+function handleMove(e) {
+  if (gameState !== 'picker' || !pickerTouchDrag) return;
+  let vc;
+  try { vc = getVirtualCoords(e); } catch (err) { return; }
+  if (!vc) return;
+  const dy = pickerTouchDrag.lastVY - vc.y;
+  pickerTouchDrag.lastVY = vc.y;
+  if (Math.abs(vc.y - pickerTouchDrag.startVY) > PICKER_SCROLL_DRAG_THRESHOLD) {
+    pickerTouchDrag.isScroll = true;
+  }
+  if (pickerTouchDrag.isScroll) {
+    pickerScrollY += dy;
+    clampPickerScroll();
+    e.preventDefault();
+  }
+}
+
+// Mouse wheel — desktop scroll. Only active in picker state.
+function handleWheel(e) {
+  if (gameState !== 'picker') return;
+  e.preventDefault();
+  pickerScrollY += e.deltaY;
+  clampPickerScroll();
+}
+
 canvas.addEventListener('mousedown', handleDown);
 canvas.addEventListener('mouseup', handleUp);
+canvas.addEventListener('mousemove', handleMove);
 canvas.addEventListener('touchstart', handleDown, { passive: false });
 canvas.addEventListener('touchend', handleUp, { passive: false });
+canvas.addEventListener('touchmove', handleMove, { passive: false });
+canvas.addEventListener('wheel', handleWheel, { passive: false });
 
 document.addEventListener('keydown', (e) => {
   initAudio();
@@ -1539,10 +1591,10 @@ document.addEventListener('keydown', (e) => {
   // Menu navigation
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
-    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+    if (gameState === 'title') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
     if (gameState === 'picker') { confirmPicker(); return; }
     if (gameState === 'modeselect') return;
-    if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+    if (gameState === 'gameover') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
     if (gameState === 'levelcomplete') {
       if (campaignLevel < campaignSequence.length - 1) { campaignLevel++; startLevelTransition(); }
       else {
@@ -1555,7 +1607,7 @@ document.addEventListener('keydown', (e) => {
       }
       return;
     }
-    if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; return; }
+    if (gameState === 'campaignwin') { gameState = 'picker'; pickerPlayer = 1; pickerPage = 0; resetPickerScroll(); return; }
   }
 
   // Mode select keyboard shortcuts — dead code unless crushFrenzy/endless revived
@@ -1676,6 +1728,46 @@ function drawTruckUnlockOverlay() {
 // Tier-grouped picker state
 let pickerTier = 'starter'; // 'starter' | 'campaign' | 'coin' | 'achievement'
 let pickerToast = null;     // { text, life }
+
+// SKG-111 picker scroll state. Tier pages now hold up to 13 cards (5 rows)
+// which doesn't fit in the 450 virtual landscape height. Scrolling makes
+// off-screen rows reachable.
+let pickerScrollY = 0;            // virtual px, 0 = top, positive = scrolled down
+let pickerTouchDrag = null;       // { startVX, startVY, lastVY, scrollAtStart, isScroll }
+const PICKER_SCROLL_DRAG_THRESHOLD = 8;  // virtual px before a touch becomes a scroll
+
+function getPickerScrollViewport() {
+  // Visible scroll region: from just below the tab bar to just above the bottom.
+  // Cards are clipped to this region during draw and excluded from hit-test
+  // when fully outside it.
+  return { top: 105, bottom: H - 20 };
+}
+
+function getPickerScrollMax() {
+  const indices = getTruckIndicesInTier(pickerTier);
+  const cols = 3;
+  const cardH = 118, gapY = 14;
+  const rows = Math.ceil(indices.length / cols);
+  if (rows === 0) return 0;
+  const totalGridH = rows * cardH + (rows - 1) * gapY;
+  const vp = getPickerScrollViewport();
+  const visibleH = vp.bottom - vp.top;
+  // Cards start at virtual y=110 (5px below viewport top), so account for that
+  // small intra-viewport offset too.
+  const cardsTopOffset = 110 - vp.top;
+  return Math.max(0, totalGridH + cardsTopOffset - visibleH + 10);
+}
+
+function clampPickerScroll() {
+  const max = getPickerScrollMax();
+  if (pickerScrollY < 0) pickerScrollY = 0;
+  if (pickerScrollY > max) pickerScrollY = max;
+}
+
+function resetPickerScroll() {
+  pickerScrollY = 0;
+  pickerTouchDrag = null;
+}
 let pickerConfirm = null;   // { truck } — coin purchase confirmation
 
 const PICKER_TIERS = ['starter', 'campaign', 'coin', 'achievement'];
@@ -1691,7 +1783,9 @@ function getTruckIndicesInTier(tier) {
 }
 
 function getPickerTruckRects() {
-  // Grid of cards for current tier: 3 columns, variable rows
+  // Grid of cards for current tier: 3 columns, variable rows.
+  // Y is offset by pickerScrollY so the same rect array works for draw + click
+  // hit-testing — both honor the live scroll position automatically.
   const rects = [];
   const indices = getTruckIndicesInTier(pickerTier);
   const cols = 3;
@@ -1699,7 +1793,7 @@ function getPickerTruckRects() {
   const gapX = 16, gapY = 14;
   const gridW = cols * cardW + (cols - 1) * gapX;
   const startX = (W - gridW) / 2;
-  const startY = 110;
+  const startY = 110 - pickerScrollY;
   for (let i = 0; i < indices.length; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols);
@@ -1751,9 +1845,18 @@ function handlePickerClick(vx, vy) {
   if (vy >= tabY && vy <= tabY + tabH) {
     for (let i = 0; i < PICKER_TIERS.length; i++) {
       const tx = tabStartX + i * tabW;
-      if (vx >= tx && vx <= tx + tabW) { pickerTier = PICKER_TIERS[i]; return; }
+      if (vx >= tx && vx <= tx + tabW) {
+        pickerTier = PICKER_TIERS[i];
+        resetPickerScroll();   // SKG-111: tier change resets scroll to top
+        return;
+      }
     }
   }
+
+  // Picker click hit-test below the tab bar — ignore taps that landed on a
+  // card that's clipped above or below the visible scroll viewport.
+  const vp = getPickerScrollViewport();
+  if (vy < vp.top || vy > vp.bottom) return;
 
   // Truck cards
   const rects = getPickerTruckRects();
@@ -1820,7 +1923,7 @@ function handleModeSelectClick(vx, vy) {
   // Back to games (top-left)
   if (vx < 145 && vy < 55) { window.location.href = '/'; return; }
   // Change truck (top-right, 130x44 button at W-145, 5)
-  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); gameState = 'picker'; return; }
+  if (vx > W - 150 && vy < 55) { pickerPlayer = 1; pickerPage = pickerPageForTruck(selectedTruck); gameState = 'picker'; resetPickerScroll(); return; }
 
   const btnW = 220, btnH = 52, gap = 10;
   const by = 195;
@@ -2004,6 +2107,7 @@ function changeTruckFromPause() {
   pickerPlayer = 1;
   pickerPage = 0;
   pickerFromPause = true;
+  resetPickerScroll();
 }
 
 let pickerFromPause = false;
@@ -2024,6 +2128,7 @@ function quitToMenu() {
   gameState = 'picker';
   pickerPlayer = 1;
   pickerPage = 0;
+  resetPickerScroll();
 }
 
 function drawGamesButton(x, y) {
@@ -2122,7 +2227,17 @@ function drawPickerScreen() {
   const rects = getPickerTruckRects();
   const activeTruck = pickerPlayer === 1 ? selectedTruck : selectedTruck2;
 
+  // SKG-111: clip card drawing to the scroll viewport so off-screen cards
+  // don't bleed onto the tab bar or the toast area.
+  const scrollVp = getPickerScrollViewport();
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, scrollVp.top, W, scrollVp.bottom - scrollVp.top);
+  ctx.clip();
+
   for (const r of rects) {
+    // Skip cards entirely outside the viewport — speeds up + avoids extra GC
+    if (r.y + r.h < scrollVp.top || r.y > scrollVp.bottom) continue;
     const t = TRUCK_ROSTER[r.idx];
     const unlocked = TruckUnlocks.isUnlocked(t);
     const isSelected = r.idx === activeTruck && unlocked;
@@ -2211,6 +2326,46 @@ function drawPickerScreen() {
         ctx.fillText('⭐ ' + best, r.x + r.w / 2, r.y + r.h - 6);
       }
     }
+  }
+
+  ctx.restore();   // end scroll viewport clip
+
+  // SKG-111: scroll cues. Subtle gradients at viewport top/bottom indicate
+  // there's more above/below; a thin track on the right shows progress.
+  const scrollMax = getPickerScrollMax();
+  if (scrollMax > 0) {
+    const vp = scrollVp;
+
+    // Top fade: only when scrolled away from top
+    if (pickerScrollY > 1) {
+      const g = ctx.createLinearGradient(0, vp.top, 0, vp.top + 18);
+      g.addColorStop(0, 'rgba(0,0,0,0.55)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, vp.top, W, 18);
+    }
+    // Bottom fade: only when not at bottom
+    if (pickerScrollY < scrollMax - 1) {
+      const g = ctx.createLinearGradient(0, vp.bottom - 18, 0, vp.bottom);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, vp.bottom - 18, W, 18);
+    }
+
+    // Right-edge scroll track + thumb
+    const trackX = W - 8;
+    const trackY = vp.top + 4;
+    const trackH = (vp.bottom - vp.top) - 8;
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.beginPath(); ctx.roundRect(trackX, trackY, 4, trackH, 2); ctx.fill();
+    const visibleH = vp.bottom - vp.top;
+    const totalContentH = visibleH + scrollMax;
+    const thumbH = Math.max(20, trackH * (visibleH / totalContentH));
+    const thumbRange = trackH - thumbH;
+    const thumbY = trackY + thumbRange * (pickerScrollY / scrollMax);
+    ctx.fillStyle = 'rgba(255,215,0,0.7)';
+    ctx.beginPath(); ctx.roundRect(trackX, thumbY, 4, thumbH, 2); ctx.fill();
   }
 
   // Toast message
