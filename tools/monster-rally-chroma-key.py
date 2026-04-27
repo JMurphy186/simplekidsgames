@@ -1,7 +1,10 @@
 """
-SKG-111 — Batch chroma-key + edge-feather + auto-crop for Monster Rally truck sprites.
+SKG-111 / SKG-113 — Batch chroma-key + edge-feather + auto-crop for Monster
+Rally painted sprites (trucks + coins).
 
-Input:  art/monster-rally/refined/*.png   (RGB, magenta background)
+Inputs (both processed, idempotent):
+  art/monster-rally/refined/*.png   (trucks; resize to 700px wide)
+  art/monster-rally/coins/*.png     (coin pickups; resize to 128px wide)
 Output: art/sprites/monster-rally/*.png   (RGBA, transparent, content-cropped)
 
 Magenta predicate (tolerant): R>200 AND G<60 AND B>200
@@ -29,7 +32,8 @@ from PIL import Image, ImageFilter
 
 # Resolve repo root (parent of tools/)
 REPO_ROOT = Path(__file__).resolve().parent.parent
-INPUT_DIR  = REPO_ROOT / "art" / "monster-rally" / "refined"
+TRUCKS_DIR = REPO_ROOT / "art" / "monster-rally" / "refined"
+COINS_DIR  = REPO_ROOT / "art" / "monster-rally" / "coins"
 OUTPUT_DIR = REPO_ROOT / "art" / "sprites" / "monster-rally"
 
 # Magenta predicate thresholds
@@ -37,15 +41,15 @@ R_HI = 200    # R must be > this
 G_LO = 60     # G must be < this
 B_HI = 200    # B must be > this
 
-# Retina-safe output width. Game renders trucks at ~90×70 max display size, so
-# 700px wide is ~10× display scale on Retina screens — plenty crisp without
-# bloating the bundle. Sprites narrower than this (post-crop) are NOT upscaled.
-# Wheel asset uses its own (smaller) target since it renders at ~30×30 in-game.
-TARGET_TRUCK_WIDTH = 700
-TARGET_WHEEL_WIDTH = 256
+# Retina-safe output widths. Game renders sprites well below source resolution,
+# so target widths give ~2-10× retina headroom without bloating the bundle.
+# Sprites narrower than these (post-crop) are NOT upscaled.
+TARGET_TRUCK_WIDTH = 700   # in-game display ~90×70
+TARGET_WHEEL_WIDTH = 256   # in-game display ~30×30
+TARGET_COIN_WIDTH  = 128   # in-game display common~30, big~45, mega~60
 
 
-def chroma_key_truck(input_path: Path, output_path: Path) -> dict:
+def chroma_key_truck(input_path: Path, output_path: Path, target_w_override=None) -> dict:
     """
     Process one PNG: chroma-key magenta to alpha=0, 1px alpha erode, auto-crop.
     Returns a stats dict for logging.
@@ -96,8 +100,11 @@ def chroma_key_truck(input_path: Path, output_path: Path) -> dict:
         crop_w, crop_h = cropped.size
 
     # Resize to retina-safe target width (only downscale, never up).
-    is_wheel = output_path.stem == "wheel"
-    target_w = TARGET_WHEEL_WIDTH if is_wheel else TARGET_TRUCK_WIDTH
+    if target_w_override is not None:
+        target_w = target_w_override
+    else:
+        is_wheel = output_path.stem == "wheel"
+        target_w = TARGET_WHEEL_WIDTH if is_wheel else TARGET_TRUCK_WIDTH
     if crop_w > target_w:
         scale = target_w / crop_w
         new_w = target_w
@@ -125,41 +132,43 @@ def chroma_key_truck(input_path: Path, output_path: Path) -> dict:
     }
 
 
-def main() -> int:
-    if not INPUT_DIR.exists():
-        print(f"STOP: input dir not found: {INPUT_DIR}", file=sys.stderr)
-        return 1
-
-    inputs = sorted(p for p in INPUT_DIR.glob("*.png") if p.is_file())
+def process_dir(input_dir: Path, output_dir: Path, label: str, target_w_override=None) -> tuple:
+    """Process every PNG under input_dir → output_dir. Returns (in_bytes, out_bytes)."""
+    if not input_dir.exists():
+        print(f"  SKIP: input dir not found: {input_dir}")
+        return 0, 0
+    inputs = sorted(p for p in input_dir.glob("*.png") if p.is_file())
     if not inputs:
-        print(f"STOP: no PNGs in {INPUT_DIR}", file=sys.stderr)
-        return 1
+        print(f"  SKIP: no PNGs in {input_dir}")
+        return 0, 0
 
-    print(f"Input:  {INPUT_DIR}")
-    print(f"Output: {OUTPUT_DIR}")
-    print(f"Files:  {len(inputs)}")
+    print(f"\n=== {label} ({len(inputs)} files) ===")
+    print(f"Input:  {input_dir}")
+    print(f"Output: {output_dir}")
     print()
     print(f"{'file':<22}  {'in (WxH)':>11}  {'out (WxH)':>11}  {'trans%':>7}  {'KB':>6}")
     print(f"{'-'*22}  {'-'*11}  {'-'*11}  {'-'*7}  {'-'*6}")
 
-    total_in_bytes = 0
-    total_out_bytes = 0
-
+    total_in = 0
+    total_out = 0
     for src in inputs:
-        # The ticket mentions "pirate ship.png" → "pirate-ship.png" rename, but
-        # the refined dir already has hyphenated names — handle defensively
-        # in case a future drop ships with a space.
+        # Defensive rename: spaces → hyphens
         safe_name = src.stem.replace(" ", "-") + src.suffix
-        dst = OUTPUT_DIR / safe_name
+        # Coin pickup files share OUTPUT_DIR with trucks; namespace them with
+        # a `coin-` prefix to avoid filename collisions if a truck were ever
+        # named `common.png` etc.
+        if label == "coins":
+            safe_name = "coin-" + safe_name
+        dst = output_dir / safe_name
 
         try:
-            stats = chroma_key_truck(src, dst)
+            stats = chroma_key_truck(src, dst, target_w_override=target_w_override)
         except Exception as e:
             print(f"  ERROR processing {src.name}: {e}", file=sys.stderr)
             continue
 
-        total_in_bytes += src.stat().st_size
-        total_out_bytes += stats["out_bytes"]
+        total_in += src.stat().st_size
+        total_out += stats["out_bytes"]
 
         print(
             f"{safe_name:<22}  "
@@ -169,9 +178,22 @@ def main() -> int:
             f"{stats['out_bytes']/1024:>5.1f}"
         )
 
+    return total_in, total_out
+
+
+def main() -> int:
+    grand_in = 0
+    grand_out = 0
+
+    in_b, out_b = process_dir(TRUCKS_DIR, OUTPUT_DIR, "trucks")
+    grand_in += in_b; grand_out += out_b
+
+    in_b, out_b = process_dir(COINS_DIR,  OUTPUT_DIR, "coins", target_w_override=TARGET_COIN_WIDTH)
+    grand_in += in_b; grand_out += out_b
+
     print()
-    print(f"Total input:  {total_in_bytes/1024/1024:.2f} MB")
-    print(f"Total output: {total_out_bytes/1024/1024:.2f} MB")
+    print(f"Total input:  {grand_in/1024/1024:.2f} MB")
+    print(f"Total output: {grand_out/1024/1024:.2f} MB")
     print(f"Output dir:   {OUTPUT_DIR}")
     return 0
 
