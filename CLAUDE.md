@@ -42,14 +42,64 @@ simplekidsgames/
 
 ## Universal Implementation Rules
 
-### Commit/Push Protocol (ALL PROMPTS)
-After every change:
+### Commit / Push / PR Protocol (ALL PROMPTS — MANDATORY)
+
+**Auto-merge protocol locked in 2026-04 (post SKG-111).** No more manual PR opening or merging by Jay.
+
+For any code change:
 ```bash
-node -c games/[game]/index.html   # Syntax check
-git add -A
-git commit -m "descriptive message"
-git push
+# 1. Syntax check the modified game(s)
+node -e "const fs=require('fs'); const html=fs.readFileSync('games/[game]/index.html','utf8'); const m=html.match(/<script>([\s\S]*?)<\/script>/); new Function(m[1]); console.log('OK')"
+
+# 2. Branch off main with a descriptive name (typically ticket-keyed)
+git checkout main && git pull origin main
+git checkout -b skg-NNN-short-description
+
+# 3. Make changes, stage, commit
+git add <specific files>   # avoid `git add -A` — sweeps in unrelated untracked items
+git commit -m "SKG-NNN: descriptive subject
+
+Multi-line body explaining what / why / how."
+
+# 4. Push branch
+git push origin skg-NNN-short-description
+
+# 5. Open PR via gh CLI
+"/c/Program Files/GitHub CLI/gh.exe" pr create \
+  --title "SKG-NNN: descriptive title" \
+  --body "$(cat <<'EOF'
+Closes SKG-NNN.
+
+## Summary
+...
+
+## Smoke test
+...
+EOF
+)" \
+  --base main
+
+# 6. Auto-merge — fully automatic, no manual gate.
+#    Jay reviews/playtests post-merge via the live URL and reverts if needed.
+"/c/Program Files/GitHub CLI/gh.exe" pr merge --merge --delete-branch
+
+# 7. Confirm origin/main advanced
+git fetch origin && git log origin/main --oneline -3
 ```
+
+**Why no pre-merge gate:** Jay decided 2026-04 the friction of manual review/merge wasn't paying for itself given how often kids playtest reveals issues only post-deploy anyway. Auto-merge means visual changes ship in <2 minutes; if anything regresses, the PR-based history makes "Revert PR" on GitHub a one-click rollback.
+
+**Exception — high-risk changes need an explicit gate:**
+- Save-state migrations (anything touching localStorage schema)
+- Collision / physics math
+- Audio system rewires
+- Any change spanning >2 game files
+
+For those, push the branch + open the PR but **do NOT merge** — surface the PR URL in chat and wait for Jay's "ship it" before merging. When in doubt, ask.
+
+**`gh` CLI path on this Windows machine:** `/c/Program Files/GitHub CLI/gh.exe` (use absolute path; the shell session this Code runs in doesn't have `gh` in PATH even after install).
+
+**Post-merge cache-bust:** After production deploy completes (~60-90s on Vercel), bump the version query string on the affected game URL: `simplekidsgames.com/games/<game>/?v=N+1`. Tracks per-game in each game's `CLAUDE.md`.
 
 ### Trailing Comma Check (CRITICAL)
 When adding entries to arrays (FISH_SVGS, SHIPS, etc.), ensure the PREVIOUS last entry has a trailing comma. Missing comma = `Unexpected string` syntax error.
