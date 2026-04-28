@@ -32,11 +32,13 @@ from PIL import Image, ImageFilter
 
 # Resolve repo root (parent of tools/)
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TRUCKS_DIR    = REPO_ROOT / "art" / "monster-rally" / "refined"
-COINS_DIR     = REPO_ROOT / "art" / "monster-rally" / "coins"
-POWERUPS_DIR  = REPO_ROOT / "art" / "monster-rally" / "powerups"
-OUTPUT_DIR    = REPO_ROOT / "art" / "sprites" / "monster-rally"
-POWERUPS_OUT  = OUTPUT_DIR / "powerups"
+TRUCKS_DIR     = REPO_ROOT / "art" / "monster-rally" / "refined"
+COINS_DIR      = REPO_ROOT / "art" / "monster-rally" / "coins"
+POWERUPS_DIR   = REPO_ROOT / "art" / "monster-rally" / "powerups"
+CRUSHABLES_DIR = REPO_ROOT / "art" / "monster-rally" / "crushables"
+OUTPUT_DIR     = REPO_ROOT / "art" / "sprites" / "monster-rally"
+POWERUPS_OUT   = OUTPUT_DIR / "powerups"
+CRUSHABLES_OUT = OUTPUT_DIR / "crushables"
 
 # Magenta predicate thresholds
 R_HI = 200    # R must be > this
@@ -46,10 +48,11 @@ B_HI = 200    # B must be > this
 # Retina-safe output widths. Game renders sprites well below source resolution,
 # so target widths give ~2-10× retina headroom without bloating the bundle.
 # Sprites narrower than these (post-crop) are NOT upscaled.
-TARGET_TRUCK_WIDTH    = 700   # in-game display ~90×70
-TARGET_WHEEL_WIDTH    = 256   # in-game display ~30×30
-TARGET_COIN_WIDTH     = 128   # in-game display common~30, big~45, mega~60
-TARGET_POWERUP_WIDTH  = 192   # in-world radius 22 → ~44px, HUD radius 8 → ~16px
+TARGET_TRUCK_WIDTH      = 700   # in-game display ~90×70
+TARGET_WHEEL_WIDTH      = 256   # in-game display ~30×30
+TARGET_COIN_WIDTH       = 128   # in-game display common~30, big~45, mega~60
+TARGET_POWERUP_WIDTH    = 192   # in-world radius 22 → ~44px, HUD radius 8 → ~16px
+TARGET_CRUSHABLE_WIDTH  = 256   # in-game display 30-100px (school_bus largest); 2.5× retina headroom
 
 
 def chroma_key_truck(input_path: Path, output_path: Path, target_w_override=None) -> dict:
@@ -198,6 +201,11 @@ def main() -> int:
     # so they don't clash with truck/coin filenames (mega.png exists as a
     # power-up; could collide with a truck if filename hygiene slips later).
     in_b, out_b = process_dir(POWERUPS_DIR, POWERUPS_OUT, "powerups", target_w_override=TARGET_POWERUP_WIDTH)
+    grand_in += in_b; grand_out += out_b
+
+    # SKG-116: crushables — 15 painted-realism sprites replacing the prior
+    # canvas-drawn obstacles. Subdirectory mirrors the powerups pattern.
+    in_b, out_b = process_dir(CRUSHABLES_DIR, CRUSHABLES_OUT, "crushables", target_w_override=TARGET_CRUSHABLE_WIDTH)
     grand_in += in_b; grand_out += out_b
 
     print()
