@@ -1173,6 +1173,70 @@ for (const effect of ['mega', 'magnet', 'turbo', 'superjump']) {
   if (img.complete && img.naturalWidth > 0) powerupDecodeStatus[e] = 'ready';
 }
 
+// SKG-116: Crushables config — 15 painted-realism sprites replacing the
+// canvas-drawn legacy roster. Each entry carries:
+//   id           — string key, matches sprite filename without extension
+//   w, h         — collision-box dimensions (px). Sprite displays with
+//                  natural aspect ratio; collision uses these.
+//   points       — score awarded on crush (× combo × pointsMult)
+//   particles    — color palette emitted on crush (spawnCrushParticlesColored)
+//
+// Spawn pool is built below from `weight` field. Tiered per ticket:
+//   2× — orange_cone, trash_can, oil_drum, pickup, beetle (common)
+//   1× — fire_hydrant, outhouse, blue_barrel, barrier, wooden_crate, taxi,
+//        minivan, icecream_truck, trash_bin, school_bus
+const CRUSHABLES = [
+  // ─── Construction (9) ─────────────────────────────────────────────────
+  { id: 'oil_drum',      w: 36, h: 42, points: 8,  weight: 2, particles: ['#3a8a8c','#1a5a5c','#2c2c2c','#cccccc'] },
+  { id: 'fire_hydrant',  w: 28, h: 40, points: 8,  weight: 1, particles: ['#cc1c1c','#8a1010','#cccccc','#ffd700'] },
+  { id: 'outhouse',      w: 32, h: 50, points: 12, weight: 1, particles: ['#2288cc','#44aadd','#1a6699','#fff'] },
+  { id: 'trash_bin',     w: 50, h: 40, points: 10, weight: 1, particles: ['#33aa33','#227722','#999','#44cc44'] },
+  { id: 'trash_can',     w: 30, h: 30, points: 5,  weight: 2, particles: ['#33aa33','#227722','#999','#44cc44'] },
+  { id: 'wooden_crate',  w: 38, h: 36, points: 8,  weight: 1, particles: ['#c8a050','#8a6020','#5a3010','#fff7d0'] },
+  { id: 'barrier',       w: 50, h: 28, points: 6,  weight: 1, particles: ['#ff8c00','#ffffff','#cc6600','#444'] },
+  { id: 'orange_cone',   w: 24, h: 32, points: 4,  weight: 2, particles: ['#ff7c00','#ffffff','#cc5a00'] },
+  { id: 'blue_barrel',   w: 32, h: 44, points: 8,  weight: 1, particles: ['#3a78c8','#1a4878','#2c2c2c','#cccccc'] },
+  // ─── Civilian vehicles (6) ────────────────────────────────────────────
+  { id: 'pickup',          w: 60, h: 26, points: 8,  weight: 2, particles: ['#cc2020','#8a1414','#cccccc','#88ccff'] },
+  { id: 'minivan',         w: 70, h: 30, points: 10, weight: 1, particles: ['#c8c8d0','#888896','#1a1a1a','#88ccff'] },
+  { id: 'taxi',            w: 60, h: 26, points: 12, weight: 1, particles: ['#f0c020','#a08010','#1a1a1a','#88ccff'] },
+  { id: 'beetle',          w: 50, h: 26, points: 10, weight: 2, particles: ['#3aaa3a','#1a6a1a','#cccccc','#88ccff'] },
+  { id: 'icecream_truck',  w: 75, h: 36, points: 14, weight: 1, particles: ['#f0f0f5','#3a78c8','#ff66cc','#88ccff'] },
+  { id: 'school_bus',      w: 95, h: 38, points: 18, weight: 1, particles: ['#f1c40f','#e67e22','#f39c12','#fff'] },
+];
+
+// Build flat random-pick pool by repeating each entry per its weight.
+const CRUSHABLE_POOL = (function buildPool() {
+  const pool = [];
+  for (const c of CRUSHABLES) {
+    for (let i = 0; i < (c.weight || 1); i++) pool.push(c);
+  }
+  return pool;
+})();
+const CRUSHABLES_BY_ID = (function() {
+  const m = {};
+  for (const c of CRUSHABLES) m[c.id] = c;
+  return m;
+})();
+
+// Crushable sprite preload — same hardened pattern as trucks/coins/powerups.
+const crushableImages = {};
+const crushableDecodeStatus = {};
+for (const c of CRUSHABLES) {
+  const img = new Image();
+  img.decoding = 'async';
+  crushableImages[c.id] = img;
+  crushableDecodeStatus[c.id] = 'loading';
+  const id = c.id;
+  img.onload = () => {
+    crushableDecodeStatus[id] = 'ready';
+    if (typeof img.decode === 'function') img.decode().catch(() => {});
+  };
+  img.onerror = () => { crushableDecodeStatus[id] = 'failed'; };
+  img.src = 'assets/crushables/' + c.id + '.png';
+  if (img.complete && img.naturalWidth > 0) crushableDecodeStatus[id] = 'ready';
+}
+
 // Cached HUD strings — rebuilt only when underlying values change (avoids
 // per-frame string concatenation + toLocaleString allocation).
 let _hudScoreText = '\u2605 0';
@@ -3004,34 +3068,32 @@ function drawCountdown() {
 // ENTITY SPAWNING
 // ============================================================
 function spawnObstacle() {
-  let types;
-  if (gameMode === 'frenzy') {
-    types = ['red_racer','red_racer','red_racer','cool_blue','cool_blue','cool_blue',
-             'gold_rush','gold_rush','big_suv','big_suv',
-             'school_bus','stretch_limo',
-             'barrel','barrel','portapotty','tvstack','trashcan','trashcan'];
-  } else {
-    types = ['red_racer','red_racer','cool_blue','cool_blue','gold_rush','gold_rush',
-             'big_suv','big_suv','school_bus','stretch_limo',
-             'ramp','ramp',
-             'barrel','portapotty','tvstack','trashcan','trashcan'];
+  // SKG-116: tiered random-pick from CRUSHABLE_POOL (15 entries weighted 1× or
+  // 2×, see CRUSHABLES config). Rally-mode adds a small ramp chance — ramps
+  // are NOT crushables (jump objects) and are kept for SKG-117 art refresh.
+  // Frenzy is a flat arena, no ramps.
+  if (gameMode !== 'frenzy' && Math.random() < 0.10) {
+    // ~10% rally chance to spawn a ramp instead of a crushable. Old pool had
+    // 2/17 ≈ 12% ramp rate; close enough.
+    const obs = {
+      x: W + 50, type: 'ramp', crushed: false, crushAnim: 0,
+      w: 60, h: 25, color: '#e67e22', points: 0,
+    };
+    obs.y = GROUND_Y - obs.h;
+    obstacles.push(obs);
+    return;
   }
-  const type = types[Math.floor(Math.random() * types.length)];
-  const obs = { x: W + 50, type, crushed: false, crushAnim: 0 };
-
-  if (type === 'red_racer') { obs.w = 55; obs.h = 28; obs.color = '#e74c3c'; obs.points = 8; }
-  else if (type === 'cool_blue') { obs.w = 55; obs.h = 28; obs.color = '#3498db'; obs.points = 8; }
-  else if (type === 'gold_rush') { obs.w = 55; obs.h = 28; obs.color = '#f39c12'; obs.points = 8; }
-  else if (type === 'big_suv') { obs.w = 65; obs.h = 35; obs.color = '#2c3e50'; obs.points = 10; }
-  else if (type === 'school_bus') { obs.w = 100; obs.h = 40; obs.color = '#f1c40f'; obs.points = 15; }
-  else if (type === 'stretch_limo') { obs.w = 110; obs.h = 30; obs.color = '#ecf0f1'; obs.points = 20; }
-  else if (type === 'ramp') { obs.w = 60; obs.h = 25; obs.color = '#e67e22'; obs.points = 0; }
-  else if (type === 'barrel') { obs.w = 40; obs.h = 30; obs.color = '#8B4513'; obs.points = 8; }
-  else if (type === 'portapotty') { obs.w = 30; obs.h = 45; obs.color = '#2288cc'; obs.points = 15; obs.tipAngle = 0; }
-  else if (type === 'tvstack') { obs.w = 50; obs.h = 40; obs.color = '#555555'; obs.points = 12; }
-  else if (type === 'trashcan') { obs.w = 35; obs.h = 30; obs.color = '#33aa33'; obs.points = 5; }
-
-  obs.y = GROUND_Y - (obs.h || 25);
+  const cfg = CRUSHABLE_POOL[Math.floor(Math.random() * CRUSHABLE_POOL.length)];
+  const obs = {
+    x: W + 50,
+    type: cfg.id,
+    crushed: false,
+    crushAnim: 0,
+    w: cfg.w,
+    h: cfg.h,
+    points: cfg.points,
+  };
+  obs.y = GROUND_Y - obs.h;
   obstacles.push(obs);
 }
 
@@ -3865,801 +3927,54 @@ function drawVehiclePreview(tx, ty, roster, showExhaust, squishY, rosterIdx) {
 // ============================================================
 // OBSTACLE DRAWING (including new types)
 // ============================================================
+// SKG-116: sprite-based crushable renderer. Replaces:
+//   - drawObstacle dispatcher (was if/else cascade by type string)
+//   - drawBarrel / drawPortaPotty / drawTVStack / drawTrashCans (4 construction)
+//   - drawPickupTruck / drawBigSUV / drawSchoolBus / drawStretchLimo (4 vehicles)
+// Each former drawer carried its own crushed-state inline; replaced here with
+// a universal runtime squash (squashScale = 1 - cp * 0.7 → collapses to 30%
+// height + alpha fade). Painted crushed-states deferred to SKG-122.
+//
+// Aspect handling matches drawTruckPNG (SKG-111): sprite preserves natural
+// ratio, fits to obs.w wide, anchors bottom to obs.y+obs.h (ground line).
+// Collision still uses the obs.w/obs.h logical box.
 function drawObstacle(obs) {
-  if (obs.type === 'barrel') return drawBarrel(obs);
-  if (obs.type === 'portapotty') return drawPortaPotty(obs);
-  if (obs.type === 'tvstack') return drawTVStack(obs);
-  if (obs.type === 'trashcan') return drawTrashCans(obs);
-  if (obs.type === 'red_racer' || obs.type === 'cool_blue' || obs.type === 'gold_rush') return drawPickupTruck(obs);
-  if (obs.type === 'big_suv') return drawBigSUV(obs);
-  if (obs.type === 'school_bus') return drawSchoolBus(obs);
-  if (obs.type === 'stretch_limo') return drawStretchLimo(obs);
   if (obs.type === 'ramp') return drawRamp(obs);
-  return drawPickupTruck(obs); // fallback
-}
 
-function drawBarrel(obs) {
-  const x = obs.x, y = obs.y;
+  const sprite = crushableImages[obs.type];
+  const cfg = CRUSHABLES_BY_ID[obs.type];
+  const ready = sprite && crushableDecodeStatus[obs.type] === 'ready' && sprite.complete && sprite.naturalWidth > 0;
+
+  // Aspect-preserving display size: width = obs.w, height = derived from natural ratio.
+  // If sprite hasn't decoded yet, fall back to a colored rect using the first
+  // particle color so spawning isn't visually empty during the brief preload window.
+  const dispW = obs.w;
+  const dispH = ready ? dispW * (sprite.naturalHeight / sprite.naturalWidth) : (cfg ? cfg.h : obs.h);
+  const groundY = GROUND_Y;
+  const cp = obs.crushed ? Math.min(obs.crushAnim, 1) : 0;
+  const squashScale = obs.crushed ? (1 - cp * 0.7) : 1;
+  const drawnH = dispH * squashScale;
+  const drawnY = groundY - drawnH;
+
   if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
     ctx.save();
     ctx.globalAlpha = 1 - cp * 0.5;
-    // Scattered barrel pieces
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(x - 5, GROUND_Y - 5 * (1 - cp), obs.w + 10, 5 * (1 - cp) + 3);
-    ctx.fillStyle = '#A0522D';
-    ctx.beginPath();
-    ctx.arc(x + 10, GROUND_Y - 3, 4 * (1 - cp), 0, Math.PI * 2);
-    ctx.arc(x + 30, GROUND_Y - 2, 3 * (1 - cp), 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-    return;
-  }
-
-  // 3 stacked barrels (pyramid: 2 bottom, 1 top)
-  ctx.fillStyle = '#8B4513';
-  // Bottom left
-  ctx.beginPath();
-  ctx.ellipse(x + 10, y + 20, 10, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Bottom right
-  ctx.beginPath();
-  ctx.ellipse(x + 30, y + 20, 10, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Top
-  ctx.beginPath();
-  ctx.ellipse(x + 20, y + 5, 10, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Metal bands
-  ctx.strokeStyle = '#666';
-  ctx.lineWidth = 1.5;
-  [{ cx: 10, cy: 20 }, { cx: 30, cy: 20 }, { cx: 20, cy: 5 }].forEach(b => {
-    ctx.beginPath();
-    ctx.ellipse(x + b.cx, y + b.cy - 4, 9, 2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(x + b.cx, y + b.cy + 4, 9, 2, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  });
-}
-
-function drawPortaPotty(obs) {
-  const x = obs.x, y = obs.y;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save();
-    ctx.globalAlpha = 1 - cp * 0.5;
-    // Tipping over animation
-    ctx.translate(x + obs.w, GROUND_Y);
-    ctx.rotate(cp * Math.PI / 2);
-    ctx.translate(-(x + obs.w), -GROUND_Y);
-    ctx.fillStyle = '#2288cc';
-    ctx.fillRect(x, y, obs.w, obs.h);
-    ctx.fillStyle = '#1a6699';
-    ctx.fillRect(x + obs.w * 0.35, y + 8, obs.w * 0.3, obs.h - 12);
-    ctx.restore();
-    return;
-  }
-
-  // Main body
-  ctx.fillStyle = '#2288cc';
-  ctx.beginPath();
-  ctx.roundRect(x, y, obs.w, obs.h, 3);
-  ctx.fill();
-
-  // Roof overhang
-  ctx.fillStyle = '#1a6699';
-  ctx.fillRect(x - 2, y - 3, obs.w + 4, 6);
-
-  // Door
-  ctx.fillStyle = '#1a6699';
-  ctx.fillRect(x + obs.w * 0.3, y + 8, obs.w * 0.4, obs.h - 12);
-
-  // Door handle
-  ctx.fillStyle = '#ccc';
-  ctx.fillRect(x + obs.w * 0.6, y + obs.h * 0.5, 3, 5);
-
-  // Vent at top
-  ctx.fillStyle = '#44aadd';
-  ctx.fillRect(x + 5, y + 5, obs.w - 10, 4);
-  ctx.strokeStyle = '#1a6699';
-  ctx.lineWidth = 0.5;
-  for (let i = 0; i < 4; i++) {
-    ctx.beginPath();
-    ctx.moveTo(x + 7 + i * 5, y + 5);
-    ctx.lineTo(x + 7 + i * 5, y + 9);
-    ctx.stroke();
-  }
-}
-
-function drawTVStack(obs) {
-  const x = obs.x, y = obs.y;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save();
-    ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.fillStyle = '#555';
-    ctx.fillRect(x - 5, GROUND_Y - 8 * (1 - cp), obs.w + 10, 8 * (1 - cp) + 2);
-    for (let i = 0; i < 5; i++) {
-      ctx.fillStyle = Math.random() > 0.5 ? '#0ff' : '#fff';
-      ctx.fillRect(x + Math.random() * obs.w, GROUND_Y - Math.random() * 10, 3, 2);
+    if (ready) {
+      ctx.drawImage(sprite, obs.x, drawnY, dispW, drawnH);
+    } else if (cfg) {
+      ctx.fillStyle = cfg.particles[0] || '#888';
+      ctx.fillRect(obs.x, drawnY, dispW, drawnH);
     }
     ctx.restore();
     return;
   }
 
-  // Flicker: every ~30 frames, briefly flash brightness
-  const flicker = (Math.floor(Date.now() / 500) % 3 === 0) ? 0.7 : 0.3;
-
-  // Bottom TV (CRT)
-  ctx.fillStyle = '#4a4a4a';
-  ctx.beginPath(); ctx.roundRect(x, y + 20, 45, 22, 3); ctx.fill();
-  ctx.fillStyle = '#333';
-  ctx.fillRect(x + 4, y + 23, 37, 15);
-  // Animated static — random horizontal lines each frame
-  for (let i = 0; i < 6; i++) {
-    const ly = y + 24 + Math.random() * 13;
-    const brightness = Math.random() * flicker;
-    ctx.fillStyle = `rgba(255,255,255,${brightness})`;
-    ctx.fillRect(x + 5, ly, 35, 1);
+  if (ready) {
+    ctx.drawImage(sprite, obs.x, drawnY, dispW, drawnH);
+  } else if (cfg) {
+    ctx.fillStyle = cfg.particles[0] || '#888';
+    ctx.fillRect(obs.x, drawnY, dispW, drawnH);
   }
-  // Screen tint
-  ctx.fillStyle = `rgba(100,200,255,${flicker * 0.15})`;
-  ctx.fillRect(x + 4, y + 23, 37, 15);
-  // Buttons on side
-  ctx.fillStyle = '#888';
-  ctx.beginPath(); ctx.arc(x + 44, y + 28, 1.5, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(x + 44, y + 33, 1.5, 0, Math.PI * 2); ctx.fill();
-
-  // Top TV (smaller CRT)
-  ctx.fillStyle = '#5a5a5a';
-  ctx.beginPath(); ctx.roundRect(x + 5, y, 35, 20, 3); ctx.fill();
-  ctx.fillStyle = '#333';
-  ctx.fillRect(x + 8, y + 3, 29, 14);
-  // Animated static
-  for (let i = 0; i < 5; i++) {
-    const ly = y + 4 + Math.random() * 12;
-    const brightness = Math.random() * flicker;
-    ctx.fillStyle = `rgba(255,255,255,${brightness})`;
-    ctx.fillRect(x + 9, ly, 27, 1);
-  }
-  ctx.fillStyle = `rgba(100,200,255,${flicker * 0.12})`;
-  ctx.fillRect(x + 8, y + 3, 29, 14);
-
-  // Rabbit ear antennas
-  ctx.strokeStyle = '#999'; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(x + 18, y); ctx.lineTo(x + 10, y - 10);
-  ctx.moveTo(x + 28, y); ctx.lineTo(x + 36, y - 10);
-  ctx.stroke();
-  ctx.fillStyle = '#ccc';
-  ctx.beginPath();
-  ctx.arc(x + 10, y - 10, 2, 0, Math.PI * 2);
-  ctx.arc(x + 36, y - 10, 2, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawTrashCans(obs) {
-  const x = obs.x, y = obs.y;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save();
-    ctx.globalAlpha = 1 - cp * 0.5;
-    // Bins scatter outward
-    ctx.fillStyle = '#33aa33';
-    ctx.save(); ctx.translate(x + 5, GROUND_Y - 8 * (1 - cp));
-    ctx.rotate(-cp * 0.5);
-    ctx.fillRect(-4, -10, 8, 10);
-    ctx.restore();
-    ctx.save(); ctx.translate(x + obs.w - 5, GROUND_Y - 6 * (1 - cp));
-    ctx.rotate(cp * 0.7);
-    ctx.fillRect(-4, -10, 8, 10);
-    ctx.restore();
-    // Lids flying off
-    ctx.fillStyle = '#227722';
-    ctx.save(); ctx.translate(x + 10, GROUND_Y - 12 * (1 - cp) - cp * 8);
-    ctx.rotate(cp * 2);
-    ctx.fillRect(-5, -2, 10, 3);
-    ctx.restore();
-    ctx.save(); ctx.translate(x + obs.w - 8, GROUND_Y - 10 * (1 - cp) - cp * 12);
-    ctx.rotate(-cp * 1.5);
-    ctx.fillRect(-4, -2, 8, 3);
-    ctx.restore();
-    ctx.restore();
-    return;
-  }
-
-  // Ground shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.2)';
-  ctx.beginPath(); ctx.ellipse(x + obs.w / 2, GROUND_Y + 2, obs.w / 2 + 3, 3, 0, 0, Math.PI * 2); ctx.fill();
-
-  // Helper: draw one wheelie bin
-  function drawBin(bx, by, bw, bh, tilt) {
-    ctx.save();
-    if (tilt) { ctx.translate(bx + bw / 2, by + bh); ctx.rotate(tilt); ctx.translate(-(bx + bw / 2), -(by + bh)); }
-    // Body (tapered: narrower at bottom)
-    const bodyGrad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
-    bodyGrad.addColorStop(0, '#227722'); bodyGrad.addColorStop(0.4, '#33bb33');
-    bodyGrad.addColorStop(0.6, '#33bb33'); bodyGrad.addColorStop(1, '#227722');
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.moveTo(bx + 1, by + bh); ctx.lineTo(bx, by + 4);
-    ctx.lineTo(bx + bw, by + 4); ctx.lineTo(bx + bw - 1, by + bh);
-    ctx.closePath(); ctx.fill();
-    // Lid (darker green)
-    ctx.fillStyle = '#1a5c1a';
-    ctx.beginPath(); ctx.roundRect(bx - 1, by, bw + 2, 5, 2); ctx.fill();
-    // Handle groove
-    ctx.fillStyle = '#115511';
-    ctx.fillRect(bx + bw * 0.3, by + 5, bw * 0.4, 2);
-    // Horizontal ridges
-    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 0.5;
-    for (let r = 0; r < 3; r++) {
-      ctx.beginPath(); ctx.moveTo(bx + 1, by + 10 + r * 5); ctx.lineTo(bx + bw - 1, by + 10 + r * 5); ctx.stroke();
-    }
-    // Highlight streak
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
-    ctx.fillRect(bx + bw * 0.25, by + 6, bw * 0.15, bh - 8);
-    // Wheels (two small circles at bottom)
-    ctx.fillStyle = '#333';
-    ctx.beginPath(); ctx.arc(bx + 2, by + bh + 1, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(bx + bw - 2, by + bh + 1, 2, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-  }
-
-  // 3 bins: back center (higher), two front side by side
-  drawBin(x + 10, y - 2, 12, 20, 0); // back center
-  drawBin(x, y + 8, 12, 20, 0); // front left
-  drawBin(x + 20, y + 8, 12, 20, 0.15); // front right (tilted)
-}
-
-function drawLimo(obs) {
-  const x = obs.x, y = obs.y;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save();
-    ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.fillStyle = obs.color;
-    const flatH = obs.h * (1 - cp * 0.7);
-    const flatY = GROUND_Y - flatH;
-    ctx.fillRect(x - 5, flatY, obs.w + 10, flatH);
-    ctx.fillStyle = 'rgba(150,200,255,0.4)';
-    for (let i = 0; i < 5; i++) {
-      ctx.fillRect(x + 10 + i * 20, flatY - 2, 10, 4);
-    }
-    ctx.restore();
-    return;
-  }
-
-  // Body (long and sleek)
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.roundRect(x, y + obs.h * 0.35, obs.w, obs.h * 0.65, 5);
-  ctx.fill();
-
-  // Roof
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.roundRect(x + obs.w * 0.12, y, obs.w * 0.6, obs.h * 0.45, 4);
-  ctx.fill();
-
-  // Tinted windows (dark)
-  ctx.fillStyle = '#223';
-  ctx.beginPath();
-  ctx.roundRect(x + obs.w * 0.14, y + 3, obs.w * 0.15, obs.h * 0.35, 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(x + obs.w * 0.32, y + 3, obs.w * 0.13, obs.h * 0.35, 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(x + obs.w * 0.48, y + 3, obs.w * 0.13, obs.h * 0.35, 2);
-  ctx.fill();
-
-  // Chrome strip
-  ctx.fillStyle = '#ccc';
-  ctx.fillRect(x + 5, y + obs.h * 0.55, obs.w - 10, 2);
-
-  // Shine effect
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.beginPath();
-  ctx.roundRect(x + 5, y + obs.h * 0.38, obs.w - 10, obs.h * 0.15, 2);
-  ctx.fill();
-
-  // Wheels
-  ctx.fillStyle = '#222';
-  ctx.beginPath();
-  ctx.arc(x + obs.w * 0.15, y + obs.h + 2, 6, 0, Math.PI * 2);
-  ctx.arc(x + obs.w * 0.85, y + obs.h + 2, 6, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Hubcaps
-  ctx.fillStyle = '#ccc';
-  ctx.beginPath();
-  ctx.arc(x + obs.w * 0.15, y + obs.h + 2, 3, 0, Math.PI * 2);
-  ctx.arc(x + obs.w * 0.85, y + obs.h + 2, 3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawCar(obs) {
-  if (obs.crushed) {
-    const crushProgress = Math.min(obs.crushAnim, 1);
-    ctx.save();
-    ctx.globalAlpha = 1 - crushProgress * 0.5;
-    ctx.fillStyle = obs.color;
-    const flatH = obs.h * (1 - crushProgress * 0.7);
-    const flatY = GROUND_Y - flatH;
-    ctx.fillRect(obs.x - 5, flatY, obs.w + 10, flatH);
-    ctx.fillStyle = 'rgba(150,200,255,0.4)';
-    for (let i = 0; i < 3; i++) {
-      ctx.fillRect(obs.x + 10 + i * 15, flatY - 2, 8, 4);
-    }
-    ctx.restore();
-    return;
-  }
-
-  const x = obs.x, y = obs.y;
-
-  if (obs.type === 'ramp') {
-    ctx.fillStyle = '#e67e22';
-    ctx.beginPath();
-    ctx.moveTo(x, GROUND_Y);
-    ctx.lineTo(x + obs.w, GROUND_Y);
-    ctx.lineTo(x + obs.w, GROUND_Y - obs.h);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#f39c12';
-    for (let i = 0; i < 3; i++) {
-      const sx = x + 10 + i * 18;
-      ctx.beginPath();
-      ctx.moveTo(sx, GROUND_Y);
-      ctx.lineTo(sx + 6, GROUND_Y);
-      const rh = ((sx - x) / obs.w) * obs.h;
-      ctx.lineTo(sx + 6, GROUND_Y - rh);
-      ctx.lineTo(sx, GROUND_Y - rh + 2);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.fillStyle = '#fff';
-    ctx.font = "700 16px 'Baloo 2', sans-serif";
-    ctx.fillText('▲', x + obs.w - 20, GROUND_Y - 5);
-    return;
-  }
-
-  // Car body
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.roundRect(x, y + obs.h * 0.35, obs.w, obs.h * 0.65, 4);
-  ctx.fill();
-
-  // Roof
-  const roofW = obs.type === 'bus' ? obs.w * 0.7 : obs.w * 0.5;
-  const roofX = obs.type === 'bus' ? x + obs.w * 0.1 : x + obs.w * 0.2;
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.roundRect(roofX, y, roofW, obs.h * 0.45, 3);
-  ctx.fill();
-
-  // Windows
-  ctx.fillStyle = '#88ccff';
-  ctx.beginPath();
-  ctx.roundRect(roofX + 3, y + 3, roofW - 6, obs.h * 0.35, 2);
-  ctx.fill();
-
-  // Wheels
-  ctx.fillStyle = '#222';
-  ctx.beginPath();
-  ctx.arc(x + obs.w * 0.2, y + obs.h + 2, 5, 0, Math.PI * 2);
-  ctx.arc(x + obs.w * 0.8, y + obs.h + 2, 5, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (obs.type === 'bus') {
-    ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    ctx.fillRect(x + 5, y + obs.h * 0.5, obs.w - 10, 3);
-  }
-}
-
-// ============================================================
-// NEW NAMED VEHICLE DRAWING (clean vector style)
-// ============================================================
-function drawPickupTruck(obs) {
-  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.fillStyle = obs.color;
-    const flatH = h * (1 - cp * 0.7);
-    ctx.fillRect(x - 3, GROUND_Y - flatH, w + 6, flatH);
-    ctx.fillStyle = 'rgba(150,200,255,0.4)';
-    ctx.fillRect(x + 10, GROUND_Y - flatH - 2, 12, 4);
-    ctx.restore(); return;
-  }
-  const dark = getDarkShade(obs.color);
-  const bottom = y + h;
-  // Stepped silhouette: hood(front 25%), cab(40%), bed(rear 35%)
-  const hoodW = w * 0.25, cabW = w * 0.40, bedW = w * 0.35;
-  const cabH = h, hoodH = h * 0.70, bedH = h * 0.70;
-  const hoodX = x + bedW + cabW, cabX = x + bedW, bedX = x;
-
-  // Underside shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(x, bottom - 2, w, 2);
-
-  // Bed
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(bedX, bottom); ctx.lineTo(bedX, bottom - bedH);
-  ctx.lineTo(bedX + bedW, bottom - bedH); ctx.lineTo(bedX + bedW, bottom);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(bedX, bottom - bedH * 0.35, bedW, bedH * 0.35);
-
-  // Cab
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(cabX, bottom); ctx.lineTo(cabX, bottom - cabH);
-  ctx.lineTo(cabX + cabW, bottom - cabH); ctx.lineTo(cabX + cabW, bottom);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(cabX, bottom - cabH * 0.35, cabW, cabH * 0.35);
-
-  // Hood
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(hoodX, bottom); ctx.lineTo(hoodX, bottom - hoodH);
-  ctx.lineTo(hoodX + hoodW, bottom - hoodH + 2); ctx.lineTo(hoodX + hoodW, bottom);
-  ctx.closePath(); ctx.fill();
-
-  // Small grille
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(hoodX + hoodW - 2, bottom - hoodH + 2, 3, hoodH - 4);
-  ctx.fillStyle = '#c0c0c0';
-  ctx.fillRect(hoodX + hoodW - 1.5, bottom - hoodH + 3, 2, 3);
-  ctx.fillRect(hoodX + hoodW - 1.5, bottom - hoodH + 8, 2, 3);
-
-  // Headlight
-  ctx.fillStyle = '#ffffcc';
-  ctx.fillRect(hoodX + hoodW - 2, bottom - hoodH + 2, 2, 2);
-  // Taillight
-  ctx.fillStyle = '#ff3333';
-  ctx.fillRect(x, bottom - bedH + 1, 2, 3);
-
-  // Window
-  const winM = 2;
-  ctx.fillStyle = '#7ec8e3';
-  ctx.beginPath();
-  ctx.moveTo(cabX + winM + 2, bottom - cabH + winM);
-  ctx.lineTo(cabX + cabW - winM, bottom - cabH + winM);
-  ctx.lineTo(cabX + cabW - winM, bottom - cabH + cabH * 0.50);
-  ctx.lineTo(cabX + winM, bottom - cabH + cabH * 0.50);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.fillRect(cabX + winM + 1, bottom - cabH + winM + 1, 4, cabH * 0.25);
-
-  // Wheels (5-6px)
-  const wr = 5, wy = y + h + 2;
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.2, wy, wr, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.8, wy, wr, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#c8c8c8';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.2, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.8, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawBigSUV(obs) {
-  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.translate(x + w / 2, GROUND_Y);
-    ctx.rotate(cp * 0.15);
-    ctx.translate(-(x + w / 2), -GROUND_Y);
-    ctx.fillStyle = obs.color;
-    const flatH = h * (1 - cp * 0.7);
-    ctx.fillRect(x - 3, GROUND_Y - flatH, w + 6, flatH);
-    ctx.restore(); return;
-  }
-  const dark = getDarkShade(obs.color);
-  const bottom = y + h;
-  // SUV is boxier: cab nearly full length, short hood
-  const hoodW = w * 0.18, cabW = w * 0.82;
-  const cabH = h, hoodH = h * 0.65;
-  const hoodX = x + cabW, cabX = x;
-
-  // Underside shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(x, bottom - 2, w, 2);
-
-  // Cab (almost full length, tallest)
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(cabX, bottom); ctx.lineTo(cabX, bottom - cabH);
-  ctx.lineTo(cabX + cabW, bottom - cabH); ctx.lineTo(cabX + cabW, bottom);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(cabX, bottom - cabH * 0.30, cabW, cabH * 0.30);
-
-  // Hood (short front, lower)
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(hoodX, bottom); ctx.lineTo(hoodX, bottom - hoodH);
-  ctx.lineTo(hoodX + hoodW, bottom - hoodH + 2); ctx.lineTo(hoodX + hoodW, bottom);
-  ctx.closePath(); ctx.fill();
-
-  // Roof rack
-  ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(cabX + 4, bottom - cabH - 2);
-  ctx.lineTo(cabX + cabW - 4, bottom - cabH - 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(cabX + 10, bottom - cabH - 2); ctx.lineTo(cabX + 10, bottom - cabH);
-  ctx.moveTo(cabX + cabW - 10, bottom - cabH - 2); ctx.lineTo(cabX + cabW - 10, bottom - cabH);
-  ctx.stroke();
-
-  // 2 windows with pillar
-  const winTop = bottom - cabH + 3;
-  const winH = cabH * 0.45;
-  const winSec = (cabW - 12) / 2;
-  ctx.fillStyle = '#7ec8e3';
-  // Window 1
-  ctx.beginPath();
-  ctx.moveTo(cabX + 3, winTop + winH); ctx.lineTo(cabX + 5, winTop);
-  ctx.lineTo(cabX + 3 + winSec - 1, winTop); ctx.lineTo(cabX + 3 + winSec - 1, winTop + winH);
-  ctx.closePath(); ctx.fill();
-  // Pillar
-  ctx.fillStyle = obs.color;
-  ctx.fillRect(cabX + 3 + winSec - 1, winTop, 3, winH);
-  // Window 2
-  ctx.fillStyle = '#7ec8e3';
-  ctx.fillRect(cabX + 5 + winSec, winTop, winSec - 2, winH);
-  // Reflections
-  ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  ctx.fillRect(cabX + 5, winTop + 1, 4, winH * 0.5);
-  ctx.fillRect(cabX + 6 + winSec, winTop + 1, 4, winH * 0.5);
-
-  // Chrome grille
-  ctx.fillStyle = '#2a2a2a';
-  ctx.fillRect(hoodX + hoodW - 3, bottom - hoodH + 2, 4, hoodH - 4);
-  ctx.fillStyle = '#c0c0c0';
-  for (let i = 0; i < 3; i++) {
-    ctx.fillRect(hoodX + hoodW - 2.5, bottom - hoodH + 3 + i * ((hoodH - 6) / 3), 3, (hoodH - 6) / 3 - 2);
-  }
-
-  // Headlight + taillight
-  ctx.fillStyle = '#ffffcc';
-  ctx.fillRect(hoodX + hoodW - 2, bottom - hoodH + 2, 3, 3);
-  ctx.fillStyle = '#ff3333';
-  ctx.fillRect(x, bottom - cabH + 3, 2, 4);
-
-  // Chrome strip
-  ctx.fillStyle = '#aaa';
-  ctx.fillRect(x + 3, bottom - cabH * 0.30 - 1, w - 6, 2);
-
-  // Wheels (6px)
-  const wr = 6, wy = y + h + 2;
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.2, wy, wr, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.8, wy, wr, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#c8c8c8';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.2, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.8, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawSchoolBus(obs) {
-  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.fillStyle = '#f1c40f';
-    const flatH = h * (1 - cp * 0.8);
-    ctx.fillRect(x - 5, GROUND_Y - flatH, w + 10, flatH);
-    ctx.fillStyle = '#e67e22';
-    ctx.save(); ctx.translate(x + w - 5, GROUND_Y - flatH);
-    ctx.rotate(-cp * 0.8);
-    ctx.fillRect(0, -8, 15, 8);
-    ctx.restore();
-    ctx.restore(); return;
-  }
-  const bottom = y + h;
-  const busYellow = '#f1c40f';
-  const busDark = '#c89e0c';
-
-  // Bus body — flat front, rectangular
-  ctx.fillStyle = busYellow;
-  ctx.beginPath();
-  ctx.moveTo(x, bottom); ctx.lineTo(x, y);
-  ctx.lineTo(x + w, y); ctx.lineTo(x + w, bottom);
-  ctx.closePath(); ctx.fill();
-
-  // Black trim strip (lower)
-  ctx.fillStyle = '#222';
-  ctx.fillRect(x, bottom - h * 0.18, w, h * 0.18);
-
-  // Underside shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(x, bottom - 2, w, 2);
-
-  // Dark lower body
-  ctx.fillStyle = busDark;
-  ctx.fillRect(x, bottom - h * 0.30, w, h * 0.12);
-
-  // Row of windows (5 windows)
-  ctx.fillStyle = '#7ec8e3';
-  const winCount = 5;
-  const winGap = 3;
-  const winAreaStart = x + 8;
-  const winAreaW = w - 20;
-  const singleWinW = (winAreaW - (winCount - 1) * winGap) / winCount;
-  for (let i = 0; i < winCount; i++) {
-    const wx = winAreaStart + i * (singleWinW + winGap);
-    ctx.fillRect(wx, y + 4, singleWinW, h * 0.32);
-  }
-  // Window reflections
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  for (let i = 0; i < winCount; i++) {
-    const wx = winAreaStart + i * (singleWinW + winGap);
-    ctx.fillRect(wx + 1, y + 5, 3, h * 0.20);
-  }
-
-  // "SCHOOL BUS" text
-  ctx.fillStyle = '#333'; ctx.font = "700 7px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
-  ctx.fillText('SCHOOL BUS', x + w / 2, y + h * 0.60);
-  ctx.textAlign = 'left';
-
-  // Stop sign arm (left side)
-  ctx.fillStyle = '#cc0000';
-  ctx.beginPath();
-  ctx.moveTo(x - 7, y + h * 0.30);
-  ctx.lineTo(x - 2, y + h * 0.25);
-  ctx.lineTo(x - 2, y + h * 0.50);
-  ctx.lineTo(x - 7, y + h * 0.45);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.font = "4px 'Baloo 2', sans-serif"; ctx.textAlign = 'center';
-  ctx.fillText('STOP', x - 4.5, y + h * 0.40);
-  ctx.textAlign = 'left';
-
-  // Flat front face
-  ctx.fillStyle = '#e0b200';
-  ctx.fillRect(x + w - 3, y + 2, 4, h - 4);
-
-  // Emergency door (back)
-  ctx.fillStyle = '#d4a800';
-  ctx.fillRect(x + 2, y + h * 0.38, 7, h * 0.45);
-  ctx.strokeStyle = '#999'; ctx.lineWidth = 0.5;
-  ctx.strokeRect(x + 2, y + h * 0.38, 7, h * 0.45);
-
-  // Headlights
-  ctx.fillStyle = '#ffffcc';
-  ctx.fillRect(x + w - 2, y + h * 0.35, 3, 4);
-  ctx.fillRect(x + w - 2, y + h * 0.65, 3, 4);
-  // Taillights
-  ctx.fillStyle = '#ff3333';
-  ctx.fillRect(x, y + h * 0.35, 2, 3);
-  ctx.fillRect(x, y + h * 0.68, 2, 3);
-
-  // Wheels (6px)
-  const wr = 6, wy = y + h + 2;
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.15, wy, wr, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.85, wy, wr, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#c8c8c8';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.15, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.85, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawStretchLimo(obs) {
-  const x = obs.x, y = obs.y, w = obs.w, h = obs.h;
-  if (obs.crushed) {
-    const cp = Math.min(obs.crushAnim, 1);
-    ctx.save(); ctx.globalAlpha = 1 - cp * 0.5;
-    ctx.fillStyle = obs.color;
-    const compW = w * (1 - cp * 0.3);
-    const flatH = h * (1 - cp * 0.6);
-    ctx.fillRect(x, GROUND_Y - flatH, compW, flatH);
-    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
-    for (let i = 0; i < 4; i++) {
-      const lx = x + compW - 10 - i * 8;
-      ctx.beginPath(); ctx.moveTo(lx, GROUND_Y - flatH); ctx.lineTo(lx + 3, GROUND_Y); ctx.stroke();
-    }
-    ctx.restore(); return;
-  }
-  const dark = getDarkShade(obs.color);
-  const bottom = y + h;
-  // Very long and low, cab at front ~35%, rest is body
-  const cabW = w * 0.35, bodyRestW = w * 0.65;
-  const cabH = h, bodyRestH = h * 0.70;
-  const cabX = x + bodyRestW;
-
-  // Underside shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
-  ctx.fillRect(x, bottom - 2, w, 2);
-
-  // Long lower body
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(x, bottom); ctx.lineTo(x, bottom - bodyRestH);
-  ctx.lineTo(x + bodyRestW, bottom - bodyRestH);
-  ctx.lineTo(x + bodyRestW, bottom);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(x, bottom - bodyRestH * 0.30, bodyRestW, bodyRestH * 0.30);
-
-  // Cab (taller front section)
-  ctx.fillStyle = obs.color;
-  ctx.beginPath();
-  ctx.moveTo(cabX, bottom); ctx.lineTo(cabX, bottom - cabH);
-  ctx.lineTo(cabX + cabW, bottom - cabH);
-  ctx.lineTo(cabX + cabW, bottom);
-  ctx.closePath(); ctx.fill();
-  ctx.fillStyle = dark;
-  ctx.fillRect(cabX, bottom - cabH * 0.30, cabW, cabH * 0.30);
-
-  // Chrome trim strip
-  ctx.fillStyle = '#ccc';
-  ctx.fillRect(x + 3, bottom - bodyRestH * 0.35, w - 6, 2);
-
-  // Shine effect on upper body
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.fillRect(x + 4, bottom - bodyRestH + 2, w - 8, bodyRestH * 0.25);
-
-  // Tinted dark windows in cab
-  ctx.fillStyle = '#223';
-  const cwm = 3;
-  ctx.beginPath();
-  ctx.moveTo(cabX + cwm + 2, bottom - cabH + cwm);
-  ctx.lineTo(cabX + cabW - cwm, bottom - cabH + cwm);
-  ctx.lineTo(cabX + cabW - cwm, bottom - cabH + cabH * 0.50);
-  ctx.lineTo(cabX + cwm, bottom - cabH + cabH * 0.50);
-  ctx.closePath(); ctx.fill();
-
-  // Additional tinted windows along body (3 small dark windows)
-  const lwTop = bottom - bodyRestH + 3;
-  const lwH = bodyRestH * 0.45;
-  const lwW = bodyRestW * 0.12;
-  for (let i = 0; i < 3; i++) {
-    ctx.fillStyle = '#223';
-    ctx.fillRect(x + 8 + i * (lwW + 5), lwTop, lwW, lwH);
-  }
-
-  // Chrome bumpers
-  ctx.fillStyle = '#ccc';
-  ctx.fillRect(x - 2, bottom - bodyRestH * 0.6, 4, bodyRestH * 0.4);
-  ctx.fillRect(x + w - 2, bottom - cabH * 0.6, 4, cabH * 0.4);
-
-  // Headlights
-  ctx.fillStyle = '#ffffcc';
-  ctx.fillRect(x + w - 3, bottom - cabH + 2, 4, 4);
-  // Taillights
-  ctx.fillStyle = '#ff2222';
-  ctx.fillRect(x, bottom - bodyRestH + 2, 3, 4);
-
-  // 3 wheels visible (front, middle, rear)
-  const wr = 5, wy = y + h + 2;
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.10, wy, wr, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.50, wy, wr, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.88, wy, wr, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#c8c8c8';
-  ctx.beginPath();
-  ctx.arc(x + w * 0.10, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.50, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.arc(x + w * 0.88, wy, wr * 0.45, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 function drawRamp(obs) {
@@ -5002,13 +4317,18 @@ function updatePlayer(p) {
       p.score += points;
       screenShake = 8; flashTimer = 6; flashColor = obs.color;
 
-      if (obs.type === 'barrel') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#8B4513', '#A0522D', '#D2691E', '#ffcc00']);
-      else if (obs.type === 'portapotty') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#2288cc', '#44aadd', '#1a6699', '#fff']);
-      else if (obs.type === 'tvstack') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#555', '#888', '#0ff', '#fff', '#333']);
-      else if (obs.type === 'trashcan') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#33aa33', '#227722', '#999', '#44cc44']);
-      else if (obs.type === 'school_bus') spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#f1c40f', '#e67e22', '#f39c12', '#fff']);
-      else if (obs.type === 'stretch_limo') { spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, ['#ecf0f1', '#ccc', '#fff', '#88ccff']); screenShake = 12; }
-      else spawnCrushParticles(obs.x + obs.w / 2, obs.y, obs.color);
+      // SKG-116: particle palette pulled from CRUSHABLES config table.
+      // Each crushable carries its own .particles array. Old per-type
+      // if/else cascade retired — single lookup now drives all 15 types.
+      const crushCfg = CRUSHABLES_BY_ID[obs.type];
+      if (crushCfg) {
+        spawnCrushParticlesColored(obs.x + obs.w / 2, obs.y, crushCfg.particles);
+        // Keep the school_bus heavy-shake feel for the largest sprite
+        if (obs.type === 'school_bus') screenShake = 12;
+      } else {
+        // Fallback for any obs without a config (shouldn't happen post-SKG-116)
+        spawnCrushParticles(obs.x + obs.w / 2, obs.y, obs.color || '#888');
+      }
 
       tk.vy = JUMP_FORCE * 0.6;
       playSound('crush');
